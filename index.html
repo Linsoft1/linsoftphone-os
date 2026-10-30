@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LinsoftPhone OS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="phone">
+
+  <!-- stavovy radek -->
+  <div id="statusbar">
+    <span id="sb-time">00:00</span>
+    <span id="sb-operator">Linsoft 5G</span>
+    <span id="sb-right">
+      <span id="sb-net">📶</span>
+      <span id="sb-batt">🔋 100 %</span>
+    </span>
+  </div>
+
+  <!-- zamykaci obrazovka -->
+  <div id="lockscreen" class="screen visible">
+    <div id="lock-clock">00:00</div>
+    <div id="lock-date">pondělí 1. ledna</div>
+    <div id="lock-hint">Klepni pro odemknutí 🔓</div>
+  </div>
+
+  <!-- plocha -->
+  <div id="homescreen" class="screen">
+    <div id="widget-clock">
+      <div id="w-time">00:00</div>
+      <div id="w-date"></div>
+    </div>
+    <div id="appgrid"></div>
+    <div id="dock"></div>
+  </div>
+
+  <!-- bezici aplikace -->
+  <div id="appscreen" class="screen">
+    <div id="app-header">
+      <button id="app-back">←</button>
+      <span id="app-title"></span>
+    </div>
+    <div id="app-content"></div>
+  </div>
+
+  <!-- panel notifikaci -->
+  <div id="notifpanel">
+    <div id="notif-head">
+      <strong>Notifikace</strong>
+      <button id="notif-clear">Vymazat</button>
+    </div>
+    <div id="notif-list"></div>
+    <div id="quick-tiles">
+      <button class="tile" data-tile="wifi">📶<br>Wi-Fi</button>
+      <button class="tile" data-tile="bt">🔵<br>Bluetooth</button>
+      <button class="tile" data-tile="torch">🔦<br>Svítilna</button>
+      <button class="tile" data-tile="plane">✈️<br>Letadlo</button>
+    </div>
+  </div>
+
+  <!-- navigacni lista -->
+  <div id="navbar">
+    <button id="nav-back">◁</button>
+    <button id="nav-home">◯</button>
+    <button id="nav-recent">▢</button>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
