@@ -37,7 +37,11 @@ function appNastaveni(c) {
       radek("motiv", "#6366f1", t("st_motiv"), prepinac("st-theme", svetly, t("st_motiv"))) +
       radek("budik", "#0ea5e9", t("st_auto_motiv"), prepinac("st-auto", store.get("autoMotiv", false), t("st_auto_motiv")),
         `<small>${esc(t("st_auto_motiv_info"))}</small>`) +
-      akce("st-plocha", "dum", "#f97316", t("st_plocha")))}
+      akce("st-plocha", "dum", "#f97316", t("st_plocha")) +
+      radek("menu", "#64748b", t("st_navigace"),
+        `<div class="segment" role="radiogroup" aria-label="${esc(t("st_navigace"))}">${["tlacitka", "gesta"].map((x) =>
+          `<button role="radio" aria-checked="${store.get("navigace", "tlacitka") === x}" class="${store.get("navigace", "tlacitka") === x ? "on" : ""}" data-navigace="${x}">${esc(t(x === "gesta" ? "nav_gesta" : "nav_tlacitka"))}</button>`).join("")}</div>`) +
+      (store.get("navigace", "tlacitka") === "gesta" ? `<p class="nast-pozn">${esc(t("nav_gesta_info"))}</p>` : ""))}
 
     ${Nativ.aktivni ? skupina("sk_pripojeni",
       akce("st-wifi", "wifi", "#3b82f6", t("st_wifi")) +
@@ -89,6 +93,7 @@ function appNastaveni(c) {
     appNastaveni(c);
   };
   $("#st-plocha").onclick = () => upravPlochu(c);
+  c.querySelectorAll("[data-navigace]").forEach((b) => b.onclick = () => { nastavNavigaci(b.dataset.navigace); appNastaveni(c); });
   $("#st-info").onclick = $("#st-o").onclick = () => infoSystem(c);
   c.querySelectorAll("[data-tapeta]").forEach((b) => b.onclick = () => { nastavTapetu(b.dataset.tapeta); appNastaveni(c); });
   $("#st-jazyk").onchange = () => {

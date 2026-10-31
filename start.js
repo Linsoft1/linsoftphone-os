@@ -60,6 +60,7 @@ setTimeout(() => {
 }, 1300);
 
 if (store.get("svetly", false)) nastavMotiv(true);
+nastavNavigaci(store.get("navigace", "tlacitka"));
 nactiTapetu();
 kresliStavovyRadek();
 prelozStranku();
