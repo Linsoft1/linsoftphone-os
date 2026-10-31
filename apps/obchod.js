@@ -122,15 +122,41 @@ function appObchod(c, detail) {
           <div><h2>Linsoft Store</h2><p>${esc(t("ob_podtitul"))}</p></div>
         </div>
         <div id="ob-info"></div>
+        <div class="nast-skupina ob-apk-karta">
+          <button class="nast-radek nast-akce" id="ob-apk">
+            <span class="nast-ik" style="background:#0e7490">${Ikony.ikona("stahnout")}</span>
+            <span class="nast-text">${esc(t("ob_apk"))}<small>${esc(t("ob_apk_info"))}</small></span>
+            ${Ikony.ikona("sipka", "nast-sipka")}
+          </button>
+          <div id="ob-apk-navod" class="ob-navod" hidden></div>
+        </div>
+        <input type="file" id="ob-apk-subor" accept=".apk,application/vnd.android.package-archive" hidden>
+        <div id="ob-nainstalovane"></div>
         <label class="kt-hledat">${Ikony.ikona("hledat")}
           <input id="ob-q" type="search" placeholder="${esc(t("kt_hledat"))}" aria-label="${esc(t("kt_hledat"))}" autocomplete="off">
         </label>
         <div class="chips ob-kategorie" id="ob-kategorie"></div>
         <div class="nast-skupina" id="ob-seznam"></div>`;
       $("#ob-q").oninput = kresli;
+      $("#ob-apk").onclick = rucniApk;
+      $("#ob-apk-subor").onchange = () => { const f = $("#ob-apk-subor").files[0]; $("#ob-apk-subor").value = ""; if (f) nahrajApk(f); };
     }
     /* poznamka se meni, az sluzba odpovi, jestli je Waydroid k dispozici */
     $("#ob-info").innerHTML = infoPanel();
+    /* nainstalovane Android aplikace (i rucne z APK, ktere nejsou v katalogu) */
+    $("#ob-nainstalovane").innerHTML = platforma === "waydroid" && stavAndroid.nainstalovane.length
+      ? `<h3 class="nast-nadpis">${esc(t("ob_nainstalovane"))}</h3><div class="nast-skupina">${stavAndroid.nainstalovane.map((b) => {
+          const x = OBCHOD_KATALOG.find((y) => y.b === b);
+          const nazev = x ? x.n : b.split(".").pop();
+          return `<div class="nast-radek">${avatar(nazev)}<span class="nast-text">${esc(nazev)}<small>${esc(b)}</small></span>
+            <button class="btn sm ob-tl" data-spustit="${esc(b)}">${esc(t("ob_otevrit"))}</button>
+            <button class="pr-tl" data-odinstalovat="${esc(b)}" aria-label="${esc(t("ob_odinstalovat"))}">${Ikony.ikona("kos")}</button></div>`;
+        }).join("")}</div>`
+      : "";
+    $("#ob-nainstalovane").querySelectorAll("[data-odinstalovat]").forEach((b) => b.onclick = () => {
+      if (confirm(t("ob_odinstalovat") + ": " + b.dataset.odinstalovat + "?"))
+        Nativ.api("android/odinstalovat", { balik: b.dataset.odinstalovat }).then(obnov, nativChyba);
+    });
     $("#ob-kategorie").innerHTML = OBCHOD_KATEGORIE.map((k) =>
       `<button class="btn sm${k === kategorie ? "" : " ghost"}" data-kategorie="${k}">${esc(t("ob_k_" + k))}</button>`).join("");
     $("#ob-kategorie").querySelectorAll("[data-kategorie]").forEach((b) => b.onclick = () => { kategorie = b.dataset.kategorie; kresli(); });
@@ -148,13 +174,52 @@ function appObchod(c, detail) {
       const bezi = Object.keys(s.instalace).some((k) => s.instalace[k] === "stahuje" || s.instalace[k] === "instaluje");
       if (bezi) setTimeout(obnov, 1500);
       Object.keys(s.instalace).forEach((k) => {
-        if (String(s.instalace[k]).indexOf("chyba") === 0 && obchodHlasene[k] !== s.instalace[k]) {
-          obchodHlasene[k] = s.instalace[k];
-          pridejNotif("Linsoft Store", s.instalace[k]);
+        const v = String(s.instalace[k]);
+        if (obchodHlasene[k] === v) return;
+        if (v.indexOf("chyba") === 0) { obchodHlasene[k] = v; pridejNotif("Linsoft Store", v); }
+        /* rucne nahrany APK hotov: "hotovo: nazev.baliku" */
+        else if (k.indexOf("apk:") === 0 && v.indexOf("hotovo") === 0) {
+          obchodHlasene[k] = v;
+          pridejNotif("Linsoft Store", t("ob_apk_hotovo", v.replace(/^hotovo:?\s*/, "") || k.slice(4)));
         }
       });
     }).catch(() => {});
   }
+
+  /* ---- rucni instalace stazeneho APK ---- */
+  function rucniApk() {
+    if (platforma === "waydroid") return $("#ob-apk-subor").click();
+    /* Android / iPhone / pocitac: webova aplikace APK instalatoru predat nemuze - navod */
+    const navod = $("#ob-apk-navod");
+    navod.textContent = t(platforma === "android" ? "ob_apk_android" : platforma === "ios" ? "ob_info_ios" : "ob_apk_pc");
+    navod.hidden = !navod.hidden;
+  }
+  function nahrajApk(f) {
+    if (!/\.apk$/i.test(f.name)) return pridejNotif("Linsoft Store", t("ob_apk_zly"));
+    if (f.size > 300 * 1024 * 1024) return pridejNotif("Linsoft Store", t("ob_apk_velky"));
+    /* APK je ZIP: prvni dva bajty "PK" */
+    const r = new FileReader();
+    r.onload = () => {
+      const b = new Uint8Array(r.result);
+      if (b[0] !== 0x50 || b[1] !== 0x4b) return pridejNotif("Linsoft Store", t("ob_apk_zly"));
+      if (!confirm(t("ob_apk_potvrd", f.name + " (" + Core.velikost(f.size, stav.jazyk) + ")") + "\n\n" + t("ob_apk_varovanie"))) return;
+      $("#ob-apk").classList.add("nahrava");
+      $("#ob-apk .nast-text small").textContent = t("ob_apk_nahrava");
+      fetch("/api/android/apk", {
+        method: "POST", body: f,
+        headers: { "X-Linsoft": "1", "X-Nazev": encodeURIComponent(f.name), "Content-Type": "application/vnd.android.package-archive" }
+      }).then((o) => o.json().then((j) => { if (!o.ok) throw new Error(j.chyba || o.status); return j; }))
+        .then(obnov, nativChyba)
+        .then(() => {
+          const el = $("#ob-apk");
+          if (!el) return;
+          el.classList.remove("nahrava");
+          $("#ob-apk .nast-text small").textContent = t("ob_apk_info");
+        });
+    };
+    r.readAsArrayBuffer(f.slice(0, 4));
+  }
+
   kresli();
   obnov();
 }

@@ -113,7 +113,13 @@ const TEXTY = {
     ob_info_waydroid: "Aplikace z F-Droid se instalují přímo do LinsoftPhone OS (Waydroid).",
     ob_bez_waydroid: "Na tomto telefonu chybí Waydroid. Nainstaluj ho: sudo apk add waydroid && sudo waydroid init",
     ob_kategorie: "Kategorie", ob_balik: "Balík", ob_otevrena: "Otevřený kód",
-    ob_k_vse: "Vše", ob_k_komunikace: "Komunikace", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Ano", ne: "Ne"
+    ob_k_vse: "Vše", ob_k_komunikace: "Komunikace", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Ano", ne: "Ne",
+    ob_apk: "Instalovat z APK souboru", ob_apk_info: "Vyber stažený soubor .apk", ob_apk_nahrava: "Nahrává se…",
+    ob_apk_potvrd: "Nainstalovat {n}?", ob_apk_hotovo: "Nainstalováno: {n}", ob_nainstalovane: "Nainstalované",
+    ob_apk_zly: "Toto není platný APK soubor.", ob_apk_velky: "Soubor je příliš velký (nejvýš 300 MB).",
+    ob_apk_varovanie: "Instaluj jen APK z důvěryhodných zdrojů. Aplikace z neznámého zdroje může poškodit telefon nebo ukrást data.",
+    ob_apk_android: "Na Androidu otevři stažený soubor v aplikaci Soubory (nebo Stažené). Při prvním použití povol „Instalovat neznámé aplikace“ pro tuto aplikaci. Instaluj jen APK z důvěryhodných zdrojů.",
+    ob_apk_pc: "APK se instaluje v telefonu: zkopíruj soubor do telefonu s Androidem nebo s LinsoftPhone OS a nainstaluj ho tam."
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -224,7 +230,13 @@ const TEXTY = {
     ob_info_waydroid: "Aplikácie z F-Droid sa inštalujú priamo do LinsoftPhone OS (Waydroid).",
     ob_bez_waydroid: "Na tomto telefóne chýba Waydroid. Nainštaluj ho: sudo apk add waydroid && sudo waydroid init",
     ob_kategorie: "Kategória", ob_balik: "Balík", ob_otevrena: "Otvorený kód",
-    ob_k_vse: "Všetko", ob_k_komunikace: "Komunikácia", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Áno", ne: "Nie"
+    ob_k_vse: "Všetko", ob_k_komunikace: "Komunikácia", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Áno", ne: "Nie",
+    ob_apk: "Inštalovať z APK súboru", ob_apk_info: "Vyber stiahnutý súbor .apk", ob_apk_nahrava: "Nahráva sa…",
+    ob_apk_potvrd: "Nainštalovať {n}?", ob_apk_hotovo: "Nainštalované: {n}", ob_nainstalovane: "Nainštalované",
+    ob_apk_zly: "Toto nie je platný APK súbor.", ob_apk_velky: "Súbor je príliš veľký (najviac 300 MB).",
+    ob_apk_varovanie: "Inštaluj iba APK z dôveryhodných zdrojov. Aplikácia z neznámeho zdroja môže poškodiť telefón alebo ukradnúť údaje.",
+    ob_apk_android: "Na Androide otvor stiahnutý súbor v aplikácii Súbory (alebo Stiahnuté). Pri prvom použití povoľ „Inštalovať neznáme aplikácie“ pre túto aplikáciu. Inštaluj iba APK z dôveryhodných zdrojov.",
+    ob_apk_pc: "APK sa inštaluje v telefóne: skopíruj súbor do telefónu s Androidom alebo s LinsoftPhone OS a nainštaluj ho tam."
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -334,7 +346,13 @@ const TEXTY = {
     ob_info_waydroid: "Apps from F-Droid install directly into LinsoftPhone OS (Waydroid).",
     ob_bez_waydroid: "Waydroid is missing on this phone. Install it: sudo apk add waydroid && sudo waydroid init",
     ob_kategorie: "Category", ob_balik: "Package", ob_otevrena: "Open source",
-    ob_k_vse: "All", ob_k_komunikace: "Communication", ob_k_zabava: "Entertainment", ob_k_mapy: "Maps", ob_k_nastroje: "Tools", ano: "Yes", ne: "No"
+    ob_k_vse: "All", ob_k_komunikace: "Communication", ob_k_zabava: "Entertainment", ob_k_mapy: "Maps", ob_k_nastroje: "Tools", ano: "Yes", ne: "No",
+    ob_apk: "Install from APK file", ob_apk_info: "Choose a downloaded .apk file", ob_apk_nahrava: "Uploading…",
+    ob_apk_potvrd: "Install {n}?", ob_apk_hotovo: "Installed: {n}", ob_nainstalovane: "Installed",
+    ob_apk_zly: "This is not a valid APK file.", ob_apk_velky: "The file is too large (300 MB max).",
+    ob_apk_varovanie: "Only install APKs from trusted sources. An app from an unknown source can damage the phone or steal data.",
+    ob_apk_android: "On Android, open the downloaded file in the Files (or Downloads) app. The first time, allow “Install unknown apps” for that app. Only install APKs from trusted sources.",
+    ob_apk_pc: "APKs are installed on the phone: copy the file to an Android phone or a phone with LinsoftPhone OS and install it there."
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
