@@ -24,6 +24,11 @@ Tři podoby jednoho systému:
   z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
   obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
   stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
+- **Telefon**: karty Klávesnice / Nedávné / Kontakty, klávesy s písmeny,
+  při vytáčení ukáže odpovídající kontakt, podržením 0 napíše „+",
+  seznam hovorů (odchozí, příchozí, zmeškané)
+- **Zprávy**: seznam konverzací s avatary a náhledem, vlákno s bublinami
+  a oddělením podle dnů, pole na psaní dole, nová zpráva tlačítkem
 - **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
   s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
   Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé

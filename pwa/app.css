@@ -871,3 +871,69 @@ a.nast-radek { text-decoration: none; }
 
 /* nastaveni prohlizece: vybrany vyhledavac */
 .pr-vybrano { color: var(--accent); width: 22px; height: 22px; }
+
+/* ================= Telefon ================= */
+.tel { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px; }
+.tel-displej { text-align: center; min-height: 100px; padding: 14px 0 6px; }
+.tel-cislo { font-size: 34px; font-weight: 300; letter-spacing: 1px; min-height: 44px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tel-kdo {
+  display: inline-flex; align-items: center; margin-top: 8px; padding: 4px 14px 4px 4px; border-radius: 24px;
+  border: none; background: var(--panel); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.tel-kdo:empty { display: none; }
+.tel-kdo .avatar { width: 32px; height: 32px; font-size: 12px; margin-right: 10px; }
+.tel-kdo small { display: block; font-size: 12px; color: var(--muted); }
+.tel-klavesy { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px 26px; justify-content: center; }
+.tel-k {
+  width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--panel); color: var(--text); font: inherit;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.tel-k b { font-size: 30px; font-weight: 400; line-height: 1; }
+.tel-k small { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+.tel-k:active { background: rgba(127,127,127,.28); }
+.tel-akce { display: grid; grid-template-columns: repeat(3, 72px); gap: 26px; justify-content: center; margin-top: 16px; }
+.tel-volat {
+  width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer; color: #fff;
+  background: linear-gradient(145deg, #4ade80, #16a34a); box-shadow: 0 8px 22px rgba(22,163,74,.4);
+  display: flex; align-items: center; justify-content: center;
+}
+.tel-volat .ik { width: 32px; height: 32px; }
+.tel-mazat { border: none; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.tel-mazat .ik { width: 28px; height: 28px; }
+.tel-smer { display: inline-flex; align-items: center; }
+.tel-smer .ik { width: 14px; height: 14px; margin-right: 4px; }
+.tel-smer.odchozi .ik { color: #22c55e; }
+.tel-smer.prichozi .ik { color: #3b82f6; }
+.tel-smer.zmeskany { color: #ef4444; }
+.tel-ik-volat { color: #22c55e; }
+@media (max-height: 640px) {
+  .tel-displej { min-height: 70px; padding-top: 4px; }
+  .tel-cislo { font-size: 28px; min-height: 36px; }
+  .tel-kdo { margin-top: 2px; }
+  .tel-klavesy { grid-template-columns: repeat(3, 56px); gap: 6px 24px; }
+  .tel-k, .tel-volat { width: 56px; height: 56px; }
+  .tel-k b { font-size: 22px; }
+  .tel-k small { font-size: 8px; margin-top: 1px; }
+  .tel-akce { grid-template-columns: repeat(3, 56px); gap: 24px; margin-top: 8px; }
+}
+
+/* ================= Zpravy ================= */
+.zpr-konv .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zpr-cas { font-size: 12px; align-self: flex-start; margin-top: 4px; }
+.zpr-obal { min-height: 100%; display: flex; flex-direction: column; }
+.zpr-vlakno { flex: 1; padding-bottom: 8px; }
+.zpr-den { text-align: center; font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+.zpr-vlakno .bubble { border-radius: 20px 20px 6px 20px; max-width: 78%; }
+.zpr-vlakno .bubble.in { border-radius: 20px 20px 20px 6px; }
+.zpr-pole { position: sticky; bottom: -16px; margin: 0 -16px -16px; padding: 8px 12px 12px; background: var(--bg); }
+.zpr-info { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+.zpr-psani { display: flex; align-items: center; background: var(--panel); border-radius: 24px; padding: 4px 4px 4px 14px; }
+.zpr-psani input { border: none; background: none; padding: 8px 4px; }
+.zpr-psani input:focus { outline: none; }
+.zpr-odeslat {
+  width: 40px; height: 40px; border-radius: 50%; border: none; flex-shrink: 0; cursor: pointer; color: #fff;
+  background: linear-gradient(145deg, #3fb4f7, #2563eb); display: flex; align-items: center; justify-content: center;
+}
+.zpr-odeslat .ik { width: 19px; height: 19px; }
+.zpr-komu input { border-radius: 14px; }

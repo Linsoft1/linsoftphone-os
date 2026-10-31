@@ -51,6 +51,11 @@ const IKONY = {
   sukromne: '<path d="M3 11h18M6 11l1.5-5.5h9L18 11"/><circle cx="7.5" cy="16" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path d="M10 16h4"/>',
   zdilet: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4M8.2 13.2l7.6 4"/>',
   hotovo: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  /* telefon a zpravy */
+  odchozi: '<path d="M7 17 17 7M9 7h8v8"/>',
+  prichozi: '<path d="M17 7 7 17M15 17H7V9"/>',
+  mazat: '<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="m12 9.5 5 5M17 9.5l-5 5"/>',
+  odeslat: '<path d="M4 12 20 4l-6 16-3-7z"/><path d="m11 13 9-9"/>',
   zakaz: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
   bezsite: '<path d="M2.5 9a14 14 0 0 1 6-3.3M21.5 9A14 14 0 0 0 13 5.6M5.5 12.5a9.5 9.5 0 0 1 3.5-2M18.5 12.5a9.5 9.5 0 0 0-2-1.4M8.8 16a4.8 4.8 0 0 1 6.4 0M3 3l18 18"/>',
   /* kontakty */

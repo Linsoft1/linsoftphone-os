@@ -579,7 +579,13 @@ const Nativ = {
 };
 function nativChyba(e) { pridejNotif("LinsoftPhone OS", t("chyba_n", e && e.message ? e.message : e)); }
 
+/* zaznam do Telefon -> Nedavne; smer: odchozi / prichozi / zmeskany */
+function zapisHovor(cislo, smer) {
+  store.set("hovory", [{ cislo, smer, cas: Date.now() }].concat(store.get("hovory", [])).slice(0, 100));
+}
+
 function volat(cislo) {
+  zapisHovor(cislo, "odchozi");
   if (!Nativ.aktivni) {
     pridejNotif(t("app_telefon"), t("volam", jmenoKCislu(cislo)));
     location.href = "tel:" + cislo; /* telefon s Androidem/iOS otevre sve vytaceni */
@@ -597,12 +603,20 @@ document.addEventListener("click", (e) => {
 
 /* ---- hovor: prichozi / odchozi / probihajici ---- */
 let hovorId = null, hovorZacatek = 0;
+let prichoziHovor = null; /* { id, cislo, prijat } - po skonceni se zapise jako prijaty / zmeskany */
 function hlidejHovory() {
   Nativ.api("hovory").then((seznam) => {
     const h = seznam.filter((x) => x.stav !== "terminated")[0];
+    if (prichoziHovor && (!h || h.id !== prichoziHovor.id)) {
+      zapisHovor(prichoziHovor.cislo, prichoziHovor.prijat ? "prichozi" : "zmeskany");
+      if (!prichoziHovor.prijat) pridejNotif(t("tel_zmeskany"), jmenoKCislu(prichoziHovor.cislo), true);
+      prichoziHovor = null;
+    }
     if (!h) { hovorId = null; $("#hovor").hidden = true; return; }
     if (h.id !== hovorId) { hovorId = h.id; hovorZacatek = 0; }
     const prichozi = h.stav === "ringing-in" || h.stav === "waiting";
+    if (prichozi && !prichoziHovor) prichoziHovor = { id: h.id, cislo: h.cislo, prijat: false };
+    if (h.stav === "active" && prichoziHovor && prichoziHovor.id === h.id) prichoziHovor.prijat = true;
     let text = t("hovor_volam");
     if (prichozi) text = t("hovor_prichozi");
     else if (h.stav === "active") {
@@ -640,7 +654,8 @@ function hlidejSms() {
     });
     store.set("zpravy", z.slice(-200));
     store.set("smsVidene", videne.concat(nove.map((s) => s.id)).slice(-500));
-    if (stav.bezici === "zpravy") appZpravy($("#app-content"));
+    /* pri psani nove zpravy neprekreslovat (prisel by napsany text) */
+    if (stav.bezici === "zpravy" && !$("#zpr-komu")) appZpravy($("#app-content"), zpravyVlakno);
   }).catch(() => {});
 }
 
@@ -787,68 +802,184 @@ const jmenoKCislu = (cislo) => {
   return k ? k.j : cislo;
 };
 
-/* Telefon */
-function appTelefon(c) {
-  c.innerHTML = `
-    <div id="dial-num" aria-live="polite"></div>
-    <div id="dial-grid"></div>
-    <div id="dial-actions">
-      <button id="dial-call" aria-label="${esc(t("app_telefon"))}">📞</button>
-      <button id="dial-del" aria-label="${esc(t("smazat"))}">⌫</button>
+/* Telefon: klavesnice, nedavne hovory, kontakty */
+function appTelefon(c, karta) {
+  karta = karta || "klavesnice";
+  const NAZVY = { klavesnice: t("tel_klavesnice"), nedavne: t("tel_nedavne"), kontakty: t("app_kontakty") };
+  /* bez hlavicky aplikace: karty nahore jako v Androidu, klavesnice se vejde i na maly displej */
+  c.innerHTML = `<div class="tel"><div class="tabs" role="tablist">${Object.keys(NAZVY).map((x) =>
+    `<button role="tab" class="tab${x === karta ? " on" : ""}" aria-selected="${x === karta}" data-karta="${x}">${esc(NAZVY[x])}</button>`
+  ).join("")}</div><div id="tel-obsah"></div></div>`;
+  c.querySelectorAll(".tab").forEach((b) => b.onclick = () => appTelefon(c, b.dataset.karta));
+  const o = $("#tel-obsah");
+  const radekVolani = (cislo, popis, vpravo) => `
+    <button class="nast-radek nast-akce tel-radek" data-cislo="${esc(cislo)}">${avatar(jmenoKCislu(cislo))}
+      <span class="nast-text">${esc(jmenoKCislu(cislo))}<small>${popis}</small></span>${vpravo || ""}</button>`;
+  const napoj = () => o.querySelectorAll("[data-cislo]").forEach((b) => b.onclick = () => volat(b.dataset.cislo));
+
+  if (karta === "nedavne") {
+    const hovory = store.get("hovory", []);
+    const SMER = { odchozi: ["odchozi", "tel_odchozi"], prichozi: ["prichozi", "tel_prichozi"], zmeskany: ["prichozi", "tel_zmeskany"] };
+    o.innerHTML = hovory.length
+      ? `<div class="nast-skupina">${hovory.map((h) => {
+          const s = SMER[h.smer] || SMER.odchozi;
+          return radekVolani(h.cislo,
+            `<span class="tel-smer ${h.smer}">${Ikony.ikona(s[0])}${esc(t(s[1]))}</span>`,
+            `<span class="nast-hodnota">${esc(Core.kratkyCas(h.cas))}</span>`);
+        }).join("")}</div>`
+      : `<p class="kt-nic">${esc(t("tel_zadne"))}</p>`;
+    return napoj();
+  }
+
+  if (karta === "kontakty") {
+    const k = nactiKontakty().slice().sort((a, b) => a.j.localeCompare(b.j, stav.jazyk));
+    o.innerHTML = k.length
+      ? `<div class="nast-skupina">${k.map((x) => radekVolani(x.t, esc(x.t), Ikony.ikona("telefon", "tel-ik-volat"))).join("")}</div>`
+      : `<p class="kt-nic">${esc(t("kt_zadne"))}</p>`;
+    return napoj();
+  }
+
+  /* klavesnice s pismeny, podrzenim 0 se napise + */
+  let cislo = "";
+  o.innerHTML = `
+    <div class="tel-displej">
+      <div class="tel-cislo" id="tel-cislo" aria-live="polite"></div>
+      <button class="tel-kdo" id="tel-kdo"></button>
+    </div>
+    <div class="tel-klavesy">${"123456789*0#".split("").map((d) =>
+      `<button class="tel-k" data-d="${d}"><b>${d}</b><small>${Core.T9[d] || "&nbsp;"}</small></button>`).join("")}</div>
+    <div class="tel-akce">
+      <span></span>
+      <button class="tel-volat" id="tel-volat" aria-label="${esc(t("kt_volat"))}">${Ikony.ikona("telefon")}</button>
+      <button class="tel-mazat" id="tel-mazat" aria-label="${esc(t("smazat"))}">${Ikony.ikona("mazat")}</button>
     </div>`;
-  const num = $("#dial-num");
-  "123456789*0#".split("").forEach((d) => {
-    const b = document.createElement("button");
-    b.textContent = d;
-    b.onclick = () => num.textContent += d;
-    $("#dial-grid").appendChild(b);
+  const kresli = () => {
+    $("#tel-cislo").textContent = cislo;
+    $("#tel-mazat").style.visibility = cislo ? "visible" : "hidden";
+    /* kontakt, jehoz cislo odpovida (nebo zacina) napsanym cislicim */
+    const n = Core.cisloTel(cislo);
+    const shoda = n.length >= 3 && nactiKontakty().find((x) => {
+      const kc = Core.cisloTel(x.t);
+      return kc === n || kc.indexOf(n) >= 0;
+    });
+    const kdo = $("#tel-kdo");
+    kdo.innerHTML = shoda ? `${avatar(shoda.j)}<span>${esc(shoda.j)}<small>${esc(shoda.t)}</small></span>` : "";
+    kdo.onclick = shoda ? () => { cislo = Core.cisloTel(shoda.t); kresli(); } : null;
+  };
+  let drzeni = null, plus = false;
+  o.querySelectorAll(".tel-k").forEach((b) => {
+    const d = b.dataset.d;
+    b.addEventListener("pointerdown", () => {
+      plus = false;
+      if (d === "0") drzeni = setTimeout(() => { plus = true; cislo += "+"; kresli(); if (navigator.vibrate) navigator.vibrate(20); }, 550);
+    });
+    b.addEventListener("pointerup", () => clearTimeout(drzeni));
+    b.addEventListener("pointerleave", () => clearTimeout(drzeni));
+    b.onclick = () => { if (plus) { plus = false; return; } cislo += d; kresli(); };
   });
-  $("#dial-del").onclick = () => num.textContent = num.textContent.slice(0, -1);
-  $("#dial-call").onclick = () => {
-    const n = Core.cisloTel(num.textContent);
-    if (!n) return;
+  $("#tel-mazat").onclick = () => { cislo = cislo.slice(0, -1); kresli(); };
+  $("#tel-volat").onclick = () => {
+    const n = Core.cisloTel(cislo);
+    /* prazdne cislo: doplnit posledni volane, jako na telefonu */
+    if (!n) { const posledni = store.get("hovory", [])[0]; if (posledni) { cislo = posledni.cislo; kresli(); } return; }
     volat(n);
   };
+  kresli();
 }
 
-/* Zpravy - odesila skutecne SMS pres aplikaci telefonu */
+/* Zpravy: konverzace -> vlakno; odesila skutecne SMS (modem nebo SMS aplikace telefonu) */
+let zpravyVlakno = null;
 function appZpravy(c, komu) {
   const z = store.get("zpravy", []);
-  const kontakty = nactiKontakty();
-  c.innerHTML = `
-    <div id="zpr-list">${z.map((m) => m.prijata
-      ? `<div class="bubble in">${esc(m.txt)}<small>← ${esc(jmenoKCislu(m.komu))} · ${Core.hhmm(new Date(m.cas))}</small></div>`
-      : `<div class="bubble">${esc(m.txt)}<small>${m.komu ? "→ " + esc(jmenoKCislu(m.komu)) + " · " : ""}${Core.hhmm(new Date(m.cas))}</small></div>`).join("")
-      || `<p class="muted">${esc(t("sms_zadne"))}</p>`}</div>
-    <div id="zpr-form">
-      <input id="zpr-komu" type="tel" list="zpr-kontakty" autocomplete="off"
-        placeholder="${esc(t("sms_komu"))}" aria-label="${esc(t("sms_komu"))}" value="${esc(komu || "")}">
-      <datalist id="zpr-kontakty">${kontakty.map((k) =>
-        `<option value="${esc(k.t)}">${esc(k.j)}</option>`).join("")}</datalist>
-      <div class="row">
-        <input id="zpr-in" placeholder="${esc(t("sms_text"))}" aria-label="${esc(t("sms_text"))}">
-        <button class="btn" id="zpr-send" aria-label="SMS">➤</button>
-      </div>
-      <p class="muted small">${esc(t(Nativ.aktivni ? "sms_info_nativ" : "sms_info"))}</p>
-    </div>`;
-  c.scrollTop = c.scrollHeight;
-  const posli = () => {
-    const text = $("#zpr-in").value.trim();
-    const cislo = Core.cisloTel($("#zpr-komu").value);
-    if (!cislo) return $("#zpr-komu").focus();
-    if (!text) return $("#zpr-in").focus();
+  c.scrollTop = 0;
+  vnitrniZpet = null;
+  zpravyVlakno = null;
+  $("#app-title").textContent = t("app_zpravy");
+
+  function posli(cislo, text, hotovo) {
     const ulozeno = () => {
       z.push({ txt: text, komu: cislo, cas: Date.now() });
       store.set("zpravy", z.slice(-200));
       pridejNotif(t("app_zpravy"), t("sms_odeslano", jmenoKCislu(cislo)));
-      if (stav.bezici === "zpravy") appZpravy(c, cislo);
+      hotovo();
     };
-    /* LinsoftPhone OS na telefonu posila primo pres modem, jinak SMS aplikace telefonu */
     if (Nativ.aktivni) Nativ.api("sms", { cislo, text }).then(ulozeno, nativChyba);
     else { location.href = Core.smsOdkaz(cislo, text, JE_IOS); ulozeno(); }
-  };
-  $("#zpr-send").onclick = posli;
-  $("#zpr-in").onkeydown = (e) => { if (e.key === "Enter") posli(); };
+  }
+  const pole = (id, zmistni) => `
+    <div class="zpr-pole">
+      ${zmistni || ""}
+      <div class="zpr-psani">
+        <input id="${id}" placeholder="${esc(t("sms_text"))}" aria-label="${esc(t("sms_text"))}" autocomplete="off">
+        <button class="zpr-odeslat" id="zpr-odeslat" aria-label="SMS">${Ikony.ikona("odeslat")}</button>
+      </div>
+    </div>`;
+
+  /* ---- nova zprava ---- */
+  if (komu && komu.nova) {
+    vnitrniZpet = () => appZpravy(c);
+    $("#app-title").textContent = t("zpr_nova");
+    c.innerHTML = `<div class="zpr-obal">
+      <div class="zpr-komu">
+        <input id="zpr-komu" type="tel" list="zpr-kontakty" autocomplete="off"
+          placeholder="${esc(t("sms_komu"))}" aria-label="${esc(t("sms_komu"))}">
+        <datalist id="zpr-kontakty">${nactiKontakty().map((k) =>
+          `<option value="${esc(k.t)}">${esc(k.j)}</option>`).join("")}</datalist>
+      </div>
+      <div class="zpr-vlakno"></div>
+      ${pole("zpr-text", `<p class="zpr-info">${esc(t(Nativ.aktivni ? "sms_info_nativ" : "sms_info"))}</p>`)}</div>`;
+    const odesli = () => {
+      const cislo = Core.cisloTel($("#zpr-komu").value), text = $("#zpr-text").value.trim();
+      if (!cislo) return $("#zpr-komu").focus();
+      if (!text) return $("#zpr-text").focus();
+      posli(cislo, text, () => { if (stav.bezici === "zpravy") appZpravy(c, cislo); });
+    };
+    $("#zpr-odeslat").onclick = odesli;
+    $("#zpr-text").onkeydown = (e) => { if (e.key === "Enter") odesli(); };
+    $("#zpr-komu").focus();
+    return;
+  }
+
+  /* ---- vlakno s jednim cislem ---- */
+  if (komu) {
+    const cislo = Core.cisloTel(komu);
+    zpravyVlakno = cislo;
+    vnitrniZpet = () => appZpravy(c);
+    $("#app-title").textContent = jmenoKCislu(cislo);
+    const vlakno = z.filter((m) => Core.cisloTel(m.komu) === cislo);
+    let den = "";
+    c.innerHTML = `<div class="zpr-obal">
+      <div class="zpr-vlakno">${vlakno.map((m) => {
+        const d = Core.datumText(stav.jazyk, new Date(m.cas));
+        const oddel = d !== den ? `<div class="zpr-den">${esc(den = d)}</div>` : "";
+        return oddel + `<div class="bubble${m.prijata ? " in" : ""}">${esc(m.txt)}<small>${Core.hhmm(new Date(m.cas))}</small></div>`;
+      }).join("") || `<p class="kt-nic">${esc(t("sms_zadne"))}</p>`}</div>
+      ${pole("zpr-text")}</div>`;
+    const odesli = () => {
+      const text = $("#zpr-text").value.trim();
+      if (!text) return $("#zpr-text").focus();
+      posli(cislo, text, () => { if (stav.bezici === "zpravy") appZpravy(c, cislo); });
+    };
+    $("#zpr-odeslat").onclick = odesli;
+    $("#zpr-text").onkeydown = (e) => { if (e.key === "Enter") odesli(); };
+    c.scrollTop = c.scrollHeight;
+    return;
+  }
+
+  /* ---- seznam konverzaci ---- */
+  const konv = Core.konverzace(z);
+  c.innerHTML = (konv.length
+    ? `<div class="nast-skupina">${konv.map((k) => {
+        const p = k.posledni;
+        const kdo = k.komu ? jmenoKCislu(k.komu) : "?";
+        return `<button class="nast-radek nast-akce zpr-konv" data-komu="${esc(k.komu)}">${avatar(kdo)}
+          <span class="nast-text">${esc(kdo)}<small>${p.prijata ? "" : esc(t("zpr_ty")) + ": "}${esc(p.txt)}</small></span>
+          <span class="nast-hodnota zpr-cas">${esc(Core.kratkyCas(p.cas))}</span></button>`;
+      }).join("")}</div>`
+    : `<p class="kt-nic">${esc(t("zpr_zadne"))}</p>`) +
+    `<button class="fab" id="zpr-nova" aria-label="${esc(t("zpr_nova"))}">${Ikony.ikona("upravit")}</button>`;
+  c.querySelectorAll("[data-komu]").forEach((b) => b.onclick = () => { if (b.dataset.komu) appZpravy(c, b.dataset.komu); });
+  $("#zpr-nova").onclick = () => appZpravy(c, { nova: true });
 }
 
 /* Kontakty */
@@ -859,7 +990,9 @@ function avatar(jmeno, trida) {
   let h = 0;
   for (const ch of jmeno) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const b = BARVY_AVATARU[h % BARVY_AVATARU.length];
-  const inicialy = jmeno.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase() || "?";
+  /* cislo bez kontaktu -> "#" */
+  const inicialy = /^[+\d]/.test(jmeno) ? "#" :
+    jmeno.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase() || "?";
   return `<span class="avatar${trida ? " " + trida : ""}" style="background:linear-gradient(145deg,${b[0]},${b[1]})" aria-hidden="true">${esc(inicialy)}</span>`;
 }
 
@@ -1897,7 +2030,7 @@ function wifiSeznam(box) {
 /* ---------------- registr aplikaci ---------------- */
 const APPS = [
   /* ikona = nazev v ikony.js, barvy = prechod podkladu */
-  { id: "telefon", barvy: ["#4ade80", "#15a34a"], render: appTelefon, dock: true },
+  { id: "telefon", barvy: ["#4ade80", "#15a34a"], render: appTelefon, dock: true, plna: true },
   { id: "zpravy", barvy: ["#38bdf8", "#2563eb"], render: appZpravy, dock: true },
   { id: "kontakty", barvy: ["#fdba74", "#ea580c"], render: appKontakty },
   { id: "kalk", barvy: ["#c4b5fd", "#7c3aed"], render: appKalk },

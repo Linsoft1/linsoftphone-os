@@ -147,3 +147,18 @@ test("Linsoft Browser: vyhledavace, YouTube, blokovane weby, navrhy", () => {
   assert.strictEqual(Core.navrhy("poč", zdroje)[0].titulek, "Počasie");
   assert.deepStrictEqual(Core.navrhy("", zdroje), []);
 });
+
+test("telefon a zpravy: kratky cas, konverzace", () => {
+  const ted = new Date(2026, 9, 31, 15, 0).getTime();
+  assert.strictEqual(Core.kratkyCas(new Date(2026, 9, 31, 9, 5).getTime(), ted), "09:05");
+  assert.strictEqual(Core.kratkyCas(new Date(2026, 9, 30, 9, 5).getTime(), ted), "30. 10.");
+  const z = [
+    { txt: "ahoj", komu: "+421 900 111 222", cas: 1 },
+    { txt: "cau", komu: "+421900111222", cas: 5, prijata: true },
+    { txt: "test", komu: "0905", cas: 3 }
+  ];
+  const k = Core.konverzace(z);
+  assert.deepStrictEqual(k.map((x) => [x.komu, x.pocet, x.posledni.txt]), [["+421900111222", 2, "cau"], ["0905", 1, "test"]]);
+  assert.deepStrictEqual(Core.konverzace([]), []);
+  assert.strictEqual(Core.T9[7], "PQRS");
+});

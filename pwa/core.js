@@ -86,7 +86,10 @@ const TEXTY = {
     pr_hledac: "Vyhledávač", pr_hledat_v: "Hledat „{n}“", pr_blok_nadpis: "Tuto stránku tu nelze zobrazit",
     pr_blok_text: "Web {n} nedovoluje zobrazení uvnitř jiné aplikace.", pr_offline_nadpis: "Bez připojení",
     pr_offline_text: "Zkontroluj Wi-Fi nebo mobilní data.", pr_znovu: "Zkusit znovu",
-    pr_vymazat_vse: "Vymazat všechna data prohlížeče", pr_vymazano: "Data prohlížeče vymazána."
+    pr_vymazat_vse: "Vymazat všechna data prohlížeče", pr_vymazano: "Data prohlížeče vymazána.",
+    tel_klavesnice: "Klávesnice", tel_nedavne: "Nedávné", tel_zadne: "Zatím žádné hovory",
+    tel_odchozi: "Odchozí", tel_prichozi: "Příchozí", tel_zmeskany: "Zmeškaný hovor",
+    zpr_nova: "Nová zpráva", zpr_zadne: "Zatím žádné zprávy", zpr_ty: "Ty"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -170,7 +173,10 @@ const TEXTY = {
     pr_hledac: "Vyhľadávač", pr_hledat_v: "Hľadať „{n}“", pr_blok_nadpis: "Túto stránku tu nie je možné zobraziť",
     pr_blok_text: "Web {n} nedovoľuje zobrazenie vnútri inej aplikácie.", pr_offline_nadpis: "Bez pripojenia",
     pr_offline_text: "Skontroluj Wi-Fi alebo mobilné dáta.", pr_znovu: "Skúsiť znova",
-    pr_vymazat_vse: "Vymazať všetky údaje prehliadača", pr_vymazano: "Údaje prehliadača vymazané."
+    pr_vymazat_vse: "Vymazať všetky údaje prehliadača", pr_vymazano: "Údaje prehliadača vymazané.",
+    tel_klavesnice: "Klávesnica", tel_nedavne: "Nedávne", tel_zadne: "Zatiaľ žiadne hovory",
+    tel_odchozi: "Odchádzajúci", tel_prichozi: "Prichádzajúci", tel_zmeskany: "Zmeškaný hovor",
+    zpr_nova: "Nová správa", zpr_zadne: "Zatiaľ žiadne správy", zpr_ty: "Ty"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -253,7 +259,10 @@ const TEXTY = {
     pr_hledac: "Search engine", pr_hledat_v: "Search “{n}”", pr_blok_nadpis: "This page can't be shown here",
     pr_blok_text: "{n} does not allow being shown inside another app.", pr_offline_nadpis: "No connection",
     pr_offline_text: "Check Wi-Fi or mobile data.", pr_znovu: "Try again",
-    pr_vymazat_vse: "Clear all browser data", pr_vymazano: "Browser data cleared."
+    pr_vymazat_vse: "Clear all browser data", pr_vymazano: "Browser data cleared.",
+    tel_klavesnice: "Keypad", tel_nedavne: "Recents", tel_zadne: "No calls yet",
+    tel_odchozi: "Outgoing", tel_prichozi: "Incoming", tel_zmeskany: "Missed call",
+    zpr_nova: "New message", zpr_zadne: "No messages yet", zpr_ty: "You"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -450,11 +459,34 @@ function navrhy(vstup, zdroje, max) {
   return vysledek.slice(0, max || 5);
 }
 
+/* ---------------- telefon a zpravy ---------------- */
+/* pismena na klavesnici telefonu */
+const T9 = { 2: "ABC", 3: "DEF", 4: "GHI", 5: "JKL", 6: "MNO", 7: "PQRS", 8: "TUV", 9: "WXYZ", 0: "+" };
+
+/* kratky cas v seznamu: dnes "14:05", jinak "31. 10." */
+function kratkyCas(cas, ted) {
+  const d = new Date(cas), n = ted ? new Date(ted) : new Date();
+  if (denKlic(d) === denKlic(n)) return hhmm(d);
+  return d.getDate() + ". " + (d.getMonth() + 1) + ".";
+}
+
+/* zpravy -> konverzace podle cisla, nejnovejsi nahore: { komu, posledni, pocet } */
+function konverzace(zpravy) {
+  const mapa = {};
+  (zpravy || []).forEach((z) => {
+    const k = cisloTel(z.komu);
+    const kon = mapa[k] || (mapa[k] = { komu: k, posledni: z, pocet: 0 });
+    kon.pocet++;
+    if (z.cas >= kon.posledni.cas) kon.posledni = z;
+  });
+  return Object.keys(mapa).map((k) => mapa[k]).sort((a, b) => b.posledni.cas - a.posledni.cas);
+}
+
 const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
   prohlizec, platforma, velikost, trvani, HLEDACE, HLEDANI, adresaZVstupu, zobrazAdresu,
-  upravAdresu, navrhy
+  upravAdresu, navrhy, T9, kratkyCas, konverzace
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;
