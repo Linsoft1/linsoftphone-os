@@ -1182,3 +1182,7 @@ body.gesta.light.v-app #navbar { background: none; }
   #hledat-plocha { margin-bottom: 0; padding: 6px 12px; }
   #appgrid { padding-top: 6px; }
 }
+/* Linsoft Store: rucni instalace APK */
+.ob-apk-karta { margin-bottom: 12px; }
+.ob-navod { padding: 4px 14px 14px 60px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+#ob-apk.nahrava .nast-ik { animation: puls 1s infinite; }

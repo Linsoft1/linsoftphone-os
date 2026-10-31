@@ -85,6 +85,40 @@ class TestSluzba(unittest.TestCase):
         self.assertEqual(pozadavek("/api/android/odinstalovat", {"balik": "org.schabi.newpipe"})[0], 200)
         self.assertNotIn("org.schabi.newpipe", json.loads(pozadavek("/api/android")[1])["nainstalovane"])
 
+    def apk(self, data, nazev="hra.apk", hlavicky=None):
+        h = {"X-Linsoft": "1", "X-Nazev": nazev, "Content-Type": "application/vnd.android.package-archive"}
+        if hlavicky is not None:
+            h = hlavicky
+        req = urllib.request.Request(ADRESA + "/api/android/apk", data=data, headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=5) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, e.read()
+
+    def test_rucni_apk(self):
+        import io
+        import zipfile
+        b = io.BytesIO()
+        with zipfile.ZipFile(b, "w") as z:
+            z.writestr("AndroidManifest.xml", "x")
+            z.writestr("classes.dex", "x")
+        kod, odpoved = self.apk(b.getvalue(), nazev="m%C3%B4j%20hra.apk")
+        self.assertEqual(kod, 200)
+        self.assertIn("sk.linsoft.ukazka", json.loads(pozadavek("/api/android")[1])["nainstalovane"])
+        self.assertTrue(odpoved["klic"].startswith("apk:"))
+
+    def test_rucni_apk_odmitne_zly_soubor(self):
+        import io
+        import zipfile
+        bez_manifestu = io.BytesIO()
+        with zipfile.ZipFile(bez_manifestu, "w") as z:
+            z.writestr("readme.txt", "x")
+        self.assertEqual(self.apk(b"neni to zip")[0], 400)
+        self.assertEqual(self.apk(bez_manifestu.getvalue())[0], 400)
+        self.assertEqual(self.apk(b"PK..", nazev="virus.exe")[0], 400)
+        self.assertEqual(self.apk(b"PK..", hlavicky={"X-Nazev": "a.apk"})[0], 403)
+
     def test_android_neplatny_balik(self):
         for zly in ["vlc", "org.x;reboot", "../etc/passwd", "-rf", None]:
             self.assertEqual(pozadavek("/api/android/instalovat", {"balik": zly})[0], 400, zly)

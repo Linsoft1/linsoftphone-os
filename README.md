@@ -45,7 +45,10 @@ Tři podoby jednoho systému:
   Na telefonu s Androidem otevře aplikaci v Google Play / F-Droid a instalaci
   dokončí Android; na vlastním systému LinsoftPhone OS (postmarketOS)
   instaluje aplikace z F-Droid přímo do **Waydroidu** (Android uvnitř Linuxu);
-  na iPhonu Android aplikace nejdou
+  na iPhonu Android aplikace nejdou. **Ruční instalace staženého APK**:
+  na LinsoftPhone OS vybereš soubor `.apk`, Store ověří, že jde o APK do
+  300 MB, upozorní na riziko a nainstaluje ho do Waydroidu; na Androidu ukáže
+  postup (aplikace Soubory → povolit neznámé aplikace)
 - **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
   s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
   Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé

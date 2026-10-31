@@ -287,6 +287,36 @@ def instaluj_android(balik):
         shutil.rmtree(os.path.dirname(soubor), ignore_errors=True)
 
 
+def je_apk(cesta):
+    """APK je ZIP archiv s AndroidManifest.xml."""
+    import zipfile
+    try:
+        with zipfile.ZipFile(cesta) as z:
+            return "AndroidManifest.xml" in z.namelist()
+    except (zipfile.BadZipFile, OSError):
+        return False
+
+
+def instaluj_apk_soubor(klic, soubor):
+    """Bezi ve vlakne: nainstaluje rucne nahrany APK; balik zjisti z rozdilu seznamu aplikaci."""
+    try:
+        instalace[klic] = "instaluje"
+        try:
+            pred = set(android_aplikace())
+        except Exception:
+            pred = set()
+        spust(["waydroid", "app", "install", soubor], casovac=300)
+        try:
+            nove = sorted(set(android_aplikace()) - pred)
+        except Exception:
+            nove = []
+        instalace[klic] = "hotovo" + (": " + nove[0] if nove else "")
+    except Exception as e:
+        instalace[klic] = "chyba: " + str(e)[:200]
+    finally:
+        shutil.rmtree(os.path.dirname(soubor), ignore_errors=True)
+
+
 # ---------------- ukazkovy rezim (pocitac bez modemu) ----------------
 
 class Demo:
@@ -358,9 +388,68 @@ class Obsluha(SimpleHTTPRequestHandler):
         except Exception as e:
             self.odpoved(500, {"chyba": str(e)})
 
+    def zahod_telo(self):
+        """Pred odmitnutim precist neprectene telo pozadavku, jinak klient dostane
+        'spojeni preruseno' misto odpovedi s duvodem. Prilis velke telo se necte (spojeni se zavre)."""
+        zbyva = int(self.headers.get("Content-Length") or 0)
+        if zbyva > MAX_APK:
+            self.close_connection = True
+            return
+        while zbyva > 0:
+            kus = self.rfile.read(min(1 << 16, zbyva))
+            if not kus:
+                break
+            zbyva -= len(kus)
+
+    def prijmi_apk(self):
+        """Rucne nahrany APK (telo pozadavku = soubor). Overi velikost a ze jde o APK."""
+        import tempfile
+        import threading
+        from urllib.parse import unquote
+        delka = int(self.headers.get("Content-Length") or 0)
+        # nazev souboru prijde zakodovany (encodeURIComponent), v hlavicce nesmi byt diakritika
+        nazev = re.sub(r"[^\w.-]", "_", os.path.basename(unquote(self.headers.get("X-Nazev", "aplikace.apk"))))[:80]
+        if delka <= 0 or delka > MAX_APK or not nazev.lower().endswith(".apk"):
+            self.zahod_telo()
+            raise ValueError("ocekava se soubor .apk do 300 MB")
+        adresar = tempfile.mkdtemp(prefix="linsoft-apk-")
+        soubor = os.path.join(adresar, nazev)
+        with open(soubor, "wb") as f:
+            zbyva = delka
+            while zbyva > 0:
+                kus = self.rfile.read(min(1 << 16, zbyva))
+                if not kus:
+                    break
+                f.write(kus)
+                zbyva -= len(kus)
+        if zbyva > 0 or not je_apk(soubor):
+            shutil.rmtree(adresar, ignore_errors=True)
+            raise ValueError("toto neni platny APK soubor")
+        klic = "apk:" + nazev
+        if DEMO:
+            shutil.rmtree(adresar, ignore_errors=True)
+            balik = "sk.linsoft.ukazka"
+            if balik not in Demo.android:
+                Demo.android.append(balik)
+            instalace[klic] = "hotovo: " + balik
+            return {"ok": True, "klic": klic}
+        if not waydroid_k_dispozici():
+            shutil.rmtree(adresar, ignore_errors=True)
+            raise RuntimeError("na telefonu chybi Waydroid")
+        threading.Thread(target=instaluj_apk_soubor, args=(klic, soubor), daemon=True).start()
+        return {"ok": True, "klic": klic}
+
     def do_POST(self):
         if not self.path.startswith("/api/") or not self.overeni():
+            self.zahod_telo()
             return self.odpoved(403, {"chyba": "zakazano"})
+        if self.path.split("?")[0] == "/api/android/apk":
+            try:
+                return self.odpoved(200, self.prijmi_apk())
+            except ValueError as e:
+                return self.odpoved(400, {"chyba": str(e)})
+            except Exception as e:
+                return self.odpoved(500, {"chyba": str(e)})
         try:
             self.odpoved(200, self.api_post(self.path.split("?")[0], self.telo()) or {"ok": True})
         except KeyError:
