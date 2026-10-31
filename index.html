@@ -26,6 +26,7 @@
     <a href="#podoby">Systém</a>
     <a href="#snimky">Snímky</a>
     <a href="#instalacia">Inštalácia</a>
+    <a href="#stiahnut">Stiahnuť</a>
     <a href="#otazky">Otázky</a>
     <a href="https://github.com/Linsoft1/linsoftphone-os" class="menu-gh">GitHub</a>
   </nav>
@@ -192,6 +193,62 @@ pmbootstrap flasher flash_rootfs && pmbootstrap flasher flash_kernel</code></pre
 <pre><code>.\build.ps1      # zostaví kernel.elf
 .\run.ps1        # QEMU s displejom, klávesnicou a dotykom</code></pre>
     <p>Príkazy v termináli: <code>pomoc</code>, <code>info</code>, <code>datum</code>, <code>kalk (2+3)*4</code>, <code>klavesnica sk</code>.</p>
+  </div>
+</section>
+
+<!-- ============ stiahnut ============ -->
+<section id="stiahnut" class="sekcia">
+  <h2>Stiahnuť</h2>
+  <p class="sekcia-uvod">Hotové súbory LinsoftPhone OS. Hostované na GitHub Releases, zadarmo.</p>
+  <div class="stiahnut">
+    <article class="subor hlavny">
+      <span class="ik" style="--a:#3fb4f7;--b:#7b3fe4"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
+      <div class="subor-text">
+        <h3>Obraz systému</h3>
+        <p>Celý LinsoftPhone OS na postmarketOS (Linux) pre počítač x86-64 alebo virtuálny stroj. Naštartuje rovno do zamknutej obrazovky.</p>
+        <p class="subor-info"><code>linsoftphone-os-2.4-qemu-amd64.img.xz</code> · <span data-velkost="img">373 MB</span></p>
+      </div>
+      <a class="tl tl-hlavne" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-os-2.4-qemu-amd64.img.xz">Stiahnuť obraz</a>
+    </article>
+    <article class="subor">
+      <span class="ik" style="--a:#f59e0b;--b:#c2410c"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="12" rx="2"/><path d="M10 6h4M12 14v4M8 18l4 4 4-4"/></svg></span>
+      <div class="subor-text">
+        <h3>LinsoftPhone Installer 1.0</h3>
+        <p>Zapíše obraz na USB kľúč alebo SD kartu, alebo pripraví <code>linsoftPhone.img</code> pre VirtualBox / QEMU. Sám stiahne a overí najnovší obraz. Windows aj Linux, potrebuje Python.</p>
+        <p class="subor-info"><code>linsoftphone-installer-1.0.zip</code> · 8 kB</p>
+      </div>
+      <a class="tl tl-druhe" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-installer-1.0.zip">Stiahnuť</a>
+    </article>
+    <article class="subor">
+      <span class="ik" style="--a:#475569;--b:#0f172a"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>
+      <div class="subor-text">
+        <h3>ARM kernel 1.3</h3>
+        <p>Vlastné jadro LinsoftPhone OS pre QEMU (ARMv7).</p>
+        <p class="subor-info"><code>linsoftphone-kernel-1.3.elf</code> · 207 kB</p>
+      </div>
+      <a class="tl tl-druhe" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-kernel-1.3.elf">Stiahnuť</a>
+    </article>
+    <article class="subor">
+      <span class="ik" style="--a:#34d399;--b:#0e7490"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+      <div class="subor-text">
+        <h3>Offline web</h3>
+        <p>LinsoftPhone OS na vlastný webový server (potrebuje HTTPS).</p>
+        <p class="subor-info"><code>linsoftphone-os-2.4-web.zip</code> · 289 kB</p>
+      </div>
+      <a class="tl tl-druhe" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-os-2.4-web.zip">Stiahnuť</a>
+    </article>
+  </div>
+  <div class="postup navod-obraz">
+    <h3>Ako spustiť obraz systému</h3>
+<pre><code>xz -d linsoftphone-os-2.4-qemu-amd64.img.xz
+qemu-system-x86_64 -enable-kvm -m 3G -smp 2 \
+  -bios /usr/share/ovmf/OVMF.fd \
+  -drive file=linsoftphone-os-2.4-qemu-amd64.img,format=raw,if=virtio \
+  -device virtio-vga -device virtio-tablet-pci -device virtio-keyboard-pci</code></pre>
+    <p>Prihlásenie (napr. cez SSH alebo konzolu): používateľ <code>user</code>, heslo <code>147147</code> — po prvom spustení ho zmeň príkazom <code>passwd</code>.</p>
+    <p>Pre konkrétny telefón sa obraz zostavuje zvlášť — pozri <a href="#instalacia">Inštaláciu → Ako systém telefónu</a>.
+      Kontrolné súčty: <a href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/SHA256SUMS">SHA256SUMS</a> ·
+      <a href="https://github.com/Linsoft1/linsoftphone-os/releases">všetky vydania</a></p>
   </div>
 </section>
 

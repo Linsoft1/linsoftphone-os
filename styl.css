@@ -184,3 +184,23 @@ details p { color: var(--tlmeny); margin-top: 10px; }
   .postup { padding: 20px; }
   .snimky img { width: 190px; }
 }
+
+/* stiahnut */
+.stiahnut { display: flex; flex-direction: column; gap: 14px; }
+.subor {
+  display: flex; align-items: center; gap: 20px; padding: 22px 24px; border-radius: 22px;
+  background: var(--panel); border: 1px solid var(--okraj);
+}
+.subor.hlavny { background: linear-gradient(160deg, rgba(63,180,247,.12), rgba(123,63,228,.14)); border-color: rgba(91,108,240,.45); }
+.subor .ik { flex-shrink: 0; }
+.subor-text { flex: 1; min-width: 0; }
+.subor-text h3 { font-size: 19px; }
+.subor-text p { color: var(--tlmeny); font-size: 14.5px; }
+.subor-info { margin-top: 6px; font-size: 13px !important; overflow-wrap: anywhere; }
+.subor .tl { flex-shrink: 0; white-space: nowrap; }
+.navod-obraz { margin-top: 18px; max-width: none; }
+.navod-obraz h3 { font-size: 18px; margin-bottom: 4px; }
+@media (max-width: 720px) {
+  .subor { flex-direction: column; align-items: flex-start; text-align: left; }
+  .subor .tl { width: 100%; text-align: center; }
+}
