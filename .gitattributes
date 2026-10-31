@@ -1,3 +1,4 @@
 # skripty a balik pro postmarketOS musi mit linuxove konce radku (LF), jinak na telefonu nefunguji
 *.sh                text eol=lf
 postmarketos/**     text eol=lf
+*.bat               text eol=crlf
