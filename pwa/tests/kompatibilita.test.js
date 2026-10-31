@@ -10,8 +10,11 @@ const Core = require("../core.js");
 const PWA = path.join(__dirname, "..");
 const cti = (f) => fs.readFileSync(path.join(PWA, f), "utf8");
 const bezKomentaru = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+/* vsechny skripty z index.html v poradi nacitani */
+const SKRIPTY = Array.from(cti("index.html").matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
+const VES_KOD = SKRIPTY.map(cti).join("\n");
 
-for (const f of ["core.js", "ikony.js", "app.js", "sw.js"]) {
+for (const f of SKRIPTY.concat("sw.js")) {
   test(f + ": platna syntaxe", () => { new vm.Script(cti(f), { filename: f }); });
 
   test(f + ": bez syntaxe, kterou starsi Android/iOS neumi", () => {
@@ -23,9 +26,9 @@ for (const f of ["core.js", "ikony.js", "app.js", "sw.js"]) {
   });
 }
 
-test("kazdy text v app.js a index.html ma preklad ve vsech jazycich", () => {
+test("kazdy text ve skriptech a index.html ma preklad ve vsech jazycich", () => {
   const klice = new Set();
-  const app = cti("app.js");
+  const app = VES_KOD;
   for (const m of app.matchAll(/\bt\("([a-z0-9_]+)"[),]/g)) klice.add(m[1]);
   /* dynamicke klice: t("app_" + id), t("hd_" + karta) */
   for (const m of app.matchAll(/\{ id: "([a-z]+)"/g)) klice.add("app_" + m[1]);
@@ -39,7 +42,7 @@ test("kazdy text v app.js a index.html ma preklad ve vsech jazycich", () => {
 
 test("service worker cachuje vsechny soubory aplikace", () => {
   const sw = cti("sw.js");
-  for (const f of ["index.html", "app.css", "core.js", "ikony.js", "app.js", "manifest.webmanifest"])
+  for (const f of ["index.html", "app.css", "manifest.webmanifest"].concat(SKRIPTY))
     assert.ok(sw.includes(`"${f}"`), "sw.js necachuje " + f);
   for (const m of sw.matchAll(/"(icons\/[^"]+)"/g))
     assert.ok(fs.existsSync(path.join(PWA, m[1])), "chybi soubor " + m[1]);
@@ -50,4 +53,10 @@ test("manifest: ikony existuji, vcetne maskovatelne", () => {
   for (const i of m.icons) assert.ok(fs.existsSync(path.join(PWA, i.src)), "chybi " + i.src);
   assert.ok(m.icons.some((i) => i.purpose === "maskable"));
   assert.ok(fs.existsSync(path.join(PWA, "icons/apple-touch-icon.png")));
+});
+
+test("vsechny skripty existuji a kazda aplikace z registru ma svou funkci", () => {
+  for (const f of SKRIPTY) assert.ok(fs.existsSync(path.join(PWA, f)), "chybi " + f);
+  for (const m of cti("start.js").matchAll(/render: (app\w+)/g))
+    assert.match(VES_KOD, new RegExp("function " + m[1] + "\\("), "chybi " + m[1]);
 });
