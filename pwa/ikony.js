@@ -27,7 +27,18 @@ const IKONY = {
   budik: '<circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 1.5"/>',
   udalost: '<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   wifi: '<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 16a4.8 4.8 0 0 1 6.4 0"/><circle cx="12" cy="19.3" r=".9" fill="currentColor"/>',
-  nahoru: '<path d="m6 15 6-6 6 6"/>'
+  nahoru: '<path d="m6 15 6-6 6 6"/>',
+  /* nastaveni */
+  sipka: '<path d="m9 6 6 6-6 6"/>',
+  jazyk: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  zvonek: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',
+  stahnout: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  nahrat: '<path d="M12 15V4M7 9l5-5 5 5M5 20h14"/>',
+  slunce: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
+  napajeni: '<path d="M12 3v8"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/>',
+  restart: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+  kos: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  stit: '<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>'
 };
 
 function ikona(nazev, trida) {

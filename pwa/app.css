@@ -325,7 +325,6 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; }
 .center { text-align: center; }
 .grow { flex: 1; min-width: 0; }
 .big { font-size: 26px; font-weight: 300; }
-.about { font-size: 14px; padding: 0 6px; line-height: 1.7; }
 .chips { display: flex; flex-wrap: wrap; justify-content: center; margin: 6px -4px; }
 .chips > * { margin: 4px; }
 select { width: auto; max-width: 50%; }
@@ -444,7 +443,6 @@ select { width: auto; max-width: 50%; }
 @media (prefers-reduced-motion: reduce) {
   #boot-logo, #boot-nazev, #boot-pruh span { animation: none; }
 }
-.about-logo { display: block; width: 72px; height: 72px; margin: 6px auto 10px; }
 
 /* ---- LinsoftPhone OS na skutecnem telefonu (nativni rezim) ---- */
 .bubble.in {
@@ -600,3 +598,62 @@ body.light.v-app #navbar { background: rgba(255,255,255,.75); }
   #appgrid { gap: 2px; padding-top: 8px; }
   .lock-karta:nth-child(2) { display: none; }
 }
+
+/* ================= nastaveni: moderni vzhled ================= */
+.nast-karta {
+  display: flex; align-items: center; padding: 16px; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(63,180,247,.18), rgba(123,63,228,.18));
+  border: 1px solid rgba(127,127,127,.18);
+}
+.nast-karta img { width: 56px; height: 56px; margin-right: 14px; flex-shrink: 0; }
+.nast-karta strong { display: block; font-size: 19px; font-weight: 600; }
+.nast-karta span { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.nast-nadpis {
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px; margin: 22px 14px 8px;
+}
+.nast-skupina { background: var(--panel); border-radius: 20px; overflow: hidden; }
+
+.nast-radek {
+  display: flex; align-items: center; width: 100%; min-height: 56px; padding: 10px 14px;
+  position: relative; background: none; border: none; color: var(--text); font: inherit; text-align: left;
+}
+/* oddelovac mezi radky odsazeny za ikonu */
+.nast-radek + .nast-radek::before, .nast-pozn + .nast-radek::before, #st-pin-box + .nast-radek::before,
+#st-wifi-seznam + .nast-radek::before {
+  content: ""; position: absolute; top: 0; left: 60px; right: 0; height: 1px; background: rgba(127,127,127,.18);
+}
+.nast-akce { cursor: pointer; }
+.nast-akce:active { background: rgba(127,127,127,.12); }
+.nast-ik {
+  width: 32px; height: 32px; border-radius: 9px; margin-right: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+.nast-ik .ik { width: 19px; height: 19px; }
+.nast-text { flex: 1; min-width: 0; font-size: 16px; }
+.nast-text small { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.nast-sipka { width: 18px; height: 18px; color: var(--muted); opacity: .7; }
+.nast-cervena .nast-text { color: #ef4444; }
+.nast-radek select { width: auto; max-width: 48%; padding: 6px 10px; font-size: 15px; }
+.nast-radek input[type="range"] { width: 42%; }
+.nast-skupina .tapety { margin: 0; padding: 0 14px 4px 60px; }
+.nast-skupina .tapeta-vzor { height: 64px; margin: 0 6px 0 0; }
+.nast-pozn { font-size: 12px; color: var(--muted); padding: 6px 14px 12px 60px; }
+.nast-o { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; margin: 18px 10px 8px; }
+#st-pin-box:not(:empty) { padding: 4px 0 14px; }
+#st-wifi-seznam .list-item { background: none; border-radius: 0; margin: 0; padding: 10px 14px 10px 60px; }
+
+/* prepinac (switch) */
+.prepinac {
+  width: 50px; height: 30px; border-radius: 15px; border: none; padding: 0; flex-shrink: 0; cursor: pointer;
+  background: rgba(127,127,127,.35); position: relative; transition: background .2s;
+}
+.prepinac span {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s cubic-bezier(.3, .8, .3, 1);
+}
+.prepinac.on { background: #22c55e; }
+.prepinac.on span { transform: translateX(20px); }
+.nast-skupina .pin-pad button { background: rgba(127,127,127,.13); }

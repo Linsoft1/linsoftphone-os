@@ -1163,35 +1163,64 @@ function appTerminal(c) {
 function appNastaveni(c) {
   const svetly = document.body.classList.contains("light");
   const umiNotif = "Notification" in window;
-  const prepinac = (id, zap) =>
-    `<button class="btn sm${zap ? "" : " ghost"}" id="${id}" aria-pressed="${zap}">${esc(t(zap ? "zap" : "vyp"))}</button>`;
+  /* stavebni prvky: radek s barevnou ikonou, prepinac, skupina se zahlavim */
+  const ik = (nazev, barva) => `<span class="nast-ik" style="background:${barva}">${Ikony.ikona(nazev)}</span>`;
+  const prepinac = (id, zap, popis) =>
+    `<button class="prepinac${zap ? " on" : ""}" id="${id}" role="switch" aria-checked="${zap}" aria-label="${esc(popis)}"><span></span></button>`;
+  const radek = (ikona, barva, text, ovladani, extra) =>
+    `<div class="nast-radek">${ik(ikona, barva)}<span class="nast-text">${esc(text)}${extra || ""}</span>${ovladani || ""}</div>`;
+  /* cely radek jako tlacitko (akce) */
+  const akce = (id, ikona, barva, text, trida) =>
+    `<button class="nast-radek nast-akce${trida ? " " + trida : ""}" id="${id}">${ik(ikona, barva)}<span class="nast-text">${esc(text)}</span>${Ikony.ikona("sipka", "nast-sipka")}</button>`;
+  const skupina = (nazev, obsah) =>
+    `<h2 class="nast-nadpis">${esc(t(nazev))}</h2><div class="nast-skupina">${obsah}</div>`;
+  const tapeta = store.get("tapeta", "polar");
+
   c.innerHTML = `
-    <div class="list-item"><div class="grow">${esc(t("st_motiv"))}</div>${prepinac("st-theme", svetly)}</div>
-    <div class="list-item"><div class="grow">${esc(t("st_tapeta"))}</div></div>
-    <div class="tapety">${TAPETY.map((x) =>
-      `<button class="tapeta-vzor tapeta-${x}${store.get("tapeta", "polar") === x ? " on" : ""}" data-tapeta="${x}" aria-label="${esc(t("tap_" + x))}"></button>`).join("")}</div>
-    <p class="muted small" style="margin:-4px 4px 10px">${esc(t("tap_foto"))}: ${esc(t("app_galerie"))} → ${esc(t("gal_tapeta"))}</p>
-    <div class="list-item"><div class="grow">${esc(t("st_jazyk"))}</div>
-      <select id="st-jazyk" aria-label="${esc(t("st_jazyk"))}">${Object.keys(Core.JAZYKY).map((k) =>
-        `<option value="${k}"${k === stav.jazyk ? " selected" : ""}>${Core.JAZYKY[k]}</option>`).join("")}</select></div>
-    <div class="list-item"><div class="grow">${esc(t("st_pin"))}</div>${prepinac("st-pin", !!stav.pin)}</div>
-    <div id="st-pin-box"></div>
-    ${umiNotif ? `<div class="list-item"><div class="grow">${esc(t("st_notif"))}</div>${prepinac("st-notif", stav.notifSys)}</div>` : ""}
-    ${Nativ.aktivni ? `
-    <div class="list-item"><div class="grow">${esc(t("st_jas"))}</div>
-      <input type="range" id="st-jas" min="5" max="100" value="${stav.jas || 70}" aria-label="${esc(t("st_jas"))}"></div>
-    <button class="btn ghost full" id="st-wifi">${esc(t("st_wifi"))}</button>
-    <div id="st-wifi-seznam"></div>` : ""}
-    <button class="btn ghost full" id="st-zaloha">${esc(t("st_zaloha"))}</button>
-    <button class="btn ghost full" id="st-obnov">${esc(t("st_obnov"))}</button>
-    <input type="file" id="st-soubor" accept="application/json,.json" hidden>
-    <div class="list-item" style="margin-top:16px"><div class="grow">${esc(t("st_o"))}</div></div>
-    <img class="about-logo" src="icons/logo.svg" alt="LinsoftPhone OS">
-    <div class="muted about center">LinsoftPhone OS 2.3${Nativ.aktivni ? "<br>" + esc(t("nativ_info")) : " (PWA)<br>" + t("st_o_text")}</div>
-    ${Nativ.aktivni ? `
-    <button class="btn ghost full" id="st-restart">${esc(t("st_restart"))}</button>
-    <button class="btn ghost full danger" id="st-vypnout">${esc(t("st_vypnout"))}</button>` : ""}
-    <button class="btn ghost full danger" id="st-reset">${esc(t("st_reset"))}</button>`;
+    <div class="nast-karta">
+      <img src="icons/logo.svg" alt="">
+      <div>
+        <strong>LinsoftPhone OS</strong>
+        <span>${esc(t("st_verze", "2.3"))} · ${esc(Nativ.aktivni ? "postmarketOS" : t("st_pwa"))}</span>
+      </div>
+    </div>
+
+    ${skupina("sk_vzhled",
+      radek("galerie", "#ec4899", t("st_tapeta"), "",
+        `<small>${esc(t("tap_" + (TAPETY.indexOf(tapeta) >= 0 ? tapeta : "foto")))}</small>`) +
+      `<div class="tapety">${TAPETY.map((x) =>
+        `<button class="tapeta-vzor tapeta-${x}${tapeta === x ? " on" : ""}" data-tapeta="${x}" aria-label="${esc(t("tap_" + x))}"></button>`).join("")}</div>
+      <p class="nast-pozn">${esc(t("tap_foto"))}: ${esc(t("app_galerie"))} → ${esc(t("gal_tapeta"))}</p>` +
+      radek("motiv", "#6366f1", t("st_motiv"), prepinac("st-theme", svetly, t("st_motiv"))))}
+
+    ${Nativ.aktivni ? skupina("sk_pripojeni",
+      akce("st-wifi", "wifi", "#3b82f6", t("st_wifi")) +
+      `<div id="st-wifi-seznam"></div>` +
+      radek("slunce", "#f59e0b", t("st_jas"),
+        `<input type="range" id="st-jas" min="5" max="100" value="${stav.jas || 70}" aria-label="${esc(t("st_jas"))}">`)) : ""}
+
+    ${skupina("sk_zabezpeceni",
+      radek("zamek", "#22c55e", t("st_pin"), prepinac("st-pin", !!stav.pin, t("st_pin"))) +
+      `<div id="st-pin-box"></div>` +
+      (umiNotif ? radek("zvonek", "#ef4444", t("st_notif"), prepinac("st-notif", stav.notifSys, t("st_notif"))) : ""))}
+
+    ${skupina("sk_system",
+      radek("jazyk", "#0ea5e9", t("st_jazyk"),
+        `<select id="st-jazyk" aria-label="${esc(t("st_jazyk"))}">${Object.keys(Core.JAZYKY).map((k) =>
+          `<option value="${k}"${k === stav.jazyk ? " selected" : ""}>${Core.JAZYKY[k]}</option>`).join("")}</select>`) +
+      akce("st-zaloha", "stahnout", "#14b8a6", t("st_zaloha")) +
+      akce("st-obnov", "nahrat", "#8b5cf6", t("st_obnov")) +
+      `<input type="file" id="st-soubor" accept="application/json,.json" hidden>`)}
+
+    ${Nativ.aktivni ? skupina("sk_telefon",
+      akce("st-restart", "restart", "#64748b", t("st_restart")) +
+      akce("st-vypnout", "napajeni", "#ef4444", t("st_vypnout"), "nast-cervena")) : ""}
+
+    <div class="nast-skupina" style="margin-top:22px">
+      ${akce("st-reset", "kos", "#ef4444", t("st_reset"), "nast-cervena")}
+    </div>
+
+    <p class="nast-o">${Nativ.aktivni ? esc(t("nativ_info")) : t("st_o_text")}</p>`;
 
   if (Nativ.aktivni) {
     $("#st-jas").onchange = () => Nativ.api("jas", { hodnota: +$("#st-jas").value }).catch(nativChyba);
