@@ -51,6 +51,11 @@ const IKONY = {
   sukromne: '<path d="M3 11h18M6 11l1.5-5.5h9L18 11"/><circle cx="7.5" cy="16" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path d="M10 16h4"/>',
   zdilet: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4M8.2 13.2l7.6 4"/>',
   hotovo: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  /* fotoaparat */
+  prepnout: '<path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M20 4v4h-4M4 20v-4h4"/>',
+  blesk: '<path d="M13 2 5 13h6l-1 9 8-11h-6z"/>',
+  bleskVyp: '<path d="M13 2 9.5 7M7 10.5 5 13h6l-1 9 4.5-6.2M15.5 12.5 19 11h-6l.5-3.5M3 3l18 18"/>',
+  casovac: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M10 2h4M12 2v3"/>',
   /* telefon a zpravy */
   odchozi: '<path d="M7 17 17 7M9 7h8v8"/>',
   prichozi: '<path d="M17 7 7 17M15 17H7V9"/>',

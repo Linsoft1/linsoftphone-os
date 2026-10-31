@@ -14,7 +14,7 @@ const RYCHLY_PRISTUP = [
   { t: "LinsoftPhone OS", u: "https://github.com/Linsoft1/linsoftphone-os" }
 ];
 
-function appPrehliadac(c) {
+function appPrehliadac(c, adresa) {
   const novaKarta = (sukromna) => ({ url: "", zpet: [], vpred: [], sukromna: !!sukromna });
   const P = store.get("prehliadac", { karty: [novaKarta()], aktivni: 0 });
   if (!P.karty.length) P.karty = [novaKarta()];
@@ -368,4 +368,6 @@ function appPrehliadac(c) {
   });
 
   zobraz();
+  /* otevreni s adresou (napr. z hledani v telefonu) */
+  if (adresa) jdi(adresa);
 }

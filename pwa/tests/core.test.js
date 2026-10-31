@@ -172,3 +172,20 @@ test("galerie: nadpisy dni", () => {
   /* prelom mesice */
   assert.strictEqual(Core.nadpisDne("cs", new Date(2026, 9, 31).getTime(), new Date(2026, 10, 1, 9).getTime()), "Včera");
 });
+
+test("poznamky: nazev a nahled", () => {
+  assert.deepStrictEqual(Core.rozdelPoznamku("\n  Nákup \nmlieko\n\nchlieb"), { nazev: "Nákup", nahled: "mlieko chlieb" });
+  assert.deepStrictEqual(Core.rozdelPoznamku("   "), { nazev: "", nahled: "" });
+  assert.strictEqual(Core.rozdelPoznamku("x".repeat(200)).nazev.length, 80);
+});
+
+test("budik ve vybrane dny a udalosti s casem", () => {
+  const sobota = new Date(2026, 9, 31, 7, 0);   /* getDay() = 6 */
+  const b = { h: 7, m: 0, zap: true, posledni: null, dny: [1, 2, 3, 4, 5] };
+  assert.ok(!Core.budikMaZvonit(b, sobota), "pracovni dny - v sobotu ne");
+  assert.ok(Core.budikMaZvonit(Object.assign({}, b, { dny: [6, 0] }), sobota));
+  assert.ok(Core.budikMaZvonit(Object.assign({}, b, { dny: [] }), sobota), "prazdne = kazdy den");
+  assert.deepStrictEqual(Core.udalost("Stará udalosť"), { text: "Stará udalosť", cas: "" });
+  assert.strictEqual(Core.textUdalosti({ text: "Tréning", cas: "18:30" }), "18:30 Tréning");
+  assert.deepStrictEqual(Core.seradUdalosti([{ text: "B", cas: "15:00" }, "A", { text: "C", cas: "09:00" }]).map((u) => u.text), ["A", "C", "B"]);
+});

@@ -11,7 +11,7 @@ const APPS = [
   { id: "hodiny", barvy: ["#fda4af", "#e11d48"], render: appHodiny },
   { id: "kalendar", barvy: ["#5eead4", "#0d9488"], render: appKalendar },
   { id: "poznamky", barvy: ["#fde047", "#ca8a04"], render: appPoznamky },
-  { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak },
+  { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak, plna: true },
   { id: "galerie", barvy: ["#f9a8d4", "#c026d3"], render: appGalerie },
   { id: "prehliadac", barvy: ["#38bdf8", "#6d28d9"], render: appPrehliadac, dock: true, plna: true },
   { id: "terminal", barvy: ["#475569", "#0f172a"], render: appTerminal },
@@ -32,15 +32,24 @@ function ikonka(app, bezPopisku) {
   b.onclick = () => otevri(app.id);
   return b;
 }
+/* poradi ikon na plose a obsah doku (Nastaveni -> Plocha); nove aplikace se pridaji na konec */
+function rozlozeniPlochy() {
+  const p = store.get("plocha", {}), ids = APPS.map((a) => a.id);
+  const poradi = (p.poradi || []).filter((id) => ids.indexOf(id) >= 0);
+  ids.forEach((id) => { if (poradi.indexOf(id) < 0) poradi.push(id); });
+  const dok = p.dok ? p.dok.filter((id) => ids.indexOf(id) >= 0) : APPS.filter((a) => a.dock).map((a) => a.id);
+  return { poradi, dok };
+}
 function vykresliIkony() {
+  const r = rozlozeniPlochy();
   $("#appgrid").innerHTML = "";
   $("#dock").innerHTML = "";
-  APPS.forEach((a, i) => {
-    const b = ikonka(a);
+  r.poradi.forEach((id, i) => {
+    const b = ikonka(najdiApp(id));
     b.style.setProperty("--i", i);
     $("#appgrid").appendChild(b);
   });
-  APPS.filter((a) => a.dock).forEach((a) => $("#dock").appendChild(ikonka(a, true)));
+  r.dok.forEach((id) => $("#dock").appendChild(ikonka(najdiApp(id), true)));
 }
 
 /* ---------------- start ---------------- */

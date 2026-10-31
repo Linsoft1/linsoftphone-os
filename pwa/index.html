@@ -64,6 +64,7 @@
       <div id="w-date"></div>
       <div id="w-info"></div>
     </div>
+    <button id="hledat-plocha" data-ikona="hledat"><span data-i18n="hl_hledat"></span></button>
     <div id="appgrid"></div>
     <div id="dock"></div>
   </div>
@@ -84,6 +85,14 @@
     <button class="btn ghost" id="recents-clear" data-i18n="zavri_vse"></button>
   </div>
 
+  <!-- hledani v telefonu (aplikace, kontakty, zpravy, poznamky, udalosti, web) -->
+  <div id="hledani" class="screen">
+    <label class="hl-pole" data-ikona="hledat">
+      <input id="hl-q" type="search" autocomplete="off" data-i18n-label="hl_hledat">
+    </label>
+    <div id="hl-vysledky"></div>
+  </div>
+
   <!-- panel notifikaci -->
   <div id="notifpanel" aria-live="polite">
     <div id="notif-head">
@@ -91,6 +100,10 @@
       <button id="notif-clear" data-i18n="notif_vymaz"></button>
     </div>
     <div id="notif-list"></div>
+    <!-- jas: jen na telefonu s LinsoftPhone OS (prohlizec jas displeje ovladat neumi) -->
+    <label id="panel-jas" data-ikona="slunce" hidden>
+      <input type="range" id="panel-jas-in" min="5" max="100" value="70" data-i18n-label="st_jas">
+    </label>
     <div id="quick-tiles">
       <button class="tile" data-tile="torch" data-ikona="svitilna"><span data-i18n="tile_torch"></span></button>
       <button class="tile" data-tile="motiv" data-ikona="motiv"><span data-i18n="tile_motiv"></span></button>

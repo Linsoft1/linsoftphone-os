@@ -91,7 +91,17 @@ const TEXTY = {
     tel_odchozi: "Odchozí", tel_prichozi: "Příchozí", tel_zmeskany: "Zmeškaný hovor",
     zpr_nova: "Nová zpráva", zpr_zadne: "Zatím žádné zprávy", zpr_ty: "Ty",
     gal_dnes: "Dnes", gal_vcera: "Včera", gal_fotky: "Fotky · {n}", gal_zdilet: "Sdílet",
-    gal_otevrit_fotak: "Otevřít fotoaparát", gal_smazat_q: "Smazat tuto fotku?", gal_smazat_vse_q: "Smazat všechny fotky?"
+    gal_otevrit_fotak: "Otevřít fotoaparát", gal_smazat_q: "Smazat tuto fotku?", gal_smazat_vse_q: "Smazat všechny fotky?",
+    cam_prepnout: "Přepnout fotoaparát", cam_blesk: "Blesk", cam_casovac: "Samospoušť", cam_posledni: "Poslední fotka",
+    pz_nova: "Nová poznámka", pz_zadne: "Zatím žádné poznámky", pz_smazat_q: "Smazat poznámku?",
+    pz_bez_nazvu: "Bez názvu", pz_barva: "Barva",
+    hd_kolo: "Kolo", hd_pauza: "Pauza", hd_pokracovat: "Pokračovat", hd_svet: "Světový čas",
+    budik_novy: "Nový budík", budik_kazdy: "Každý den", kal_cas: "Čas", kal_cely_den: "Celý den",
+    kal_dnes: "Dnes", kal_nova: "Nová událost", ter_prikazy: "Příkazy",
+    hl_hledat: "Hledat v telefonu", hl_web: "Hledat na webu „{n}“", st_plocha: "Plocha",
+    st_plocha_info: "Pořadí aplikací na ploše a které jsou v doku (hvězdička, nejvýš 4).",
+    st_auto_motiv: "Automatický motiv", st_auto_motiv_info: "Světlý přes den (7:00–19:00)",
+    pl_dok: "V doku", pl_max: "Dok má nejvýš 4 aplikace.", pl_nahoru: "Posunout nahoru", pl_dolu: "Posunout dolů"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -180,7 +190,17 @@ const TEXTY = {
     tel_odchozi: "Odchádzajúci", tel_prichozi: "Prichádzajúci", tel_zmeskany: "Zmeškaný hovor",
     zpr_nova: "Nová správa", zpr_zadne: "Zatiaľ žiadne správy", zpr_ty: "Ty",
     gal_dnes: "Dnes", gal_vcera: "Včera", gal_fotky: "Fotky · {n}", gal_zdilet: "Zdieľať",
-    gal_otevrit_fotak: "Otvoriť fotoaparát", gal_smazat_q: "Zmazať túto fotku?", gal_smazat_vse_q: "Zmazať všetky fotky?"
+    gal_otevrit_fotak: "Otvoriť fotoaparát", gal_smazat_q: "Zmazať túto fotku?", gal_smazat_vse_q: "Zmazať všetky fotky?",
+    cam_prepnout: "Prepnúť fotoaparát", cam_blesk: "Blesk", cam_casovac: "Samospúšť", cam_posledni: "Posledná fotka",
+    pz_nova: "Nová poznámka", pz_zadne: "Zatiaľ žiadne poznámky", pz_smazat_q: "Zmazať poznámku?",
+    pz_bez_nazvu: "Bez názvu", pz_barva: "Farba",
+    hd_kolo: "Kolo", hd_pauza: "Pauza", hd_pokracovat: "Pokračovať", hd_svet: "Svetový čas",
+    budik_novy: "Nový budík", budik_kazdy: "Každý deň", kal_cas: "Čas", kal_cely_den: "Celý deň",
+    kal_dnes: "Dnes", kal_nova: "Nová udalosť", ter_prikazy: "Príkazy",
+    hl_hledat: "Hľadať v telefóne", hl_web: "Hľadať na webe „{n}“", st_plocha: "Plocha",
+    st_plocha_info: "Poradie aplikácií na ploche a ktoré sú v doku (hviezdička, najviac 4).",
+    st_auto_motiv: "Automatický motív", st_auto_motiv_info: "Svetlý cez deň (7:00–19:00)",
+    pl_dok: "V doku", pl_max: "Dok má najviac 4 aplikácie.", pl_nahoru: "Posunúť nahor", pl_dolu: "Posunúť nadol"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -268,7 +288,17 @@ const TEXTY = {
     tel_odchozi: "Outgoing", tel_prichozi: "Incoming", tel_zmeskany: "Missed call",
     zpr_nova: "New message", zpr_zadne: "No messages yet", zpr_ty: "You",
     gal_dnes: "Today", gal_vcera: "Yesterday", gal_fotky: "Photos · {n}", gal_zdilet: "Share",
-    gal_otevrit_fotak: "Open camera", gal_smazat_q: "Delete this photo?", gal_smazat_vse_q: "Delete all photos?"
+    gal_otevrit_fotak: "Open camera", gal_smazat_q: "Delete this photo?", gal_smazat_vse_q: "Delete all photos?",
+    cam_prepnout: "Switch camera", cam_blesk: "Flash", cam_casovac: "Self-timer", cam_posledni: "Last photo",
+    pz_nova: "New note", pz_zadne: "No notes yet", pz_smazat_q: "Delete this note?",
+    pz_bez_nazvu: "Untitled", pz_barva: "Color",
+    hd_kolo: "Lap", hd_pauza: "Pause", hd_pokracovat: "Resume", hd_svet: "World clock",
+    budik_novy: "New alarm", budik_kazdy: "Every day", kal_cas: "Time", kal_cely_den: "All day",
+    kal_dnes: "Today", kal_nova: "New event", ter_prikazy: "Commands",
+    hl_hledat: "Search phone", hl_web: "Search the web for “{n}”", st_plocha: "Home screen",
+    st_plocha_info: "Order of apps on the home screen and which are in the dock (star, up to 4).",
+    st_auto_motiv: "Automatic theme", st_auto_motiv_info: "Light during the day (7:00–19:00)",
+    pl_dok: "In dock", pl_max: "The dock holds up to 4 apps.", pl_nahoru: "Move up", pl_dolu: "Move down"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -309,7 +339,22 @@ function mesicMrizka(rok, mesic) {
 
 /* ma budik zazvonit? budik = { h, m, zap, posledni: "YYYY-MM-DD" } */
 function budikMaZvonit(b, d) {
+  /* b.dny = dny v tydnu (0 = nedele, jako Date.getDay); prazdne = kazdy den */
+  if (b.dny && b.dny.length && b.dny.indexOf(d.getDay()) < 0) return false;
   return !!b.zap && b.h === d.getHours() && b.m === d.getMinutes() && b.posledni !== denKlic(d);
+}
+
+/* udalost v kalendari: starsi verze ukladala jen text, nova { text, cas: "14:00" | "" } */
+function udalost(u) {
+  return typeof u === "string" ? { text: u, cas: "" } : { text: String(u.text || ""), cas: u.cas || "" };
+}
+function textUdalosti(u) {
+  const x = udalost(u);
+  return (x.cas ? x.cas + " " : "") + x.text;
+}
+/* udalosti dne serazene: cely den nahore, pak podle casu */
+function seradUdalosti(seznam) {
+  return (seznam || []).map(udalost).sort((a, b) => (a.cas || "") < (b.cas || "") ? -1 : (a.cas || "") > (b.cas || "") ? 1 : 0);
 }
 
 /* ---------------- kalkulacka ---------------- */
@@ -485,6 +530,14 @@ function nadpisDne(jazyk, cas, ted) {
   return datumText(jazyk, d);
 }
 
+/* poznamka: prvni neprazdny radek je nazev, zbytek nahled */
+function rozdelPoznamku(text) {
+  const radky = String(text || "").split("\n").map((x) => x.trim());
+  const i = radky.findIndex((x) => x);
+  if (i < 0) return { nazev: "", nahled: "" };
+  return { nazev: radky[i].slice(0, 80), nahled: radky.slice(i + 1).filter(Boolean).join(" ").slice(0, 140) };
+}
+
 /* zpravy -> konverzace podle cisla, nejnovejsi nahore: { komu, posledni, pocet } */
 function konverzace(zpravy) {
   const mapa = {};
@@ -501,7 +554,8 @@ const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
   prohlizec, platforma, velikost, trvani, HLEDACE, HLEDANI, adresaZVstupu, zobrazAdresu,
-  upravAdresu, navrhy, T9, kratkyCas, konverzace, nadpisDne
+  upravAdresu, navrhy, T9, kratkyCas, konverzace, nadpisDne, rozdelPoznamku,
+  udalost, textUdalosti, seradUdalosti
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

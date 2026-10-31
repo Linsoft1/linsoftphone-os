@@ -73,7 +73,7 @@ function tick() {
   $("#w-time").textContent = c;
   $("#w-date").textContent = dt;
   $("#sb-alarm").hidden = !stav.minutka && !stav.budiky.some((b) => b.zap);
-  if (d.getSeconds() === 0 || !tick.hotovo) { kresliDnes(d); tick.hotovo = true; }
+  if (d.getSeconds() === 0 || !tick.hotovo) { kresliDnes(d); autoMotiv(d); tick.hotovo = true; }
   hlidejBudiky(d);
 }
 
@@ -83,15 +83,20 @@ function dalsiBudik(d) {
   let nej = null;
   stav.budiky.forEach((b) => {
     if (!b.zap) return;
-    const za = (b.h * 60 + b.m - ted + 1440) % 1440;
-    if (nej === null || za < nej.za) nej = { za, text: Core.dva(b.h) + ":" + Core.dva(b.m) };
+    /* nejblizsi den v pristim tydnu, kdy budik zvoni (b.dny prazdne = kazdy den) */
+    for (let k = 0; k <= 7; k++) {
+      const za = k * 1440 + b.h * 60 + b.m - ted;
+      if (za <= 0 || (b.dny && b.dny.length && b.dny.indexOf((d.getDay() + k) % 7) < 0)) continue;
+      if (nej === null || za < nej.za) nej = { za, text: Core.dva(b.h) + ":" + Core.dva(b.m) };
+      break;
+    }
   });
   return nej;
 }
 /* widget "Dnes" na plose a radek na zamykaci obrazovce */
 function kresliDnes(d) {
   const b = dalsiBudik(d);
-  const udalosti = store.get("udalosti", {})[Core.denKlic(d)] || [];
+  const udalosti = Core.seradUdalosti(store.get("udalosti", {})[Core.denKlic(d)]).map(Core.textUdalosti);
   const radek = (ik, text) => `<div class="w-radek">${Ikony.ikona(ik)}<span>${esc(text)}</span></div>`;
   $("#w-info").innerHTML =
     (b ? radek("budik", t("w_budik") + " " + b.text) : "") +
@@ -174,7 +179,8 @@ function hlidejBudiky(d) {
     store.set("budiky", stav.budiky);
     zazvon(t("budik_zvoni", Core.dva(b.h) + ":" + Core.dva(b.m)));
   });
-  if (stav.minutka && Date.now() >= stav.minutka.konec) {
+  /* minutka bezi ({ konec }) nebo je pozastavena ({ zbyva }) */
+  if (stav.minutka && stav.minutka.konec && Date.now() >= stav.minutka.konec) {
     stav.minutka = null;
     store.set("minutka", null);
     zazvon(t("minutka_konec"));
@@ -386,7 +392,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && sta
 
 /* ---------------- navigace ---------------- */
 function ukazObrazovku(id) {
-  ["#homescreen", "#appscreen", "#recents"].forEach((s) =>
+  ["#homescreen", "#appscreen", "#recents", "#hledani"].forEach((s) =>
     $(s).classList.toggle("visible", s === id));
   barvyListy();
 }
@@ -421,7 +427,7 @@ function zavriApp() {
   if (history.state && history.state.app) history.back(); /* popstate zavola domu() */
   else domu();
 }
-const nedavneOtevrene = () => $("#recents").classList.contains("visible");
+const nedavneOtevrene = () => $("#recents").classList.contains("visible") || $("#hledani").classList.contains("visible");
 window.addEventListener("popstate", () => {
   if (stav.bezici || panelOtevreny() || nedavneOtevrene()) domu();
 });
@@ -469,6 +475,85 @@ function ukazNedavne() {
   zapisHistorii("nedavne");
 }
 $("#recents-clear").onclick = () => { stav.nedavne = []; store.set("nedavne", []); zavriApp(); };
+
+/* ---------------- hledani v telefonu ----------------
+ * aplikace, kontakty, zpravy, poznamky, udalosti v kalendari a hledani na webu */
+function otevriHledani() {
+  stav.bezici = null;
+  panel(false);
+  $("#hl-q").value = "";
+  kresliHledani();
+  ukazObrazovku("#hledani");
+  zapisHistorii("hledani");
+  setTimeout(() => $("#hl-q").focus(), 50);
+}
+function kresliHledani() {
+  const q = $("#hl-q").value.trim().toLowerCase();
+  const box = $("#hl-vysledky");
+  const obsahuje = (x) => String(x || "").toLowerCase().indexOf(q) >= 0;
+  const skupina = (nadpis, radky) => radky.length
+    ? `<h3 class="nast-nadpis">${esc(nadpis)}</h3><div class="nast-skupina">${radky.join("")}</div>` : "";
+  const radek = (akce, ikonaHtml, text, popis) =>
+    `<button class="nast-radek nast-akce" data-akce="${esc(akce)}">${ikonaHtml}<span class="nast-text">${esc(text)}${popis ? `<small>${esc(popis)}</small>` : ""}</span></button>`;
+
+  /* bez dotazu: vsechny aplikace jako mrizka */
+  const appky = APPS.filter((a) => !q || obsahuje(t("app_" + a.id)));
+  let html = appky.length ? `<div class="hl-appky">${appky.map((a) =>
+    `<button class="appicon" data-akce="app:${a.id}">${glyph(a)}<span>${esc(t("app_" + a.id))}</span></button>`).join("")}</div>` : "";
+  if (q) {
+    const kontakty = nactiKontakty().map((k, i) => ({ k, i })).filter((o) => obsahuje(o.k.j) || obsahuje(o.k.t)).slice(0, 5);
+    const zpravy = store.get("zpravy", []).filter((m) => obsahuje(m.txt)).slice(-5).reverse();
+    const poznamky = nactiPoznamky().filter((p) => obsahuje(p.text)).slice(0, 5);
+    const udalosti = [];
+    const ud = store.get("udalosti", {});
+    Object.keys(ud).sort().forEach((den) => Core.seradUdalosti(ud[den]).forEach((u) => { if (obsahuje(u.text)) udalosti.push({ den, u }); }));
+    html += skupina(t("app_kontakty"), kontakty.map((o) => radek("kontakt:" + o.i, avatar(o.k.j), o.k.j, o.k.t)));
+    html += skupina(t("app_zpravy"), zpravy.map((m) => radek("zprava:" + m.komu, avatar(jmenoKCislu(m.komu)), jmenoKCislu(m.komu), m.txt)));
+    html += skupina(t("app_poznamky"), poznamky.map((p) => {
+      const r = Core.rozdelPoznamku(p.text);
+      return radek("poznamka:" + p.id, `<span class="nast-ik" style="background:#ca8a04">${Ikony.ikona("poznamky")}</span>`, r.nazev || t("pz_bez_nazvu"), r.nahled);
+    }));
+    html += skupina(t("app_kalendar"), udalosti.slice(0, 5).map((o) => {
+      const p = o.den.split("-").map(Number);
+      return radek("udalost:" + o.den, `<span class="nast-ik" style="background:#0d9488">${Ikony.ikona("kalendar")}</span>`,
+        Core.textUdalosti(o.u), Core.datumText(stav.jazyk, new Date(p[0], p[1] - 1, p[2])));
+    }));
+    html += `<div class="nast-skupina" style="margin-top:18px">${radek("web:" + q,
+      `<span class="nast-ik" style="background:#6d28d9">${Ikony.ikona("prehliadac")}</span>`, t("hl_web", $("#hl-q").value.trim()), "Linsoft Browser")}</div>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll("[data-akce]").forEach((b) => b.onclick = () => {
+    const a = b.dataset.akce, i = a.indexOf(":"), druh = a.slice(0, i), hodnota = a.slice(i + 1);
+    if (druh === "app") otevri(hodnota);
+    else if (druh === "kontakt") otevri("kontakty", { detail: +hodnota });
+    else if (druh === "zprava") otevri("zpravy", hodnota);
+    else if (druh === "poznamka") otevri("poznamky", +hodnota);
+    else if (druh === "udalost") {
+      const p = hodnota.split("-").map(Number), ted = new Date();
+      stav.kalVyber = hodnota;
+      otevri("kalendar", (p[0] - ted.getFullYear()) * 12 + p[1] - 1 - ted.getMonth());
+    }
+    else if (druh === "web") otevri("prehliadac", Core.adresaZVstupu(hodnota, store.get("prehliadacHledac", "google")));
+  });
+}
+$("#hledat-plocha").onclick = otevriHledani;
+$("#hl-q").oninput = kresliHledani;
+$("#hl-q").onkeydown = (e) => {
+  /* Enter: prvni vysledek */
+  if (e.key !== "Enter") return;
+  const prvni = $("#hl-vysledky [data-akce]");
+  if (prvni) prvni.click();
+};
+
+/* ---------------- automaticky motiv (svetly 7:00-19:00) ---------------- */
+function autoMotiv(d) {
+  if (!store.get("autoMotiv", false)) return;
+  const den = d.getHours() >= 7 && d.getHours() < 19;
+  if (den !== document.body.classList.contains("light")) nastavMotiv(den);
+}
+
+/* ---------------- jas v panelu notifikaci (jen LinsoftPhone OS na telefonu) ---------------- */
+$("#panel-jas-in").onchange = () => Nativ.api("jas", { hodnota: +$("#panel-jas-in").value }).catch(nativChyba);
 
 $("#nav-home").onclick = zavriApp;
 $("#nav-back").onclick = $("#app-back").onclick = () => {
@@ -669,6 +754,7 @@ function obnovStav() {
     sb.sila = s.modem ? Math.min(4, Math.ceil(s.modem.signal / 25)) : null;
     kresliStavovyRadek();
     stav.jas = s.jas;
+    if (s.jas) $("#panel-jas-in").value = s.jas;
   }).catch(() => {});
 }
 
@@ -678,6 +764,7 @@ function spustNativ() {
   Nativ.api("stav").then(() => {
     Nativ.aktivni = true;
     document.body.classList.add("nativ");
+    $("#panel-jas").hidden = false;
     obnovStav();
     hlidejHovory();
     hlidejSms();

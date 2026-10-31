@@ -33,7 +33,10 @@ function appNastaveni(c) {
       `<div class="tapety">${TAPETY.map((x) =>
         `<button class="tapeta-vzor tapeta-${x}${tapeta === x ? " on" : ""}" data-tapeta="${x}" aria-label="${esc(t("tap_" + x))}"></button>`).join("")}</div>
       <p class="nast-pozn">${esc(t("tap_foto"))}: ${esc(t("app_galerie"))} → ${esc(t("gal_tapeta"))}</p>` +
-      radek("motiv", "#6366f1", t("st_motiv"), prepinac("st-theme", svetly, t("st_motiv"))))}
+      radek("motiv", "#6366f1", t("st_motiv"), prepinac("st-theme", svetly, t("st_motiv"))) +
+      radek("budik", "#0ea5e9", t("st_auto_motiv"), prepinac("st-auto", store.get("autoMotiv", false), t("st_auto_motiv")),
+        `<small>${esc(t("st_auto_motiv_info"))}</small>`) +
+      akce("st-plocha", "dum", "#f97316", t("st_plocha")))}
 
     ${Nativ.aktivni ? skupina("sk_pripojeni",
       akce("st-wifi", "wifi", "#3b82f6", t("st_wifi")) +
@@ -76,7 +79,15 @@ function appNastaveni(c) {
     };
   }
 
-  $("#st-theme").onclick = () => { nastavMotiv(!svetly); appNastaveni(c); };
+  /* rucni prepnuti motivu vypne automaticky motiv */
+  $("#st-theme").onclick = () => { store.set("autoMotiv", false); nastavMotiv(!svetly); appNastaveni(c); };
+  $("#st-auto").onclick = () => {
+    const zap = !store.get("autoMotiv", false);
+    store.set("autoMotiv", zap);
+    autoMotiv(new Date());
+    appNastaveni(c);
+  };
+  $("#st-plocha").onclick = () => upravPlochu(c);
   $("#st-info").onclick = $("#st-o").onclick = () => infoSystem(c);
   c.querySelectorAll("[data-tapeta]").forEach((b) => b.onclick = () => { nastavTapetu(b.dataset.tapeta); appNastaveni(c); });
   $("#st-jazyk").onchange = () => {
@@ -149,6 +160,39 @@ function appNastaveni(c) {
     Object.keys(localStorage).filter((k) => k.indexOf("lp_") === 0).forEach((k) => localStorage.removeItem(k));
     Fotky.smazVse().then(() => location.reload(), () => location.reload());
   };
+}
+
+/* Nastaveni -> Plocha: poradi ikon (sipky) a ktere aplikace jsou v doku (max. 4) */
+function upravPlochu(c) {
+  vnitrniZpet = () => { $("#app-title").textContent = t("app_nastaveni"); appNastaveni(c); };
+  $("#app-title").textContent = t("st_plocha");
+  const r = rozlozeniPlochy();
+  const uloz = () => { store.set("plocha", r); vykresliIkony(); upravPlochu(c); };
+  c.innerHTML = `
+    <p class="nast-pozn" style="padding:0 4px 12px">${esc(t("st_plocha_info"))}</p>
+    <div class="nast-skupina">${r.poradi.map((id, i) => {
+      const a = najdiApp(id), vDoku = r.dok.indexOf(id) >= 0;
+      return `<div class="nast-radek pl-radek">${glyph(a)}
+        <span class="nast-text">${esc(t("app_" + id))}${vDoku ? `<small>${esc(t("pl_dok"))}</small>` : ""}</span>
+        <button class="pr-tl pl-dok${vDoku ? " on" : ""}" data-dok="${id}" aria-pressed="${vDoku}" aria-label="${esc(t("pl_dok"))}">${Ikony.ikona("hvezda")}</button>
+        <button class="pr-tl" data-posun="${i}" data-o="-1" aria-label="${esc(t("pl_nahoru"))}"${i ? "" : " disabled"}>${Ikony.ikona("nahoru")}</button>
+        <button class="pr-tl pl-dolu" data-posun="${i}" data-o="1" aria-label="${esc(t("pl_dolu"))}"${i < r.poradi.length - 1 ? "" : " disabled"}>${Ikony.ikona("nahoru")}</button>
+      </div>`;
+    }).join("")}</div>`;
+  c.querySelectorAll("[data-posun]").forEach((b) => b.onclick = () => {
+    const i = +b.dataset.posun, j = i + +b.dataset.o;
+    const x = r.poradi[i];
+    r.poradi[i] = r.poradi[j];
+    r.poradi[j] = x;
+    uloz();
+  });
+  c.querySelectorAll("[data-dok]").forEach((b) => b.onclick = () => {
+    const i = r.dok.indexOf(b.dataset.dok);
+    if (i >= 0) r.dok.splice(i, 1);
+    else if (r.dok.length >= 4) return pridejNotif(t("st_plocha"), t("pl_max"));
+    else r.dok.push(b.dataset.dok);
+    uloz();
+  });
 }
 
 /* Nastaveni -> O systemu: podrobnosti o LinsoftPhone OS a zarizeni */
