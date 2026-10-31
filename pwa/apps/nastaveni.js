@@ -23,6 +23,7 @@ function appNastaveni(c) {
       <div>
         <strong>LinsoftPhone OS</strong>
         <span>${esc(t("st_verze", VERZE_OS))} · ${esc(Nativ.aktivni ? "postmarketOS" : t("st_pwa"))}</span>
+        <span>© ${new Date().getFullYear()} ${esc(AUTOR_OS)}</span>
       </div>
       ${Ikony.ikona("sipka", "nast-sipka")}
     </button>
@@ -218,6 +219,7 @@ function infoSystem(c) {
     ${skupina("info_softver",
       radek(t("info_system"), "LinsoftPhone OS " + VERZE_OS) +
       radek(t("info_zostaveni"), ZOSTAVENI) +
+      radek(t("info_autor"), AUTOR_OS) +
       radek(t("info_rozhrani"), Nativ.aktivni ? t("info_nativ") : t("st_pwa")) +
       (Nativ.aktivni ? radek(t("info_distribuce"), "…", "in-distribuce") + radek(t("info_jadro"), "…", "in-jadro") : "") +
       radek(t("info_prohlizec"), pr.nazev + (pr.verze ? " " + pr.verze : "")))}

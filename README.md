@@ -2,6 +2,8 @@
 
 # LinsoftPhone OS
 
+**Autor: Linsoft** · © 2026 Linsoft
+
 Vlastní logo systému: písmeno **L** tvoří dvě osy a z jejich rohu se šíří
 signál ([pwa/icons/logo.svg](pwa/icons/logo.svg)). Stejné logo vykresluje
 i kernel přímo do framebufferu — bez obrázku, výpočtem ([gfx.c](gfx.c)).

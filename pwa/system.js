@@ -34,6 +34,7 @@ const JE_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
 /* ---------------- stav ---------------- */
 const VERZE_OS = "2.4";
 const ZOSTAVENI = "2026.10.31";
+const AUTOR_OS = "Linsoft";
 
 const stav = {
   jazyk: store.get("jazyk", Core.vychoziJazyk(navigator.language)),

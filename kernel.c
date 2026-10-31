@@ -12,6 +12,7 @@
 static u32 uptime_s(void);
 
 #define VERZE "1.3"
+#define AUTOR "Linsoft"
 static void obnov_hodiny(void);
 
 /* ---------------- UART PL011 (QEMU virt: 0x09000000) ---------------- */
@@ -325,6 +326,7 @@ static void app_info(void)
     __asm__ volatile("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
     puts_raw("--- LinsoftPhone OS ---\n");
     puts_raw("Verze:    " VERZE " (kernel)\n");
+    puts_raw("Autor:    " AUTOR "\n");
     puts_raw("Arch:     ARMv7-A (32bit)\n");
     puts_raw("Stroj:    QEMU virt\n");
     puts_raw("CPU MIDR: "); put_hex(midr); puts_raw("\n");
@@ -474,7 +476,7 @@ void vyjimka(u32 typ, u32 adresa)
 static void banner(void)
 {
     logo();
-    puts_raw("=== LinsoftPhone OS " VERZE " ===\n");
+    puts_raw("=== LinsoftPhone OS " VERZE " === (c) " AUTOR "\n");
     puts_raw("Kernel nastartoval. Napis 'pomoc' pro seznam prikazu.\n\n");
 }
 

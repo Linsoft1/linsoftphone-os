@@ -473,6 +473,8 @@ void gfx_uvod(const char *verze)
     while (verze[n]) n++;
     text((SIRKA - n * 16) / 2, 492, verze, 2, BARVA_AKCENT);
     obdelnik(140, UVOD_PRUH_Y, 200, 6, BARVA_PANEL);
+    /* autor pod ukazatelem nacitani */
+    text((SIRKA - 11 * 16) / 2, 600, "(c) Linsoft", 2, 0x8fa3bdu);
 }
 
 void gfx_uvod_postup(int procent)

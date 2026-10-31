@@ -283,6 +283,7 @@ function appPrehliadac(c, adresa) {
         </div>
         <div class="nast-skupina info">
           ${radek(t("info_system"), "LinsoftPhone OS " + VERZE_OS)}
+          ${radek(t("info_autor"), AUTOR_OS)}
           ${radek(t("info_jadro"), jadro.nazev + " " + jadro.verze)}
           ${radek(t("pr_hledac"), (Core.HLEDACE[hledac] || Core.HLEDACE.google).nazev)}
           ${radek(t("pr_zalozky"), String(zalozky.length))}

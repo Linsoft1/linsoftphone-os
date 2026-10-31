@@ -1111,3 +1111,4 @@ a.nast-radek { text-decoration: none; }
   .kalk-mriezka { gap: 7px 10px; }
   .kalk-k { aspect-ratio: auto; height: 50px; border-radius: 25px; font-size: 22px; }
 }
+#boot-autor { margin-top: 6px; font-size: 12px; letter-spacing: 1px; opacity: .55; animation: boot-text .6s .35s both; }
