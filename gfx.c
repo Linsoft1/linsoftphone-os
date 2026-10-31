@@ -156,6 +156,83 @@ static void text(int x, int y, const char *s, int scale, u32 barva)
     }
 }
 
+/* ---------------- logo LinsoftPhone OS ----------------
+ * Stejne logo jako pwa/icons/logo.svg (prostor 512x512): zaobleny ctverec
+ * s prechodem modra -> fialova, bile "L" jako dve osy a z jeho rohu dva
+ * oblouky signalu. Kresli se vypoctem (bez obrazku), 2x2 vyhlazovani hran. */
+
+static int ctverec(int x) { return x * x; }
+
+/* bila v bode (u,v): 0..255, nebo -1 mimo zaobleny ctverec */
+static int logo_bila(int u, int v)
+{
+    if (u < 32 || u > 480 || v < 32 || v > 480) return -1;
+    int rx = u < 144 ? 144 : (u > 368 ? 368 : u);
+    int ry = v < 144 ? 144 : (v > 368 ? 368 : v);
+    if (ctverec(u - rx) + ctverec(v - ry) > ctverec(112)) return -1;
+
+    /* znak je o 16 posunuty doleva dolu (vycentrovani, jako v SVG) */
+    u += 16;
+    v -= 16;
+
+    /* "L": svisla 160,128-352 a vodorovna 160-384,352, tloustka 56, kulate konce */
+    int sy = v < 128 ? 128 : (v > 352 ? 352 : v);
+    int sx = u < 160 ? 160 : (u > 384 ? 384 : u);
+    if (ctverec(u - 160) + ctverec(v - sy) <= ctverec(28) ||
+        ctverec(u - sx) + ctverec(v - 352) <= ctverec(28))
+        return 255;
+
+    /* oblouky se stredem v rohu L (160,352), ctvrtina vpravo nahoru */
+    if (u >= 160 && v <= 352) {
+        int d2 = ctverec(u - 160) + ctverec(v - 352);
+        if (d2 >= ctverec(104 - 15) && d2 <= ctverec(104 + 15)) return 242;
+        if (d2 >= ctverec(184 - 15) && d2 <= ctverec(184 + 15)) return 153;
+    }
+    return 0;
+}
+
+/* prechod #3fb4f7 -> #5b6cf0 (55 %) -> #7b3fe4 po uhlopricce */
+static u32 logo_prechod(int u, int v)
+{
+    int t = ((u + v - 64) * 1000) / 896;
+    if (t < 0) t = 0;
+    if (t > 1000) t = 1000;
+    int r, g, b;
+    if (t < 550) {
+        r = 0x3f + (0x5b - 0x3f) * t / 550;
+        g = 0xb4 + (0x6c - 0xb4) * t / 550;
+        b = 0xf7 + (0xf0 - 0xf7) * t / 550;
+    } else {
+        t -= 550;
+        r = 0x5b + (0x7b - 0x5b) * t / 450;
+        g = 0x6c + (0x3f - 0x6c) * t / 450;
+        b = 0xf0 + (0xe4 - 0xf0) * t / 450;
+    }
+    return ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+}
+
+static void kresli_logo(int x0, int y0, int vel, u32 pozadi)
+{
+    for (int j = 0; j < vel; j++)
+        for (int i = 0; i < vel; i++) {
+            int r = 0, g = 0, b = 0;
+            for (int s = 0; s < 4; s++) {
+                int u = ((4 * i + 1 + 2 * (s & 1)) * 512) / (4 * vel);
+                int v = ((4 * j + 1 + (s & 2)) * 512) / (4 * vel);
+                int w = logo_bila(u, v);
+                u32 c = w < 0 ? pozadi : logo_prechod(u, v);
+                int cr = (c >> 16) & 0xff, cg = (c >> 8) & 0xff, cb = c & 0xff;
+                if (w > 0) {
+                    cr += (255 - cr) * w / 255;
+                    cg += (255 - cg) * w / 255;
+                    cb += (255 - cb) * w / 255;
+                }
+                r += cr; g += cg; b += cb;
+            }
+            pixel(x0 + i, y0 + j, ((u32)(r / 4) << 16) | ((u32)(g / 4) << 8) | (u32)(b / 4));
+        }
+}
+
 /* ---------------- graficka konzole ---------------- */
 
 #define KONZ_X      16
@@ -260,7 +337,8 @@ static void stavovy_radek(unsigned int hod, unsigned int min, int dvojtecka)
 static void hlavicka(void)
 {
     obdelnik(0, 36, SIRKA, 64, BARVA_POZADI);
-    text(KONZ_X, 52, "LinsoftPhone OS", 3, BARVA_AKCENT);
+    kresli_logo(KONZ_X, 44, 44, BARVA_POZADI);
+    text(KONZ_X + 54, 54, "LinsoftPhone OS", 3, BARVA_AKCENT);
     obdelnik(KONZ_X, 92, SIRKA - 2 * KONZ_X, 2, BARVA_AKCENT);
 }
 
@@ -307,6 +385,29 @@ void gfx_domu(void)
 }
 
 int gfx_active(void) { return aktivni; }
+
+/* uvodni obrazovka pri startu: velke logo, nazev, verze a ukazatel nacitani */
+#define UVOD_LOGO   224
+#define UVOD_PRUH_Y 560
+
+void gfx_uvod(const char *verze)
+{
+    if (!aktivni) return;
+    obdelnik(0, 0, SIRKA, VYSKA, BARVA_POZADI);
+    kresli_logo((SIRKA - UVOD_LOGO) / 2, 200, UVOD_LOGO, BARVA_POZADI);
+    text((SIRKA - 15 * 24) / 2, 450, "LinsoftPhone OS", 3, BARVA_TEXT);
+    int n = 0;
+    while (verze[n]) n++;
+    text((SIRKA - n * 16) / 2, 492, verze, 2, BARVA_AKCENT);
+    obdelnik(140, UVOD_PRUH_Y, 200, 6, BARVA_PANEL);
+}
+
+void gfx_uvod_postup(int procent)
+{
+    if (!aktivni) return;
+    if (procent > 100) procent = 100;
+    obdelnik(140, UVOD_PRUH_Y, 2 * procent, 6, BARVA_AKCENT);
+}
 
 int gfx_init(void)
 {

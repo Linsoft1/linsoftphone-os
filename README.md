@@ -1,4 +1,10 @@
+<p align="center"><img src="pwa/icons/logo.svg" width="128" alt="Logo LinsoftPhone OS"></p>
+
 # LinsoftPhone OS
+
+Vlastní logo systému: písmeno **L** tvoří dvě osy a z jejich rohu se šíří
+signál ([pwa/icons/logo.svg](pwa/icons/logo.svg)). Stejné logo vykresluje
+i kernel přímo do framebufferu — bez obrázku, výpočtem ([gfx.c](gfx.c)).
 
 Dvě podoby jednoho systému:
 
@@ -7,7 +13,10 @@ Dvě podoby jednoho systému:
    **jakémkoli smartphonu** (Android i iPhone) přes prohlížeč a dá se
    nainstalovat jako aplikace („Přidat na plochu")
 
-## PWA verze 2.1 — pro skutečné telefony
+## PWA verze 2.2 — pro skutečné telefony
+
+- **úvodní obrazovka s logem** při startu, logo v Nastavení → O systému,
+  ikony aplikace a favicon z vlastního loga
 
 - zamykací obrazovka s volitelným **PIN zámkem** (zamkne se při každém odchodu
   z aplikace), odemknutí klepnutím nebo potažením nahoru
@@ -53,7 +62,10 @@ WebView), iPhone s iOS 12+ (Safari). Ošetřeno: výřez displeje (notch), malé
 displeje od 320 px, telefon na šířku, gesto Zpět na Androidu, zoom při psaní na
 iOS, plné úložiště fotkami, aktualizace přes service worker.
 
-## Kernel verze 1.1 — skutečný OS v QEMU
+## Kernel verze 1.2 — skutečný OS v QEMU
+
+Při startu se na displeji ukáže **úvodní obrazovka s logem** a ukazatelem
+načítání, v hlavičce zůstane malé logo; na sériové konzoli je logo v ASCII.
 
 Mini operační systém (kernel) pro ARM, běžící v emulátoru QEMU. Napsaný v C a
 assembleru, bez jakékoli knihovny — vlastní ovladač UART, shell a aplikace.
@@ -71,7 +83,7 @@ assembleru, bez jakékoli knihovny — vlastní ovladač UART, shell a aplikace.
                   |_|   |_| |_|\___/|_| |_|\___| \___/|____/
 ```
 
-### Novinky ve verzi 1.1
+### Novinky ve verzi 1.1–1.2
 
 - **Hodiny reálného času** — RTC PL031 ([rtc.c](./rtc.c)); stavový řádek
   ukazuje skutečný čas HH:MM s blikající dvojtečkou, `run.ps1` spouští QEMU

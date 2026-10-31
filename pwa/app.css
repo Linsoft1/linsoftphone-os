@@ -421,3 +421,27 @@ select { width: auto; max-width: 50%; }
   .list-item { padding: 10px; }
   .list-item .avatar { width: 36px; height: 36px; }
 }
+
+/* ---- uvodni obrazovka s logem ---- */
+#boot {
+  position: absolute; z-index: 100; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #0b1220; color: #eef4fb;
+  transition: opacity .4s ease;
+}
+#boot.hotovo { opacity: 0; pointer-events: none; }
+#boot-logo { width: 128px; height: 128px; animation: boot-logo .7s cubic-bezier(.2, .9, .3, 1.2) both; }
+#boot-nazev { margin-top: 22px; font-size: 22px; font-weight: 300; letter-spacing: 1px; animation: boot-text .6s .25s both; }
+#boot-pruh { width: 120px; height: 4px; margin-top: 36px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; }
+#boot-pruh span {
+  display: block; height: 100%; width: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, #3fb4f7, #7b3fe4);
+  transform-origin: left; animation: boot-pruh 1s .2s ease-in-out both;
+}
+@keyframes boot-logo { from { opacity: 0; transform: scale(.6); } }
+@keyframes boot-text { from { opacity: 0; transform: translateY(8px); } }
+@keyframes boot-pruh { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  #boot-logo, #boot-nazev, #boot-pruh span { animation: none; }
+}
+.about-logo { display: block; width: 72px; height: 72px; margin: 6px auto 10px; }

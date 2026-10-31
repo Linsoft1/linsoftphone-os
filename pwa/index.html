@@ -11,12 +11,20 @@
 <meta name="format-detection" content="telephone=no">
 <title>LinsoftPhone OS</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <div id="phone">
+
+  <!-- uvodni obrazovka pri startu (logo LinsoftPhone OS) -->
+  <div id="boot" aria-hidden="true">
+    <img id="boot-logo" src="icons/logo.svg" alt="">
+    <div id="boot-nazev">LinsoftPhone OS</div>
+    <div id="boot-pruh"><span></span></div>
+  </div>
 
   <!-- stavovy radek -->
   <div id="statusbar" role="button" tabindex="0" data-i18n-label="notif">

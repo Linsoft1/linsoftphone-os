@@ -824,7 +824,7 @@ function appTerminal(c) {
   const tm = $("#term");
   const start = Date.now();
   const w = (s) => { tm.textContent += s + "\n"; tm.scrollTop = tm.scrollHeight; };
-  w("=== LinsoftPhone OS 2.1 (PWA) ===");
+  w("=== LinsoftPhone OS 2.2 (PWA) ===");
   w("Napis 'pomoc' pro seznam prikazu.\n");
   $("#term-in").onkeydown = (e) => {
     if (e.key !== "Enter") return;
@@ -832,7 +832,7 @@ function appTerminal(c) {
     $("#term-in").value = "";
     w("linsoft> " + cmd);
     if (cmd === "pomoc") w("pomoc, info, cas, datum, kalk <vyraz>, vymaz");
-    else if (cmd === "info") w(`Verze: 2.1 PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
+    else if (cmd === "info") w(`Verze: 2.2 PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
     else if (cmd === "cas") w("Doba behu: " + Math.round((Date.now() - start) / 1000) + " s");
     else if (cmd === "datum") w(new Date().toLocaleString(stav.jazyk));
     else if (cmd === "vymaz") tm.textContent = "";
@@ -861,7 +861,8 @@ function appNastaveni(c) {
     <button class="btn ghost full" id="st-obnov">${esc(t("st_obnov"))}</button>
     <input type="file" id="st-soubor" accept="application/json,.json" hidden>
     <div class="list-item" style="margin-top:16px"><div class="grow">${esc(t("st_o"))}</div></div>
-    <div class="muted about">LinsoftPhone OS 2.1 (PWA)<br>${t("st_o_text")}</div>
+    <img class="about-logo" src="icons/logo.svg" alt="LinsoftPhone OS">
+    <div class="muted about center">LinsoftPhone OS 2.2 (PWA)<br>${t("st_o_text")}</div>
     <button class="btn ghost full danger" id="st-reset">${esc(t("st_reset"))}</button>`;
 
   $("#st-theme").onclick = () => { nastavMotiv(!svetly); appNastaveni(c); };
@@ -971,6 +972,12 @@ function vykresliIkony() {
 }
 
 /* ---------------- start ---------------- */
+/* uvodni obrazovka s logem zmizi po dobehnuti animace (jako start telefonu) */
+setTimeout(() => {
+  $("#boot").classList.add("hotovo");
+  setTimeout(() => $("#boot").remove(), 450);
+}, 1300);
+
 if (store.get("svetly", false)) nastavMotiv(true);
 prelozStranku();
 vykresliIkony();

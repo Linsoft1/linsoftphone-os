@@ -10,6 +10,8 @@
 #include "gfx.h"
 
 static u32 uptime_s(void);
+
+#define VERZE "1.2"
 static void obnov_hodiny(void);
 
 /* ---------------- UART PL011 (QEMU virt: 0x09000000) ---------------- */
@@ -322,7 +324,7 @@ static void app_info(void)
     u32 midr;
     __asm__ volatile("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
     puts_raw("--- LinsoftPhone OS ---\n");
-    puts_raw("Verze:    1.1 (kernel)\n");
+    puts_raw("Verze:    " VERZE " (kernel)\n");
     puts_raw("Arch:     ARMv7-A (32bit)\n");
     puts_raw("Stroj:    QEMU virt\n");
     puts_raw("CPU MIDR: "); put_hex(midr); puts_raw("\n");
@@ -423,16 +425,16 @@ static void logo(void)
 {
     /* ASCII logo jen na seriovou konzoli - na displeji je graficka hlavicka */
     puts_uart("\n");
-    puts_uart("  .-----------.    _     _                  __ _\n");
-    puts_uart("  | ========= |   | |   (_)_ __  ___  ___  / _| |_\n");
-    puts_uart("  | |LINSOFT| |   | |   | | '_ \\/ __|/ _ \\| |_| __|\n");
-    puts_uart("  | | PHONE | |   | |___| | | | \\__ \\ (_) |  _| |_\n");
-    puts_uart("  | |  OS   | |   |_____|_|_| |_|___/\\___/|_|  \\__|\n");
-    puts_uart("  | ========= |    ____  _                      ___  ____\n");
-    puts_uart("  |    ___    |   |  _ \\| |__   ___  _ __   ___ / _ \\/ ___|\n");
-    puts_uart("  |   (( ))   |   | |_) | '_ \\ / _ \\| '_ \\ / _ \\ | | \\___ \\\n");
-    puts_uart("  '-----------'   |  __/| | | | (_) | | | |  __/ |_| |___) |\n");
-    puts_uart("                  |_|   |_| |_|\\___/|_| |_|\\___| \\___/|____/\n");
+    puts_uart("  ##                _     _                  __ _\n");
+    puts_uart("  ##               | |   (_)_ __  ___  ___  / _| |_\n");
+    puts_uart("  ##\"\"\"--._        | |   | | '_ \\/ __|/ _ \\| |_| __|\n");
+    puts_uart("  ##       `.      | |___| | | | \\__ \\ (_) |  _| |_\n");
+    puts_uart("  ##\"\"\"-._  \\      |_____|_|_| |_|___/\\___/|_|  \\__|\n");
+    puts_uart("  ##      `. \\      ____  _                      ___  ____\n");
+    puts_uart("  ##        \\ |    |  _ \\| |__   ___  _ __   ___ / _ \\/ ___|\n");
+    puts_uart("  ##        | |    | |_) | '_ \\ / _ \\| '_ \\ / _ \\ | | \\___ \\\n");
+    puts_uart("  ##############   |  __/| | | | (_) | | | |  __/ |_| |___) |\n");
+    puts_uart("                   |_|   |_| |_|\\___/|_| |_|\\___| \\___/|____/\n");
     puts_uart("\n");
 }
 
@@ -457,7 +459,7 @@ void vyjimka(u32 typ, u32 adresa)
 static void banner(void)
 {
     logo();
-    puts_raw("=== LinsoftPhone OS 1.1 ===\n");
+    puts_raw("=== LinsoftPhone OS " VERZE " ===\n");
     puts_raw("Kernel nastartoval. Napis 'pomoc' pro seznam prikazu.\n\n");
 }
 
@@ -465,7 +467,17 @@ void kmain(void)
 {
     char radek[128];
 
-    gfx_init();
+    /* uvodni obrazovka s logem (~1,5 s, ceka se na generic timer - funguje i bez IRQ) */
+    if (gfx_init()) {
+        gfx_uvod(VERZE);
+        u32 f = read_cntfrq();
+        u64 start = read_cntvct();
+        for (int p = 0; f && p <= 100; p += 4) {
+            gfx_uvod_postup(p);
+            while (read_cntvct() - start < udiv64_32((u64)f * (u32)p, 66, 0)) ;
+        }
+        gfx_domu();
+    }
     rtc_init();
     irq_init();         /* GIC + timer + UART RX; pri chybe zustane polling */
     virtio_init();      /* klavesnice/tablet; bez nich jen seriovy vstup */

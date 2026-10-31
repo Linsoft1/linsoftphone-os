@@ -21,4 +21,8 @@ void gfx_domu(void);
 /* je displej aktivni? */
 int gfx_active(void);
 
+/* uvodni obrazovka s logem a ukazatel nacitani (0-100 %) */
+void gfx_uvod(const char *verze);
+void gfx_uvod_postup(int procent);
+
 #endif
