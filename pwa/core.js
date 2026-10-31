@@ -73,7 +73,14 @@ const TEXTY = {
     info_pamet: "Paměť", info_uloziste: "Úložiště", info_obsazeno: "{n} obsazeno", info_baterie: "Baterie",
     info_nabiji: "nabíjí se", info_sit: "Síť", info_online: "připojeno", info_offline: "bez připojení",
     info_operator: "Operátor", info_signal: "Signál", info_beh: "Doba běhu", info_aplikace: "Aplikace",
-    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznámé"
+    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznámé",
+    app_prehliadac: "Linsoft Browser", pr_hledat: "Hledej nebo zadej adresu", pr_nova_karta: "Nová karta",
+    pr_karty: "Karty", pr_zalozky: "Záložky", pr_historie: "Historie", pr_pridat_zalozku: "Přidat záložku",
+    pr_odebrat_zalozku: "Odebrat záložku", pr_mimo: "Otevřít mimo LinsoftPhone OS", pr_o: "O prohlížeči",
+    pr_vymazat: "Vymazat historii", pr_prazdne: "Zatím nic", pr_rychle: "Rychlý přístup",
+    pr_zavrit_karty: "Zavřít všechny karty", pr_obnovit: "Obnovit", pr_vpred: "Vpřed", pr_menu: "Nabídka",
+    pr_tip: "Některé weby (Facebook, GitHub, YouTube) nedovolí zobrazení uvnitř jiné aplikace. Pak použij „Otevřít mimo“.",
+    pr_o_text: "Webový prohlížeč LinsoftPhone OS. Stránky běží odděleně (sandbox) a nemohou ovládat systém."
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -144,7 +151,14 @@ const TEXTY = {
     info_pamet: "Pamäť", info_uloziste: "Úložisko", info_obsazeno: "{n} obsadené", info_baterie: "Batéria",
     info_nabiji: "nabíja sa", info_sit: "Sieť", info_online: "pripojené", info_offline: "bez pripojenia",
     info_operator: "Operátor", info_signal: "Signál", info_beh: "Doba behu", info_aplikace: "Aplikácie",
-    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznáme"
+    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznáme",
+    app_prehliadac: "Linsoft Browser", pr_hledat: "Hľadaj alebo zadaj adresu", pr_nova_karta: "Nová karta",
+    pr_karty: "Karty", pr_zalozky: "Záložky", pr_historie: "História", pr_pridat_zalozku: "Pridať záložku",
+    pr_odebrat_zalozku: "Odobrať záložku", pr_mimo: "Otvoriť mimo LinsoftPhone OS", pr_o: "O prehliadači",
+    pr_vymazat: "Vymazať históriu", pr_prazdne: "Zatiaľ nič", pr_rychle: "Rýchly prístup",
+    pr_zavrit_karty: "Zavrieť všetky karty", pr_obnovit: "Obnoviť", pr_vpred: "Dopredu", pr_menu: "Ponuka",
+    pr_tip: "Niektoré weby (Facebook, GitHub, YouTube) nedovolia zobrazenie vnútri inej aplikácie. Vtedy použi „Otvoriť mimo“.",
+    pr_o_text: "Webový prehliadač LinsoftPhone OS. Stránky bežia oddelene (sandbox) a nemôžu ovládať systém."
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -214,7 +228,14 @@ const TEXTY = {
     info_pamet: "Memory", info_uloziste: "Storage", info_obsazeno: "{n} used", info_baterie: "Battery",
     info_nabiji: "charging", info_sit: "Network", info_online: "connected", info_offline: "offline",
     info_operator: "Carrier", info_signal: "Signal", info_beh: "Uptime", info_aplikace: "Apps",
-    info_fotky: "Photos", info_zdroj: "Source code", info_nezname: "unknown"
+    info_fotky: "Photos", info_zdroj: "Source code", info_nezname: "unknown",
+    app_prehliadac: "Linsoft Browser", pr_hledat: "Search or type an address", pr_nova_karta: "New tab",
+    pr_karty: "Tabs", pr_zalozky: "Bookmarks", pr_historie: "History", pr_pridat_zalozku: "Add bookmark",
+    pr_odebrat_zalozku: "Remove bookmark", pr_mimo: "Open outside LinsoftPhone OS", pr_o: "About browser",
+    pr_vymazat: "Clear history", pr_prazdne: "Nothing yet", pr_rychle: "Quick access",
+    pr_zavrit_karty: "Close all tabs", pr_obnovit: "Reload", pr_vpred: "Forward", pr_menu: "Menu",
+    pr_tip: "Some sites (Facebook, GitHub, YouTube) refuse to be shown inside another app. Use “Open outside” for them.",
+    pr_o_text: "The LinsoftPhone OS web browser. Pages run isolated (sandbox) and cannot control the system."
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -343,10 +364,35 @@ function trvani(sekundy) {
   return s + " s";
 }
 
+/* ---------------- Linsoft Browser ---------------- */
+/* Google s igu=1 povoli zobrazeni vysledku ve vnorenem okne prohlizece */
+const HLEDANI = "https://www.google.com/search?igu=1&q=";
+
+/* text z adresniho radku -> adresa stranky, nebo vyhledavani */
+function adresaZVstupu(vstup) {
+  const s = String(vstup || "").trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^(about|data|javascript|file|blob):/i.test(s)) return HLEDANI + encodeURIComponent(s);
+  /* "sme.sk", "localhost:8080", "192.168.1.1/admin" - bez mezer a s teckou nebo portem */
+  if (!/\s/.test(s) && (/^[^/]+\.[a-z]{2,}(?::\d+)?(\/.*)?$/i.test(s) || /^localhost(:\d+)?(\/.*)?$/i.test(s) ||
+      /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/.*)?$/.test(s)))
+    return (/^(localhost|\d)/i.test(s) ? "http://" : "https://") + s;
+  return HLEDANI + encodeURIComponent(s);
+}
+
+/* adresa pro zobrazeni: domena bez "www.", u hledani hledany text */
+function zobrazAdresu(url) {
+  const s = String(url || "");
+  if (s.indexOf(HLEDANI) === 0) return decodeURIComponent(s.slice(HLEDANI.length));
+  const m = s.match(/^https?:\/\/(?:www\.)?([^/?#]+)/i);
+  return m ? m[1] : s;
+}
+
 const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
-  prohlizec, platforma, velikost, trvani
+  prohlizec, platforma, velikost, trvani, HLEDANI, adresaZVstupu, zobrazAdresu
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

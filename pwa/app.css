@@ -728,3 +728,100 @@ a.nast-radek { text-decoration: none; }
 .info-hlava img { width: 88px; height: 88px; filter: drop-shadow(0 10px 24px rgba(91,108,240,.4)); }
 .info-hlava h2 { font-size: 24px; font-weight: 600; margin-top: 12px; }
 .info-hlava p { color: var(--muted); margin-top: 2px; }
+
+/* ================= Linsoft Browser ================= */
+#appscreen.plna #app-header { display: none; }
+#appscreen.plna #app-content { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.pr { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pr-adresa {
+  display: flex; align-items: center; height: 44px; margin: 8px 10px 6px; padding: 0 4px 0 14px;
+  border-radius: 22px; background: var(--panel); border: 1px solid rgba(127,127,127,.15);
+}
+.pr-adresa input { border: none; background: none; height: 100%; padding: 0 8px; font-size: 15px; text-align: center; }
+.pr-adresa input:focus { outline: none; text-align: left; }
+.pr-ikona { display: flex; color: var(--muted); }
+.pr-ikona .ik { width: 16px; height: 16px; }
+.pr-tl {
+  width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; position: relative;
+}
+.pr-tl:active { background: rgba(127,127,127,.18); }
+.pr-tl:disabled { opacity: .3; }
+.pr-pruh { height: 2px; position: relative; overflow: hidden; }
+.pr-pruh.nacita::after {
+  content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+  background: linear-gradient(90deg, #3fb4f7, #7b3fe4); animation: pr-pruh 1s linear infinite;
+}
+@keyframes pr-pruh { to { left: 100%; } }
+.pr-telo { flex: 1; min-height: 0; position: relative; }
+#pr-ram { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #fff; }
+.pr-start, .pr-vrstva {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 18px 16px 24px; background: var(--bg);
+}
+.pr-vrstva { z-index: 3; animation: app-in .2s ease; }
+.pr-vrstva-hlava { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pr-vrstva-hlava h2 { font-size: 20px; font-weight: 600; }
+.pr-lista {
+  display: flex; justify-content: space-around; align-items: center; height: 52px; flex-shrink: 0;
+  background: var(--panel); border-top: 1px solid rgba(127,127,127,.15);
+}
+/* pocet karet uprostred predniho ctverce ikony */
+.pr-karty-tl span {
+  position: absolute; top: calc(50% + 1.5px); left: calc(50% - 1.5px); transform: translate(-50%, -50%);
+  font-size: 9px; font-weight: 700; line-height: 1;
+}
+
+/* uvodni stranka */
+.pr-logo { text-align: center; padding: 8px 0 4px; }
+.pr-logo-ik {
+  display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 22px;
+  color: #fff; background: linear-gradient(145deg, #38bdf8, #6d28d9); box-shadow: 0 10px 26px rgba(109,40,217,.35);
+}
+.pr-logo-ik .ik { width: 40px; height: 40px; }
+.pr-logo h2 { font-size: 22px; font-weight: 600; margin-top: 12px; }
+.pr-logo p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.pr-hledat {
+  display: flex; align-items: center; width: 100%; margin-top: 18px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(127,127,127,.2); background: var(--panel); color: var(--muted); font: inherit; cursor: text;
+}
+.pr-hledat .ik { width: 18px; height: 18px; margin-right: 10px; }
+.pr-rychle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pr-rychle .pr-otevrit {
+  display: flex; flex-direction: column; align-items: center; padding: 8px 2px; border: none; border-radius: 14px;
+  background: none; color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+}
+.pr-rychle .pr-otevrit:active { background: rgba(127,127,127,.15); }
+.pr-rychle .avatar { width: 48px; height: 48px; margin: 0 0 6px; border-radius: 16px; font-size: 17px; }
+.pr-rychle span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-polozka { padding: 0 6px 0 0; }
+.pr-polozka .pr-otevrit {
+  flex: 1; min-width: 0; display: flex; align-items: center; padding: 10px 0 10px 14px;
+  border: none; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.pr-polozka .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-tip { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; margin: 20px 8px 0; }
+
+/* karty */
+.pr-karty { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pr-karta {
+  position: relative; height: 110px; border-radius: 16px; background: var(--panel);
+  border: 2px solid transparent; overflow: hidden;
+}
+.pr-karta.on { border-color: var(--accent); }
+.pr-karta-otevrit {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; padding: 8px;
+}
+.pr-karta-otevrit .avatar { margin: 0 0 8px; }
+.pr-karta-otevrit span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-karta-x { position: absolute; top: 2px; right: 2px; width: 32px; height: 32px; }
+.pr-karta-x .ik { width: 16px; height: 16px; }
+.pr-karta-nova {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 2px dashed rgba(127,127,127,.35); background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.pr-karta-nova .ik { margin-bottom: 6px; }
+
+/* nazvy aplikaci na plose na dva radky (napr. Linsoft Browser) */
+#homescreen .appicon span:last-child { text-align: center; line-height: 1.15; max-width: 100%; }

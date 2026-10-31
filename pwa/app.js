@@ -435,6 +435,8 @@ function otevri(id, param) {
   const c = $("#app-content");
   c.innerHTML = "";
   c.scrollTop = 0;
+  /* aplikace s vlastni horni listou (prohlizec) bezi pres celou plochu */
+  $("#appscreen").classList.toggle("plna", !!app.plna);
   app.render(c, param);
   panel(false);
   ukazObrazovku("#appscreen");
@@ -1267,6 +1269,250 @@ function appTerminal(c) {
   };
 }
 
+/* Linsoft Browser - webovy prohlizec LinsoftPhone OS.
+ * Stranky bezi ve vnorenem okne se sandboxem: nemohou prejit na jinou adresu
+ * misto systemu ani cist data LinsoftPhone OS. Weby, ktere vnoreni zakazuji
+ * (X-Frame-Options), se daji otevrit mimo. */
+const PREHLIADAC_VERZE = "2.0.32";
+const RYCHLY_PRISTUP = [
+  { t: "Google", u: "https://www.google.com/webhp?igu=1" },
+  { t: "Wikipédia", u: "https://sk.m.wikipedia.org/" },
+  { t: "Mapy", u: "https://www.openstreetmap.org/export/embed.html?bbox=16.95,48.08,17.25,48.22&layer=mapnik" },
+  { t: "Počasie", u: "https://wttr.in/Bratislava" },
+  { t: "LinsoftPhone OS", u: "https://github.com/Linsoft1/linsoftphone-os" }
+];
+
+function appPrehliadac(c) {
+  const novaKarta = () => ({ url: "", zpet: [], vpred: [] });
+  const P = store.get("prehliadac", { karty: [novaKarta()], aktivni: 0 });
+  if (!P.karty.length) P.karty = [novaKarta()];
+  if (!P.karty[P.aktivni]) P.aktivni = 0;
+  const zalozky = store.get("zalozky", []);
+  let historie = store.get("historie", []);
+  const uloz = () => { store.set("prehliadac", P); store.set("zalozky", zalozky); store.set("historie", historie); };
+  const karta = () => P.karty[P.aktivni];
+  const tl = (id, ikona, popis) => `<button type="button" class="pr-tl" id="${id}" aria-label="${esc(t(popis))}">${Ikony.ikona(ikona)}</button>`;
+
+  c.innerHTML = `
+    <div class="pr">
+      <div class="pr-adresa">
+        <span class="pr-ikona" id="pr-ikona"></span>
+        <input id="pr-url" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+          placeholder="${esc(t("pr_hledat"))}" aria-label="${esc(t("pr_hledat"))}">
+        ${tl("pr-obnov", "restart", "pr_obnovit")}
+      </div>
+      <div class="pr-pruh" id="pr-pruh"></div>
+      <div class="pr-telo">
+        <iframe id="pr-ram" title="Linsoft Browser" hidden
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
+          referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation"></iframe>
+        <div id="pr-start" class="pr-start"></div>
+        <div id="pr-vrstva" class="pr-vrstva" hidden></div>
+      </div>
+      <nav class="pr-lista">
+        ${tl("pr-zpet", "zpet", "zpet")}
+        <button type="button" class="pr-tl" id="pr-vpred" aria-label="${esc(t("pr_vpred"))}">${Ikony.ikona("sipka")}</button>
+        ${tl("pr-domu", "dum", "domu")}
+        <button type="button" class="pr-tl pr-karty-tl" id="pr-karty" aria-label="${esc(t("pr_karty"))}">${Ikony.ikona("karty")}<span id="pr-pocet"></span></button>
+        ${tl("pr-menu", "menu", "pr_menu")}
+      </nav>
+    </div>`;
+
+  const ram = $("#pr-ram"), start = $("#pr-start"), vrstva = $("#pr-vrstva"), url = $("#pr-url");
+
+  /* ---- navigace ---- */
+  function jdi(adresa) {
+    const k = karta();   /* adresa "" = uvodni stranka */
+    if (adresa === k.url) return zobraz();
+    k.zpet.push(k.url);
+    k.vpred = [];
+    k.url = adresa;
+    if (adresa) historie = [{ url: adresa, cas: Date.now() }].concat(historie.filter((h) => h.url !== adresa)).slice(0, 100);
+    uloz();
+    zobraz();
+  }
+  function zpet() { const k = karta(); if (!k.zpet.length) return; k.vpred.push(k.url); k.url = k.zpet.pop(); uloz(); zobraz(); }
+  function vpred() { const k = karta(); if (!k.vpred.length) return; k.zpet.push(k.url); k.url = k.vpred.pop(); uloz(); zobraz(); }
+
+  function zobraz() {
+    const k = karta();
+    vrstva.hidden = true;
+    url.value = k.url ? Core.zobrazAdresu(k.url) : "";
+    $("#pr-ikona").innerHTML = Ikony.ikona(/^https:/.test(k.url) ? "zamek" : "hledat");
+    if (!k.url) {
+      ram.hidden = true;
+      ram.removeAttribute("src");
+      ram.dataset.url = "";
+      start.hidden = false;
+      kresliStart();
+    } else {
+      start.hidden = true;
+      ram.hidden = false;
+      if (ram.dataset.url !== k.url) {
+        ram.dataset.url = k.url;
+        $("#pr-pruh").classList.add("nacita");
+        ram.src = k.url;
+      }
+    }
+    $("#pr-zpet").disabled = !k.zpet.length;
+    $("#pr-vpred").disabled = !k.vpred.length;
+    $("#pr-pocet").textContent = P.karty.length;
+    /* systemove "Zpet" (lista, gesto) jde nejdriv zpet v prohlizeci */
+    vnitrniZpet = k.zpet.length ? zpet : null;
+  }
+  ram.onload = () => $("#pr-pruh").classList.remove("nacita");
+
+  /* ---- adresni radek ---- */
+  url.onfocus = () => { if (karta().url) url.value = karta().url; setTimeout(() => url.select(), 0); };
+  url.onblur = () => { url.value = karta().url ? Core.zobrazAdresu(karta().url) : ""; };
+  url.onkeydown = (e) => {
+    if (e.key !== "Enter") return;
+    const adresa = Core.adresaZVstupu(url.value);
+    url.blur();
+    jdi(adresa);
+  };
+  $("#pr-obnov").onclick = () => {
+    if (!karta().url) return;
+    $("#pr-pruh").classList.add("nacita");
+    ram.src = karta().url;
+  };
+  $("#pr-zpet").onclick = zpet;
+  $("#pr-vpred").onclick = vpred;
+  $("#pr-domu").onclick = () => jdi("");
+
+  /* ---- uvodni stranka ---- */
+  const polozka = (u, nazev, extra) => `
+    <div class="nast-radek pr-polozka">
+      <button class="pr-otevrit" data-url="${esc(u)}">${avatar(nazev)}
+        <span class="nast-text">${esc(nazev)}<small>${esc(Core.zobrazAdresu(u))}</small></span></button>${extra || ""}
+    </div>`;
+  function kresliStart() {
+    start.innerHTML = `
+      <div class="pr-logo">
+        <span class="pr-logo-ik">${Ikony.ikona("prehliadac")}</span>
+        <h2>Linsoft Browser</h2>
+        <p>${esc(t("st_verze", PREHLIADAC_VERZE))}</p>
+      </div>
+      <button class="pr-hledat" id="pr-hledat">${Ikony.ikona("hledat")}<span>${esc(t("pr_hledat"))}</span></button>
+      <h3 class="nast-nadpis">${esc(t("pr_rychle"))}</h3>
+      <div class="pr-rychle">${RYCHLY_PRISTUP.map((r) =>
+        `<button class="pr-otevrit" data-url="${esc(r.u)}">${avatar(r.t)}<span>${esc(r.t)}</span></button>`).join("")}</div>
+      ${zalozky.length ? `<h3 class="nast-nadpis">${esc(t("pr_zalozky"))}</h3>
+        <div class="nast-skupina">${zalozky.slice(0, 5).map((z) => polozka(z.url, z.titulek)).join("")}</div>` : ""}
+      ${historie.length ? `<h3 class="nast-nadpis">${esc(t("pr_historie"))}</h3>
+        <div class="nast-skupina">${historie.slice(0, 4).map((h) => polozka(h.url, Core.zobrazAdresu(h.url))).join("")}</div>` : ""}
+      <p class="pr-tip">${esc(t("pr_tip"))}</p>`;
+    $("#pr-hledat").onclick = () => url.focus();
+    napojOdkazy(start);
+  }
+  function napojOdkazy(box) {
+    box.querySelectorAll(".pr-otevrit").forEach((b) => b.onclick = () => jdi(b.dataset.url));
+  }
+
+  /* ---- vrstvy: menu, karty, zalozky, historie, o prohlizeci ---- */
+  function ukazVrstvu(nadpis, obsah) {
+    vrstva.innerHTML = `
+      <div class="pr-vrstva-hlava">
+        <h2>${esc(nadpis)}</h2>
+        <button class="pr-tl" id="pr-zavrit" aria-label="${esc(t("zpet"))}">${Ikony.ikona("zavrit")}</button>
+      </div>${obsah}`;
+    vrstva.hidden = false;
+    vrstva.scrollTop = 0;
+    $("#pr-zavrit").onclick = zobraz;
+    vnitrniZpet = zobraz;
+  }
+  const akce = (id, ikona, barva, text) =>
+    `<button class="nast-radek nast-akce" id="${id}"><span class="nast-ik" style="background:${barva}">${Ikony.ikona(ikona)}</span><span class="nast-text">${esc(text)}</span></button>`;
+
+  $("#pr-menu").onclick = () => {
+    const k = karta();
+    const jeZalozka = k.url && zalozky.some((z) => z.url === k.url);
+    ukazVrstvu("Linsoft Browser", `
+      <div class="nast-skupina">
+        ${akce("pm-nova", "plus", "#3b82f6", t("pr_nova_karta"))}
+        ${k.url ? akce("pm-zalozka", "hvezda", "#f59e0b", t(jeZalozka ? "pr_odebrat_zalozku" : "pr_pridat_zalozku")) : ""}
+        ${akce("pm-zalozky", "hvezda", "#eab308", t("pr_zalozky"))}
+        ${akce("pm-historie", "budik", "#8b5cf6", t("pr_historie"))}
+        ${k.url ? akce("pm-mimo", "venku", "#14b8a6", t("pr_mimo")) : ""}
+      </div>
+      <div class="nast-skupina" style="margin-top:14px">${akce("pm-o", "info", "#64748b", t("pr_o"))}</div>`);
+    $("#pm-nova").onclick = () => { P.karty.push(novaKarta()); P.aktivni = P.karty.length - 1; uloz(); zobraz(); url.focus(); };
+    if (k.url) {
+      $("#pm-zalozka").onclick = () => {
+        const i = zalozky.findIndex((z) => z.url === k.url);
+        if (i >= 0) zalozky.splice(i, 1);
+        else zalozky.unshift({ url: k.url, titulek: Core.zobrazAdresu(k.url) });
+        uloz();
+        zobraz();
+      };
+      $("#pm-mimo").onclick = () => { window.open(k.url, "_blank", "noopener"); zobraz(); };
+    }
+    $("#pm-zalozky").onclick = ukazZalozky;
+    $("#pm-historie").onclick = ukazHistorii;
+    $("#pm-o").onclick = () => {
+      const jadro = Core.prohlizec(navigator.userAgent);
+      ukazVrstvu(t("pr_o"), `
+        <div class="pr-logo">
+          <span class="pr-logo-ik">${Ikony.ikona("prehliadac")}</span>
+          <h2>Linsoft Browser</h2>
+          <p>${esc(t("st_verze", PREHLIADAC_VERZE))}</p>
+        </div>
+        <div class="nast-skupina info">
+          <div class="nast-radek"><span class="nast-text">${esc(t("info_system"))}</span><span class="nast-hodnota">LinsoftPhone OS ${VERZE_OS}</span></div>
+          <div class="nast-radek"><span class="nast-text">${esc(t("info_jadro"))}</span><span class="nast-hodnota">${esc(jadro.nazev + " " + jadro.verze)}</span></div>
+          <div class="nast-radek"><span class="nast-text">${esc(t("pr_zalozky"))}</span><span class="nast-hodnota">${zalozky.length}</span></div>
+          <div class="nast-radek"><span class="nast-text">${esc(t("pr_historie"))}</span><span class="nast-hodnota">${historie.length}</span></div>
+        </div>
+        <p class="pr-tip">${esc(t("pr_o_text"))}</p>`);
+    };
+  };
+
+  function ukazZalozky() {
+    ukazVrstvu(t("pr_zalozky"), zalozky.length
+      ? `<div class="nast-skupina">${zalozky.map((z, i) => polozka(z.url, z.titulek,
+          `<button class="pr-tl pr-smaz" data-i="${i}" aria-label="${esc(t("smazat"))}">${Ikony.ikona("zavrit")}</button>`)).join("")}</div>`
+      : `<p class="kt-nic">${esc(t("pr_prazdne"))}</p>`);
+    napojOdkazy(vrstva);
+    vrstva.querySelectorAll(".pr-smaz").forEach((b) => b.onclick = () => { zalozky.splice(+b.dataset.i, 1); uloz(); ukazZalozky(); });
+  }
+  function ukazHistorii() {
+    ukazVrstvu(t("pr_historie"), historie.length
+      ? `<div class="nast-skupina">${historie.slice(0, 50).map((h) => polozka(h.url, Core.zobrazAdresu(h.url),
+          `<span class="nast-hodnota">${Core.hhmm(new Date(h.cas))}</span>`)).join("")}</div>
+         <div class="nast-skupina" style="margin-top:14px">${akce("pr-vymazat", "kos", "#ef4444", t("pr_vymazat"))}</div>`
+      : `<p class="kt-nic">${esc(t("pr_prazdne"))}</p>`);
+    napojOdkazy(vrstva);
+    const v = $("#pr-vymazat");
+    if (v) v.onclick = () => { historie = []; uloz(); ukazHistorii(); };
+  }
+
+  $("#pr-karty").onclick = function ukazKarty() {
+    ukazVrstvu(t("pr_karty"), `
+      <div class="pr-karty">${P.karty.map((k, i) => `
+        <div class="pr-karta${i === P.aktivni ? " on" : ""}">
+          <button class="pr-karta-otevrit" data-i="${i}">${avatar(k.url ? Core.zobrazAdresu(k.url) : "+")}
+            <span>${esc(k.url ? Core.zobrazAdresu(k.url) : t("pr_nova_karta"))}</span></button>
+          <button class="pr-tl pr-karta-x" data-x="${i}" aria-label="${esc(t("smazat"))}">${Ikony.ikona("zavrit")}</button>
+        </div>`).join("")}
+        <button class="pr-karta pr-karta-nova" id="pr-nova">${Ikony.ikona("plus")}<span>${esc(t("pr_nova_karta"))}</span></button>
+      </div>
+      <div class="nast-skupina" style="margin-top:14px">${akce("pr-zavrit-vse", "kos", "#ef4444", t("pr_zavrit_karty"))}</div>`);
+    vrstva.querySelectorAll("[data-i]").forEach((b) => b.onclick = () => { P.aktivni = +b.dataset.i; uloz(); zobraz(); });
+    vrstva.querySelectorAll("[data-x]").forEach((b) => b.onclick = () => {
+      P.karty.splice(+b.dataset.x, 1);
+      if (!P.karty.length) P.karty.push(novaKarta());
+      P.aktivni = Math.min(P.aktivni, P.karty.length - 1);
+      uloz();
+      ukazKarty();
+      $("#pr-pocet").textContent = P.karty.length;
+    });
+    $("#pr-nova").onclick = () => { P.karty.push(novaKarta()); P.aktivni = P.karty.length - 1; uloz(); zobraz(); };
+    $("#pr-zavrit-vse").onclick = () => { P.karty = [novaKarta()]; P.aktivni = 0; uloz(); zobraz(); };
+  };
+
+  zobraz();
+}
+
 /* Nastaveni */
 function appNastaveni(c) {
   const svetly = document.body.classList.contains("light");
@@ -1532,8 +1778,9 @@ const APPS = [
   { id: "hodiny", barvy: ["#fda4af", "#e11d48"], render: appHodiny },
   { id: "kalendar", barvy: ["#5eead4", "#0d9488"], render: appKalendar },
   { id: "poznamky", barvy: ["#fde047", "#ca8a04"], render: appPoznamky },
-  { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak, dock: true },
+  { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak },
   { id: "galerie", barvy: ["#f9a8d4", "#c026d3"], render: appGalerie },
+  { id: "prehliadac", barvy: ["#38bdf8", "#6d28d9"], render: appPrehliadac, dock: true, plna: true },
   { id: "terminal", barvy: ["#475569", "#0f172a"], render: appTerminal },
   { id: "nastaveni", barvy: ["#cbd5e1", "#475569"], render: appNastaveni, dock: true }
 ];

@@ -24,6 +24,11 @@ Tři podoby jednoho systému:
   z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
   obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
   stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
+- **Linsoft Browser 2.0.32** — webový prohlížeč v doku: adresní řádek
+  (adresa nebo hledání Google), úvodní stránka s rychlým přístupem
+  (Wikipédia, Mapy, Počasí…), karty, záložky, historie, „Otevřít mimo";
+  stránky běží v sandboxu a nemohou ovládat systém. Weby, které vnoření
+  zakazují (Facebook, GitHub, YouTube), se otevřou mimo LinsoftPhone OS
 - **Nastavení → O systému**: verze a sestavení LinsoftPhone OS, rozhraní,
   prohlížeč, platforma, displej, procesor, paměť, úložiště, baterie, síť,
   doba běhu, počet kontaktů a fotek; na telefonu s postmarketOS navíc model,

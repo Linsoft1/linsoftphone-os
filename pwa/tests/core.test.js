@@ -109,3 +109,18 @@ test("velikost a doba behu", () => {
   assert.strictEqual(Core.trvani(3 * 3600 + 5 * 60), "3 h 5 min");
   assert.strictEqual(Core.trvani(2 * 86400 + 4 * 3600), "2 d 4 h");
 });
+
+test("Linsoft Browser: adresni radek", () => {
+  const H = Core.HLEDANI;
+  assert.strictEqual(Core.adresaZVstupu("sme.sk"), "https://sme.sk");
+  assert.strictEqual(Core.adresaZVstupu("  sk.wikipedia.org/wiki/Bratislava "), "https://sk.wikipedia.org/wiki/Bratislava");
+  assert.strictEqual(Core.adresaZVstupu("http://example.com"), "http://example.com");
+  assert.strictEqual(Core.adresaZVstupu("localhost:8080"), "http://localhost:8080");
+  assert.strictEqual(Core.adresaZVstupu("192.168.1.1"), "http://192.168.1.1");
+  assert.strictEqual(Core.adresaZVstupu("počasie bratislava"), H + "po%C4%8Dasie%20bratislava");
+  assert.strictEqual(Core.adresaZVstupu("linsoft"), H + "linsoft");
+  assert.strictEqual(Core.adresaZVstupu("javascript:alert(1)"), H + "javascript%3Aalert(1)");
+  assert.strictEqual(Core.adresaZVstupu(""), "");
+  assert.strictEqual(Core.zobrazAdresu("https://www.sme.sk/clanok?id=1"), "sme.sk");
+  assert.strictEqual(Core.zobrazAdresu(H + "po%C4%8Dasie"), "počasie");
+});
