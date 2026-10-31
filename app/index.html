@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="author" content="Linsoft">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LinsoftOS">
+<meta name="format-detection" content="telephone=no">
+<title>LinsoftPhone OS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="phone">
+
+  <!-- uvodni obrazovka pri startu (logo LinsoftPhone OS) -->
+  <div id="boot" aria-hidden="true">
+    <img id="boot-logo" src="icons/logo.svg" alt="">
+    <div id="boot-nazev">LinsoftPhone OS</div>
+    <div id="boot-autor">© Linsoft</div>
+    <div id="boot-pruh"><span></span></div>
+  </div>
+
+  <!-- stavovy radek -->
+  <div id="statusbar" role="button" tabindex="0" data-i18n-label="notif">
+    <span id="sb-time">00:00</span>
+    <span id="sb-operator">Linsoft 5G</span>
+    <span id="sb-right">
+      <span id="sb-alarm" hidden></span>
+      <span id="sb-net"></span>
+      <span id="sb-wifi"></span>
+      <span id="sb-batt"></span>
+    </span>
+  </div>
+
+  <!-- zamykaci obrazovka -->
+  <div id="lockscreen" class="screen visible">
+    <div id="lock-top">
+      <div id="lock-date"></div>
+      <div id="lock-clock">00:00</div>
+      <div id="lock-info"></div>
+    </div>
+    <div id="lock-notif"></div>
+    <div id="lock-pin" hidden>
+      <div id="lock-pin-title" class="pin-title" data-i18n="pin_zadej"></div>
+      <div id="lock-pin-box"></div>
+    </div>
+    <div id="lock-bottom">
+      <button class="lock-btn" id="lock-torch" data-i18n-label="tile_torch"></button>
+      <div id="lock-hint"><span id="lock-sipka"></span><span data-i18n="lock_hint"></span></div>
+      <button class="lock-btn" id="lock-cam" data-i18n-label="app_fotak"></button>
+    </div>
+  </div>
+
+  <!-- plocha -->
+  <div id="homescreen" class="screen visible">
+    <div id="widget-clock">
+      <div id="w-time">00:00</div>
+      <div id="w-date"></div>
+      <div id="w-info"></div>
+    </div>
+    <button id="hledat-plocha" data-ikona="hledat"><span data-i18n="hl_hledat"></span></button>
+    <div id="appgrid"></div>
+    <div id="dock"></div>
+  </div>
+
+  <!-- bezici aplikace -->
+  <div id="appscreen" class="screen">
+    <div id="app-header">
+      <button id="app-back" data-i18n-label="zpet">←</button>
+      <h1 id="app-title"></h1>
+    </div>
+    <div id="app-content"></div>
+  </div>
+
+  <!-- nedavne aplikace -->
+  <div id="recents" class="screen">
+    <h2 data-i18n="nedavne"></h2>
+    <div id="recents-list"></div>
+    <button class="btn ghost" id="recents-clear" data-i18n="zavri_vse"></button>
+  </div>
+
+  <!-- hledani v telefonu (aplikace, kontakty, zpravy, poznamky, udalosti, web) -->
+  <div id="hledani" class="screen">
+    <label class="hl-pole" data-ikona="hledat">
+      <input id="hl-q" type="search" autocomplete="off" data-i18n-label="hl_hledat">
+    </label>
+    <div id="hl-vysledky"></div>
+  </div>
+
+  <!-- panel notifikaci -->
+  <div id="notifpanel" aria-live="polite">
+    <div id="notif-head">
+      <strong data-i18n="notif"></strong>
+      <button id="notif-clear" data-i18n="notif_vymaz"></button>
+    </div>
+    <div id="notif-list"></div>
+    <!-- jas: jen na telefonu s LinsoftPhone OS (prohlizec jas displeje ovladat neumi) -->
+    <label id="panel-jas" data-ikona="slunce" hidden>
+      <input type="range" id="panel-jas-in" min="5" max="100" value="70" data-i18n-label="st_jas">
+    </label>
+    <div id="quick-tiles">
+      <button class="tile" data-tile="torch" data-ikona="svitilna"><span data-i18n="tile_torch"></span></button>
+      <button class="tile" data-tile="motiv" data-ikona="motiv"><span data-i18n="tile_motiv"></span></button>
+      <button class="tile" data-tile="full" data-ikona="cela"><span data-i18n="tile_full"></span></button>
+      <button class="tile" data-tile="zamek" data-ikona="zamek"><span data-i18n="tile_zamek"></span></button>
+    </div>
+    <div id="notif-grip"></div>
+  </div>
+
+  <!-- zvonici budik / minutka -->
+  <div id="alarm" role="alertdialog" hidden>
+    <div id="alarm-icon">⏰</div>
+    <div id="alarm-text"></div>
+    <button class="btn" id="alarm-stop" data-i18n="vypnout"></button>
+  </div>
+
+  <!-- hovor (jen na skutecnem telefonu s LinsoftPhone OS) -->
+  <div id="hovor" role="dialog" hidden>
+    <div id="hovor-avatar"></div>
+    <div id="hovor-kdo"></div>
+    <div id="hovor-stav"></div>
+    <div id="hovor-tlacitka">
+      <button id="hovor-prijmout" data-i18n-label="prijmout">📞</button>
+      <button id="hovor-zavesit" data-i18n-label="zavesit">📞</button>
+    </div>
+  </div>
+
+  <!-- vlastni klavesnice na obrazovce (v kiosku zadna jina neni) -->
+  <div id="klavesnice" hidden></div>
+
+  <!-- navigacni lista -->
+  <nav id="navbar">
+    <button id="nav-back" data-i18n-label="zpet" data-ikona="zpet"></button>
+    <button id="nav-home" data-i18n-label="domu" data-ikona="domu"></button>
+    <button id="nav-recent" data-i18n-label="nedavne" data-ikona="nedavne"></button>
+    <!-- navigace gesty: prouzek dole (Nastaveni -> Navigace) -->
+    <span id="nav-prouzek" aria-hidden="true"></span>
+  </nav>
+
+</div>
+<script src="core.js"></script>
+<script src="ikony.js"></script>
+<script src="shell.js"></script>
+<script src="system.js"></script>
+<script src="apps/telefon.js"></script>
+<script src="apps/zpravy.js"></script>
+<script src="apps/kontakty.js"></script>
+<script src="apps/kalkulacka.js"></script>
+<script src="apps/hodiny.js"></script>
+<script src="apps/kalendar.js"></script>
+<script src="apps/poznamky.js"></script>
+<script src="apps/galerie.js"></script>
+<script src="apps/fotak.js"></script>
+<script src="apps/terminal.js"></script>
+<script src="apps/prehliadac.js"></script>
+<script src="apps/obchod.js"></script>
+<script src="apps/nastaveni.js"></script>
+<script src="start.js"></script>
+</body>
+</html>

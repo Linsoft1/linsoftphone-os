@@ -1,168 +1,253 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="sk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b1220">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinsoftPhone OS — vlastný operačný systém pre smartfóny</title>
+<meta name="description" content="LinsoftPhone OS je vlastný telefónny systém od Linsoft: beží v prehliadači každého smartfónu, ako samostatný systém na telefónoch s postmarketOS aj ako ARM kernel v QEMU.">
 <meta name="author" content="Linsoft">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LinsoftOS">
-<meta name="format-detection" content="telephone=no">
-<title>LinsoftPhone OS</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="app.css">
+<meta name="theme-color" content="#0b1220">
+<meta property="og:title" content="LinsoftPhone OS">
+<meta property="og:description" content="Vlastný operačný systém pre smartfóny od Linsoft.">
+<meta property="og:image" content="obrazky/plocha.webp">
+<link rel="icon" type="image/svg+xml" href="app/icons/logo.svg">
+<link rel="stylesheet" href="styl.css">
 </head>
 <body>
-<div id="phone">
 
-  <!-- uvodni obrazovka pri startu (logo LinsoftPhone OS) -->
-  <div id="boot" aria-hidden="true">
-    <img id="boot-logo" src="icons/logo.svg" alt="">
-    <div id="boot-nazev">LinsoftPhone OS</div>
-    <div id="boot-autor">© Linsoft</div>
-    <div id="boot-pruh"><span></span></div>
-  </div>
-
-  <!-- stavovy radek -->
-  <div id="statusbar" role="button" tabindex="0" data-i18n-label="notif">
-    <span id="sb-time">00:00</span>
-    <span id="sb-operator">Linsoft 5G</span>
-    <span id="sb-right">
-      <span id="sb-alarm" hidden></span>
-      <span id="sb-net"></span>
-      <span id="sb-wifi"></span>
-      <span id="sb-batt"></span>
-    </span>
-  </div>
-
-  <!-- zamykaci obrazovka -->
-  <div id="lockscreen" class="screen visible">
-    <div id="lock-top">
-      <div id="lock-date"></div>
-      <div id="lock-clock">00:00</div>
-      <div id="lock-info"></div>
-    </div>
-    <div id="lock-notif"></div>
-    <div id="lock-pin" hidden>
-      <div id="lock-pin-title" class="pin-title" data-i18n="pin_zadej"></div>
-      <div id="lock-pin-box"></div>
-    </div>
-    <div id="lock-bottom">
-      <button class="lock-btn" id="lock-torch" data-i18n-label="tile_torch"></button>
-      <div id="lock-hint"><span id="lock-sipka"></span><span data-i18n="lock_hint"></span></div>
-      <button class="lock-btn" id="lock-cam" data-i18n-label="app_fotak"></button>
-    </div>
-  </div>
-
-  <!-- plocha -->
-  <div id="homescreen" class="screen visible">
-    <div id="widget-clock">
-      <div id="w-time">00:00</div>
-      <div id="w-date"></div>
-      <div id="w-info"></div>
-    </div>
-    <button id="hledat-plocha" data-ikona="hledat"><span data-i18n="hl_hledat"></span></button>
-    <div id="appgrid"></div>
-    <div id="dock"></div>
-  </div>
-
-  <!-- bezici aplikace -->
-  <div id="appscreen" class="screen">
-    <div id="app-header">
-      <button id="app-back" data-i18n-label="zpet">←</button>
-      <h1 id="app-title"></h1>
-    </div>
-    <div id="app-content"></div>
-  </div>
-
-  <!-- nedavne aplikace -->
-  <div id="recents" class="screen">
-    <h2 data-i18n="nedavne"></h2>
-    <div id="recents-list"></div>
-    <button class="btn ghost" id="recents-clear" data-i18n="zavri_vse"></button>
-  </div>
-
-  <!-- hledani v telefonu (aplikace, kontakty, zpravy, poznamky, udalosti, web) -->
-  <div id="hledani" class="screen">
-    <label class="hl-pole" data-ikona="hledat">
-      <input id="hl-q" type="search" autocomplete="off" data-i18n-label="hl_hledat">
-    </label>
-    <div id="hl-vysledky"></div>
-  </div>
-
-  <!-- panel notifikaci -->
-  <div id="notifpanel" aria-live="polite">
-    <div id="notif-head">
-      <strong data-i18n="notif"></strong>
-      <button id="notif-clear" data-i18n="notif_vymaz"></button>
-    </div>
-    <div id="notif-list"></div>
-    <!-- jas: jen na telefonu s LinsoftPhone OS (prohlizec jas displeje ovladat neumi) -->
-    <label id="panel-jas" data-ikona="slunce" hidden>
-      <input type="range" id="panel-jas-in" min="5" max="100" value="70" data-i18n-label="st_jas">
-    </label>
-    <div id="quick-tiles">
-      <button class="tile" data-tile="torch" data-ikona="svitilna"><span data-i18n="tile_torch"></span></button>
-      <button class="tile" data-tile="motiv" data-ikona="motiv"><span data-i18n="tile_motiv"></span></button>
-      <button class="tile" data-tile="full" data-ikona="cela"><span data-i18n="tile_full"></span></button>
-      <button class="tile" data-tile="zamek" data-ikona="zamek"><span data-i18n="tile_zamek"></span></button>
-    </div>
-    <div id="notif-grip"></div>
-  </div>
-
-  <!-- zvonici budik / minutka -->
-  <div id="alarm" role="alertdialog" hidden>
-    <div id="alarm-icon">⏰</div>
-    <div id="alarm-text"></div>
-    <button class="btn" id="alarm-stop" data-i18n="vypnout"></button>
-  </div>
-
-  <!-- hovor (jen na skutecnem telefonu s LinsoftPhone OS) -->
-  <div id="hovor" role="dialog" hidden>
-    <div id="hovor-avatar"></div>
-    <div id="hovor-kdo"></div>
-    <div id="hovor-stav"></div>
-    <div id="hovor-tlacitka">
-      <button id="hovor-prijmout" data-i18n-label="prijmout">📞</button>
-      <button id="hovor-zavesit" data-i18n-label="zavesit">📞</button>
-    </div>
-  </div>
-
-  <!-- vlastni klavesnice na obrazovce (v kiosku zadna jina neni) -->
-  <div id="klavesnice" hidden></div>
-
-  <!-- navigacni lista -->
-  <nav id="navbar">
-    <button id="nav-back" data-i18n-label="zpet" data-ikona="zpet"></button>
-    <button id="nav-home" data-i18n-label="domu" data-ikona="domu"></button>
-    <button id="nav-recent" data-i18n-label="nedavne" data-ikona="nedavne"></button>
-    <!-- navigace gesty: prouzek dole (Nastaveni -> Navigace) -->
-    <span id="nav-prouzek" aria-hidden="true"></span>
+<!-- ============ navigacia ============ -->
+<header class="lista">
+  <a class="znacka" href="#">
+    <img src="app/icons/logo.svg" alt="" width="32" height="32">
+    <span>LinsoftPhone OS</span>
+  </a>
+  <nav class="menu" id="menu">
+    <a href="#funkcie">Funkcie</a>
+    <a href="#podoby">Systém</a>
+    <a href="#snimky">Snímky</a>
+    <a href="#instalacia">Inštalácia</a>
+    <a href="#otazky">Otázky</a>
+    <a href="https://github.com/Linsoft1/linsoftphone-os" class="menu-gh">GitHub</a>
   </nav>
+  <button class="menu-tl" id="menu-tl" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</header>
 
-</div>
-<script src="core.js"></script>
-<script src="ikony.js"></script>
-<script src="shell.js"></script>
-<script src="system.js"></script>
-<script src="apps/telefon.js"></script>
-<script src="apps/zpravy.js"></script>
-<script src="apps/kontakty.js"></script>
-<script src="apps/kalkulacka.js"></script>
-<script src="apps/hodiny.js"></script>
-<script src="apps/kalendar.js"></script>
-<script src="apps/poznamky.js"></script>
-<script src="apps/galerie.js"></script>
-<script src="apps/fotak.js"></script>
-<script src="apps/terminal.js"></script>
-<script src="apps/prehliadac.js"></script>
-<script src="apps/obchod.js"></script>
-<script src="apps/nastaveni.js"></script>
-<script src="start.js"></script>
+<main>
+
+<!-- ============ uvod ============ -->
+<section class="hero">
+  <div class="hero-text">
+    <p class="stitok">Verzia 2.4 · zadarmo · otvorený kód</p>
+    <h1>Telefón, ktorý je <span class="prechod">celý tvoj</span>.</h1>
+    <p class="podnadpis">LinsoftPhone OS je vlastný operačný systém pre smartfóny. Spustíš ho v prehliadači
+      ktoréhokoľvek telefónu, nahráš ho do telefónu namiesto Androidu, alebo naštartuješ jeho
+      vlastné jadro pre ARM.</p>
+    <div class="tlacidla">
+      <a class="tl tl-hlavne" href="app/">Spustiť LinsoftPhone OS</a>
+      <a class="tl tl-druhe" href="#instalacia">Nainštalovať do telefónu</a>
+    </div>
+    <ul class="body">
+      <li>Android aj iPhone</li><li>Funguje offline</li><li>Slovenčina · čeština · angličtina</li>
+    </ul>
+  </div>
+  <div class="hero-telefon">
+    <div class="telefon">
+      <iframe src="app/" title="Živá ukážka LinsoftPhone OS" loading="lazy"></iframe>
+    </div>
+    <p class="pod-telefonom">Živá ukážka — vyskúšaj myšou alebo prstom</p>
+  </div>
+</section>
+
+<!-- ============ funkcie ============ -->
+<section id="funkcie" class="sekcia">
+  <h2>Všetko, čo telefón potrebuje</h2>
+  <p class="sekcia-uvod">Dvanásť vlastných aplikácií, jednotný vzhľad a žiadne reklamy.</p>
+  <div class="mriezka">
+    <article class="karta">
+      <span class="ik" style="--a:#4ade80;--b:#15a34a"><svg viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
+      <h3>Telefón a Správy</h3>
+      <p>Klávesnica s písmenami, zoznam hovorov, konverzácie ako v chate. Na vlastnom systéme volá a posiela SMS priamo cez modem.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#38bdf8;--b:#6d28d9"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span>
+      <h3>Linsoft Browser</h3>
+      <p>Karty, súkromné karty, záložky, našepkávač a YouTube priamo v prehliadači. Stránky bežia oddelene od systému.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#34d399;--b:#0e7490"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/><path d="m10 13.5 2 2 2.5-3"/></svg></span>
+      <h3>Linsoft Store</h3>
+      <p>Android aplikácie z Google Play a F-Droid, alebo vlastný stiahnutý APK. Na vlastnom systéme sa inštalujú do Waydroidu.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#475569;--b:#0f172a"><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="m6.5 9.5 3 2.5-3 2.5M12 15h5"/></svg></span>
+      <h3>Terminál ako v Linuxe</h3>
+      <p>Výzva <code>user@linsoftphone:~$</code>, rúry, presmerovanie, Tab a história. Na telefóne s postmarketOS je to skutočný shell.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#22c55e;--b:#166534"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg></span>
+      <h3>Súkromie</h3>
+      <p>PIN zámok, dáta zostávajú v telefóne, záloha do súboru. Bez účtov, bez sledovania, bez reklám.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#f9a8d4;--b:#c026d3"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="15.5" cy="9" r="1.6"/><path d="m3.5 17 5-5.5 4 4 2.5-2.5 5.5 5"/></svg></span>
+      <h3>Fotoaparát a Galéria</h3>
+      <p>Predná aj zadná kamera, samospúšť, blesk. Galéria po dňoch, posúvanie prstom, zdieľanie a tapeta z fotky.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#fda4af;--b:#e11d48"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M5 3 2.5 5.5M19 3l2.5 2.5"/></svg></span>
+      <h3>Hodiny a Kalendár</h3>
+      <p>Budíky podľa dní, kruhová minútka, stopky s kolami, svetový čas. Udalosti s časom a widget „Dnes“ na ploche.</p>
+    </article>
+    <article class="karta">
+      <span class="ik" style="--a:#c4b5fd;--b:#7c3aed"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></span>
+      <h3>Tvoj vzhľad</h3>
+      <p>Tapety aj z vlastnej fotky, svetlý, tmavý a automatický motív, poradie ikon, navigácia tlačidlami alebo gestami.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ tri podoby ============ -->
+<section id="podoby" class="sekcia">
+  <h2>Jeden systém, tri podoby</h2>
+  <p class="sekcia-uvod">Od prehliadača až po vlastné jadro.</p>
+  <div class="podoby">
+    <article class="podoba">
+      <span class="cislo">1</span>
+      <h3>V prehliadači</h3>
+      <p>Otvor stránku na ľubovoľnom smartfóne a daj „Pridať na plochu“. Funguje offline a aktualizuje sa sám.</p>
+      <p class="podoba-pre">Android · iPhone · počítač</p>
+      <a href="app/">Spustiť →</a>
+    </article>
+    <article class="podoba zvyraznena">
+      <span class="cislo">2</span>
+      <h3>Ako systém telefónu</h3>
+      <p>Na telefónoch s postmarketOS nahradí Android. Po zapnutí naštartuje rovno LinsoftPhone OS a skutočne volá, píše SMS a pripája sa na Wi-Fi.</p>
+      <p class="podoba-pre">postmarketOS · stovky modelov</p>
+      <a href="#instalacia">Návod →</a>
+    </article>
+    <article class="podoba">
+      <span class="cislo">3</span>
+      <h3>Vlastné jadro</h3>
+      <p>Mini operačný systém pre ARM napísaný v C a assembleri: grafika, prerušenia, hodiny, klávesnica a dotyk. Beží v QEMU.</p>
+      <p class="podoba-pre">ARMv7 · QEMU · kernel 1.3</p>
+      <a href="https://github.com/Linsoft1/linsoftphone-os#kernel-verze-13--skutečný-os-v-qemu">Zdrojový kód →</a>
+    </article>
+  </div>
+</section>
+
+<!-- ============ snimky ============ -->
+<section id="snimky" class="sekcia">
+  <h2>Ako vyzerá</h2>
+  <div class="snimky" id="snimky-pas">
+    <figure><img src="obrazky/zamok.webp" alt="Zamknutá obrazovka" loading="lazy" width="360" height="740"><figcaption>Zamknutá obrazovka</figcaption></figure>
+    <figure><img src="obrazky/plocha.webp" alt="Plocha s widgetom Dnes" loading="lazy" width="360" height="740"><figcaption>Plocha</figcaption></figure>
+    <figure><img src="obrazky/telefon.webp" alt="Telefón s klávesnicou" loading="lazy" width="360" height="740"><figcaption>Telefón</figcaption></figure>
+    <figure><img src="obrazky/prehliadac.webp" alt="Linsoft Browser" loading="lazy" width="360" height="740"><figcaption>Linsoft Browser</figcaption></figure>
+    <figure><img src="obrazky/obchod.webp" alt="Linsoft Store" loading="lazy" width="360" height="740"><figcaption>Linsoft Store</figcaption></figure>
+    <figure><img src="obrazky/terminal.webp" alt="Terminál" loading="lazy" width="360" height="740"><figcaption>Terminál</figcaption></figure>
+    <figure><img src="obrazky/kontakty.webp" alt="Kontakty" loading="lazy" width="360" height="740"><figcaption>Kontakty</figcaption></figure>
+    <figure><img src="obrazky/hodiny.webp" alt="Hodiny" loading="lazy" width="360" height="740"><figcaption>Hodiny</figcaption></figure>
+    <figure><img src="obrazky/nastavenia.webp" alt="Nastavenia" loading="lazy" width="360" height="740"><figcaption>Nastavenia</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ instalacia ============ -->
+<section id="instalacia" class="sekcia">
+  <h2>Inštalácia</h2>
+  <div class="karty-instalacia" role="tablist">
+    <button class="karta-tl on" data-karta="android" role="tab" aria-selected="true">Android</button>
+    <button class="karta-tl" data-karta="iphone" role="tab" aria-selected="false">iPhone</button>
+    <button class="karta-tl" data-karta="pmos" role="tab" aria-selected="false">Ako systém telefónu</button>
+    <button class="karta-tl" data-karta="kernel" role="tab" aria-selected="false">Kernel</button>
+  </div>
+  <div class="postup" data-postup="android">
+    <ol>
+      <li>Otvor <a href="app/">linsoft1.github.io/linsoftphone-os/app</a> v Chrome alebo Samsung Internete.</li>
+      <li>Ťukni na menu <b>⋮</b> a vyber <b>Pridať na plochu</b> (alebo <b>Inštalovať aplikáciu</b>).</li>
+      <li>Otvor LinsoftPhone OS z plochy — beží na celú obrazovku a aj bez internetu.</li>
+    </ol>
+  </div>
+  <div class="postup" data-postup="iphone" hidden>
+    <ol>
+      <li>Otvor <a href="app/">linsoft1.github.io/linsoftphone-os/app</a> v Safari.</li>
+      <li>Ťukni na <b>Zdieľať</b> a vyber <b>Pridať na plochu</b>.</li>
+      <li>Hotovo. Na iPhone fungujú všetky aplikácie okrem inštalácie Android aplikácií.</li>
+    </ol>
+  </div>
+  <div class="postup" data-postup="pmos" hidden>
+    <p class="varovanie">Inštalácia zmaže celý telefón a väčšinou treba odomknúť bootloader. Vyskúšaj to najprv na starom telefóne.</p>
+    <ol>
+      <li>Over, či tvoj telefón podporuje <a href="https://wiki.postmarketos.org/wiki/Devices">postmarketOS</a>.</li>
+      <li>Na Linuxe alebo vo WSL nainštaluj <code>pmbootstrap</code> a stiahni tento repozitár.</li>
+    </ol>
+<pre><code>pmbootstrap init                 # vyber telefón
+sh postmarketos/priprav.sh       # vloží LinsoftPhone OS
+pmbootstrap init                 # ako UI zvoľ: linsoft
+pmbootstrap install
+pmbootstrap flasher flash_rootfs && pmbootstrap flasher flash_kernel</code></pre>
+    <p>Celý postup: <a href="https://github.com/Linsoft1/linsoftphone-os/tree/main/postmarketos">postmarketos/README.md</a></p>
+  </div>
+  <div class="postup" data-postup="kernel" hidden>
+    <p>Kernel pre ARM sa zostaví kompilátorom <code>zig</code> a spustí v emulátore QEMU (Windows):</p>
+<pre><code>.\build.ps1      # zostaví kernel.elf
+.\run.ps1        # QEMU s displejom, klávesnicou a dotykom</code></pre>
+    <p>Príkazy v termináli: <code>pomoc</code>, <code>info</code>, <code>datum</code>, <code>kalk (2+3)*4</code>, <code>klavesnica sk</code>.</p>
+  </div>
+</section>
+
+<!-- ============ verzie ============ -->
+<section class="sekcia">
+  <h2>Verzie</h2>
+  <div class="verzie">
+    <div class="verzia"><b>2.4</b><span>LinsoftPhone OS</span><small>Store, Terminál ako v Linuxe, gestá, vyhľadávanie</small></div>
+    <div class="verzia"><b>2.1</b><span>Linsoft Browser</span><small>Našepkávač, súkromné karty, YouTube</small></div>
+    <div class="verzia"><b>1.3</b><span>ARM kernel</span><small>Slovenská klávesnica, zalamovanie riadkov</small></div>
+  </div>
+</section>
+
+<!-- ============ otazky ============ -->
+<section id="otazky" class="sekcia">
+  <h2>Časté otázky</h2>
+  <details>
+    <summary>Je LinsoftPhone OS zadarmo?</summary>
+    <p>Áno. Celý systém je zadarmo a jeho zdrojový kód je na GitHube.</p>
+  </details>
+  <details>
+    <summary>Nahradí mi Android na každom telefóne?</summary>
+    <p>Nie na každom. Ako samostatný systém beží na telefónoch, ktoré podporuje postmarketOS, a hovory a SMS fungujú len tam, kde postmarketOS ovláda modem. V prehliadači beží na každom smartfóne.</p>
+  </details>
+  <details>
+    <summary>Dajú sa inštalovať Android aplikácie?</summary>
+    <p>Na telefóne s Androidom ich Linsoft Store otvorí v Google Play alebo F-Droid. Na vlastnom systéme ich inštaluje do Waydroidu (aplikácie z F-Droid a vlastné APK). Na iPhone Android aplikácie nejdú.</p>
+  </details>
+  <details>
+    <summary>Kde sú uložené moje dáta?</summary>
+    <p>Iba v tvojom telefóne. LinsoftPhone OS nemá žiadne účty ani server. Zálohu si urobíš v Nastaveniach do súboru.</p>
+  </details>
+  <details>
+    <summary>Funguje budík, keď je telefón zamknutý?</summary>
+    <p>V prehliadači zvoní len vtedy, keď je LinsoftPhone OS otvorený — webová aplikácia nemôže zobudiť zamknutý telefón.</p>
+  </details>
+</section>
+
+<!-- ============ vyzva ============ -->
+<section class="vyzva">
+  <img src="app/icons/logo.svg" alt="" width="72" height="72">
+  <h2>Vyskúšaj LinsoftPhone OS ešte dnes</h2>
+  <p>Netreba nič inštalovať — stačí prehliadač.</p>
+  <a class="tl tl-hlavne" href="app/">Spustiť LinsoftPhone OS</a>
+</section>
+
+</main>
+
+<footer class="pata">
+  <div class="znacka">
+    <img src="app/icons/logo.svg" alt="" width="28" height="28">
+    <span>LinsoftPhone OS</span>
+  </div>
+  <p>© <span id="rok">2026</span> Linsoft · <a href="https://github.com/Linsoft1/linsoftphone-os">GitHub</a> · <a href="app/">Spustiť</a></p>
+</footer>
+
+<script src="web.js"></script>
 </body>
 </html>
