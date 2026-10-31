@@ -80,7 +80,13 @@ const TEXTY = {
     pr_vymazat: "Vymazat historii", pr_prazdne: "Zatím nic", pr_rychle: "Rychlý přístup",
     pr_zavrit_karty: "Zavřít všechny karty", pr_obnovit: "Obnovit", pr_vpred: "Vpřed", pr_menu: "Nabídka",
     pr_tip: "Některé weby (Facebook, GitHub, YouTube) nedovolí zobrazení uvnitř jiné aplikace. Pak použij „Otevřít mimo“.",
-    pr_o_text: "Webový prohlížeč LinsoftPhone OS. Stránky běží odděleně (sandbox) a nemohou ovládat systém."
+    pr_o_text: "Webový prohlížeč LinsoftPhone OS. Stránky běží odděleně (sandbox) a nemohou ovládat systém.",
+    pr_sukromna: "Nová soukromá karta", pr_sukromna_info: "Soukromá karta: historie se neukládá.",
+    pr_zdilet: "Sdílet odkaz", pr_skopirovano: "Odkaz zkopírován.", pr_nastaveni: "Nastavení prohlížeče",
+    pr_hledac: "Vyhledávač", pr_hledat_v: "Hledat „{n}“", pr_blok_nadpis: "Tuto stránku tu nelze zobrazit",
+    pr_blok_text: "Web {n} nedovoluje zobrazení uvnitř jiné aplikace.", pr_offline_nadpis: "Bez připojení",
+    pr_offline_text: "Zkontroluj Wi-Fi nebo mobilní data.", pr_znovu: "Zkusit znovu",
+    pr_vymazat_vse: "Vymazat všechna data prohlížeče", pr_vymazano: "Data prohlížeče vymazána."
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -158,7 +164,13 @@ const TEXTY = {
     pr_vymazat: "Vymazať históriu", pr_prazdne: "Zatiaľ nič", pr_rychle: "Rýchly prístup",
     pr_zavrit_karty: "Zavrieť všetky karty", pr_obnovit: "Obnoviť", pr_vpred: "Dopredu", pr_menu: "Ponuka",
     pr_tip: "Niektoré weby (Facebook, GitHub, YouTube) nedovolia zobrazenie vnútri inej aplikácie. Vtedy použi „Otvoriť mimo“.",
-    pr_o_text: "Webový prehliadač LinsoftPhone OS. Stránky bežia oddelene (sandbox) a nemôžu ovládať systém."
+    pr_o_text: "Webový prehliadač LinsoftPhone OS. Stránky bežia oddelene (sandbox) a nemôžu ovládať systém.",
+    pr_sukromna: "Nová súkromná karta", pr_sukromna_info: "Súkromná karta: história sa neukladá.",
+    pr_zdilet: "Zdieľať odkaz", pr_skopirovano: "Odkaz skopírovaný.", pr_nastaveni: "Nastavenia prehliadača",
+    pr_hledac: "Vyhľadávač", pr_hledat_v: "Hľadať „{n}“", pr_blok_nadpis: "Túto stránku tu nie je možné zobraziť",
+    pr_blok_text: "Web {n} nedovoľuje zobrazenie vnútri inej aplikácie.", pr_offline_nadpis: "Bez pripojenia",
+    pr_offline_text: "Skontroluj Wi-Fi alebo mobilné dáta.", pr_znovu: "Skúsiť znova",
+    pr_vymazat_vse: "Vymazať všetky údaje prehliadača", pr_vymazano: "Údaje prehliadača vymazané."
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -235,7 +247,13 @@ const TEXTY = {
     pr_vymazat: "Clear history", pr_prazdne: "Nothing yet", pr_rychle: "Quick access",
     pr_zavrit_karty: "Close all tabs", pr_obnovit: "Reload", pr_vpred: "Forward", pr_menu: "Menu",
     pr_tip: "Some sites (Facebook, GitHub, YouTube) refuse to be shown inside another app. Use “Open outside” for them.",
-    pr_o_text: "The LinsoftPhone OS web browser. Pages run isolated (sandbox) and cannot control the system."
+    pr_o_text: "The LinsoftPhone OS web browser. Pages run isolated (sandbox) and cannot control the system.",
+    pr_sukromna: "New private tab", pr_sukromna_info: "Private tab: history is not saved.",
+    pr_zdilet: "Share link", pr_skopirovano: "Link copied.", pr_nastaveni: "Browser settings",
+    pr_hledac: "Search engine", pr_hledat_v: "Search “{n}”", pr_blok_nadpis: "This page can't be shown here",
+    pr_blok_text: "{n} does not allow being shown inside another app.", pr_offline_nadpis: "No connection",
+    pr_offline_text: "Check Wi-Fi or mobile data.", pr_znovu: "Try again",
+    pr_vymazat_vse: "Clear all browser data", pr_vymazano: "Browser data cleared."
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -365,34 +383,78 @@ function trvani(sekundy) {
 }
 
 /* ---------------- Linsoft Browser ---------------- */
-/* Google s igu=1 povoli zobrazeni vysledku ve vnorenem okne prohlizece */
-const HLEDANI = "https://www.google.com/search?igu=1&q=";
+/* vyhledavace, ktere dovoli zobrazeni vysledku ve vnorenem okne prohlizece
+ * (Google jen s igu=1; DuckDuckGo, Brave a Startpage vnoreni zakazuji) */
+const HLEDACE = {
+  google: { nazev: "Google", url: "https://www.google.com/search?igu=1&q=" },
+  bing: { nazev: "Bing", url: "https://www.bing.com/search?q=" },
+  wikipedia: { nazev: "Wikipédia", url: "https://sk.m.wikipedia.org/w/index.php?search=" }
+};
+const HLEDANI = HLEDACE.google.url;
 
-/* text z adresniho radku -> adresa stranky, nebo vyhledavani */
-function adresaZVstupu(vstup) {
+/* text z adresniho radku -> adresa stranky, nebo vyhledavani zvolenym vyhledavacem */
+function adresaZVstupu(vstup, hledac) {
+  const hledej = (HLEDACE[hledac] || HLEDACE.google).url;
   const s = String(vstup || "").trim();
   if (!s) return "";
   if (/^https?:\/\//i.test(s)) return s;
-  if (/^(about|data|javascript|file|blob):/i.test(s)) return HLEDANI + encodeURIComponent(s);
+  if (/^(about|data|javascript|file|blob):/i.test(s)) return hledej + encodeURIComponent(s);
   /* "sme.sk", "localhost:8080", "192.168.1.1/admin" - bez mezer a s teckou nebo portem */
   if (!/\s/.test(s) && (/^[^/]+\.[a-z]{2,}(?::\d+)?(\/.*)?$/i.test(s) || /^localhost(:\d+)?(\/.*)?$/i.test(s) ||
       /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/.*)?$/.test(s)))
     return (/^(localhost|\d)/i.test(s) ? "http://" : "https://") + s;
-  return HLEDANI + encodeURIComponent(s);
+  return hledej + encodeURIComponent(s);
 }
 
 /* adresa pro zobrazeni: domena bez "www.", u hledani hledany text */
 function zobrazAdresu(url) {
   const s = String(url || "");
-  if (s.indexOf(HLEDANI) === 0) return decodeURIComponent(s.slice(HLEDANI.length));
-  const m = s.match(/^https?:\/\/(?:www\.)?([^/?#]+)/i);
+  const klice = Object.keys(HLEDACE);
+  for (let i = 0; i < klice.length; i++) {
+    const h = HLEDACE[klice[i]].url;
+    if (s.indexOf(h) === 0) {
+      try { return decodeURIComponent(s.slice(h.length).replace(/\+/g, " ")); } catch (e) { return s.slice(h.length); }
+    }
+  }
+  const m = s.match(/^https?:\/\/(?:www\.|m\.)?([^/?#]+)/i);
   return m ? m[1] : s;
+}
+
+/* weby, ktere zobrazeni ve vnorenem okne zakazuji (X-Frame-Options / CSP) */
+const BLOKOVANE = ["facebook.com", "instagram.com", "x.com", "twitter.com", "github.com", "linkedin.com",
+  "duckduckgo.com", "search.brave.com", "startpage.com", "netflix.com", "tiktok.com", "reddit.com",
+  "accounts.google.com", "mail.google.com", "web.whatsapp.com", "chatgpt.com", "claude.ai"];
+
+/* pred nactenim: YouTube video -> vlozitelna verze, zname blokovane weby oznacit */
+function upravAdresu(url) {
+  const s = String(url || "");
+  const yt = s.match(/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/)|youtu\.be\/)([\w-]{11})/i);
+  if (yt) return { url: "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1", blokovane: false };
+  const host = (s.match(/^https?:\/\/([^/?#:]+)/i) || [])[1];
+  const blok = !!host && BLOKOVANE.some((d) => host.toLowerCase() === d || host.toLowerCase().slice(-d.length - 1) === "." + d);
+  return { url: s, blokovane: blok };
+}
+
+/* navrhy pri psani adresy: zalozky, historie a rychly pristup podle shody */
+function navrhy(vstup, zdroje, max) {
+  const q = String(vstup || "").trim().toLowerCase();
+  if (!q) return [];
+  const videne = {}, vysledek = [];
+  zdroje.forEach((p) => {
+    if (!p || !p.url || videne[p.url]) return;
+    const text = ((p.titulek || "") + " " + p.url).toLowerCase();
+    if (text.indexOf(q) < 0) return;
+    videne[p.url] = true;
+    vysledek.push(p);
+  });
+  return vysledek.slice(0, max || 5);
 }
 
 const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
-  prohlizec, platforma, velikost, trvani, HLEDANI, adresaZVstupu, zobrazAdresu
+  prohlizec, platforma, velikost, trvani, HLEDACE, HLEDANI, adresaZVstupu, zobrazAdresu,
+  upravAdresu, navrhy
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

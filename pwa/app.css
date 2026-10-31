@@ -825,3 +825,49 @@ a.nast-radek { text-decoration: none; }
 
 /* nazvy aplikaci na plose na dva radky (napr. Linsoft Browser) */
 #homescreen .appicon span:last-child { text-align: center; line-height: 1.15; max-width: 100%; }
+
+/* ================= Linsoft Browser 2.1 ================= */
+/* adresni radek: pri psani krizek misto obnoveni */
+#pr-vymaz { display: none; }
+.pr-adresa.pise #pr-vymaz { display: flex; }
+.pr-adresa.pise #pr-obnov { display: none; }
+.pr-adresa.pise { border-color: var(--accent); }
+/* soukroma karta */
+.pr-adresa.sukromna { background: #2e1065; border-color: #6d28d9; color: #ede9fe; }
+.pr-adresa.sukromna input, .pr-adresa.sukromna .pr-tl, .pr-adresa.sukromna .pr-ikona { color: #ede9fe; }
+.pr-logo.sukromna .pr-logo-ik { background: linear-gradient(145deg, #4c1d95, #1e1b4b); }
+.pr-karta.sukromna { background: #2e1065; color: #ede9fe; }
+.pr-karta.sukromna .pr-karta-otevrit, .pr-karta.sukromna .pr-tl { color: #ede9fe; }
+.avatar.pr-maska { background: #4c1d95; }
+.avatar.pr-maska .ik { width: 22px; height: 22px; }
+
+/* navrhy pri psani */
+.pr-navrhy {
+  position: absolute; z-index: 4; top: 0; left: 0; right: 0; max-height: 100%; overflow-y: auto;
+  background: var(--bg); border-bottom: 1px solid rgba(127,127,127,.18); padding: 4px 0 8px;
+  box-shadow: 0 16px 30px rgba(0,0,0,.25);
+}
+.pr-navrh {
+  display: flex; align-items: center; width: 100%; padding: 10px 18px; border: none; background: none;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.pr-navrh:active { background: rgba(127,127,127,.15); }
+.pr-navrh > .ik { width: 18px; height: 18px; margin-right: 14px; color: var(--muted); flex-shrink: 0; }
+.pr-navrh .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* uvodni stranka: vyhledavac vpravo v poli */
+.pr-hledat span { flex: 1; text-align: left; }
+.pr-hledat small { font-size: 12px; opacity: .8; }
+
+/* hlaska: blokovany web, bez pripojeni */
+.pr-hlaska { text-align: center; padding: 48px 12px 0; }
+.pr-hlaska-ik {
+  display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(127,127,127,.14); color: var(--muted);
+}
+.pr-hlaska-ik .ik { width: 40px; height: 40px; }
+.pr-hlaska h2 { font-size: 20px; font-weight: 600; margin-top: 18px; }
+.pr-hlaska p { color: var(--muted); margin: 8px 0 22px; line-height: 1.5; }
+
+/* nastaveni prohlizece: vybrany vyhledavac */
+.pr-vybrano { color: var(--accent); width: 22px; height: 22px; }

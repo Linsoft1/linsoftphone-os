@@ -48,6 +48,11 @@ const IKONY = {
   hvezda: '<path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1-4.5-4.3 6.1-.8z"/>',
   venku: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   zavrit: '<path d="M6 6l12 12M18 6 6 18"/>',
+  sukromne: '<path d="M3 11h18M6 11l1.5-5.5h9L18 11"/><circle cx="7.5" cy="16" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path d="M10 16h4"/>',
+  zdilet: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4M8.2 13.2l7.6 4"/>',
+  hotovo: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  zakaz: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  bezsite: '<path d="M2.5 9a14 14 0 0 1 6-3.3M21.5 9A14 14 0 0 0 13 5.6M5.5 12.5a9.5 9.5 0 0 1 3.5-2M18.5 12.5a9.5 9.5 0 0 0-2-1.4M8.8 16a4.8 4.8 0 0 1 6.4 0M3 3l18 18"/>',
   /* kontakty */
   hledat: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',

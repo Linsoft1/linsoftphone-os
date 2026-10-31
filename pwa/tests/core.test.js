@@ -124,3 +124,26 @@ test("Linsoft Browser: adresni radek", () => {
   assert.strictEqual(Core.zobrazAdresu("https://www.sme.sk/clanok?id=1"), "sme.sk");
   assert.strictEqual(Core.zobrazAdresu(H + "po%C4%8Dasie"), "počasie");
 });
+
+test("Linsoft Browser: vyhledavace, YouTube, blokovane weby, navrhy", () => {
+  assert.strictEqual(Core.adresaZVstupu("mapa", "bing"), "https://www.bing.com/search?q=mapa");
+  assert.strictEqual(Core.adresaZVstupu("Bratislava", "wikipedia"), Core.HLEDACE.wikipedia.url + "Bratislava");
+  assert.strictEqual(Core.adresaZVstupu("x", "neexistuje"), Core.HLEDANI + "x");
+  assert.strictEqual(Core.zobrazAdresu("https://www.bing.com/search?q=po%C4%8Dasie+dnes"), "počasie dnes");
+  assert.strictEqual(Core.zobrazAdresu("https://m.youtube.com/watch?v=x"), "youtube.com");
+
+  const yt = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1";
+  assert.deepStrictEqual(Core.upravAdresu("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10"), { url: yt, blokovane: false });
+  assert.strictEqual(Core.upravAdresu("https://youtu.be/dQw4w9WgXcQ").url, yt);
+  assert.strictEqual(Core.upravAdresu("https://m.youtube.com/shorts/dQw4w9WgXcQ").url, yt);
+  assert.strictEqual(Core.upravAdresu("https://www.facebook.com/linsoft").blokovane, true);
+  assert.strictEqual(Core.upravAdresu("https://github.com/Linsoft1").blokovane, true);
+  assert.strictEqual(Core.upravAdresu("https://notgithub.com/").blokovane, false);
+  assert.strictEqual(Core.upravAdresu("https://sk.wikipedia.org/").blokovane, false);
+
+  const zdroje = [{ url: "https://sk.m.wikipedia.org/", titulek: "Wikipédia" }, { url: "https://sme.sk" },
+    { url: "https://sk.m.wikipedia.org/" }, { url: "https://wttr.in/Bratislava", titulek: "Počasie" }];
+  assert.deepStrictEqual(Core.navrhy("wiki", zdroje).map((p) => p.url), ["https://sk.m.wikipedia.org/"]);
+  assert.strictEqual(Core.navrhy("poč", zdroje)[0].titulek, "Počasie");
+  assert.deepStrictEqual(Core.navrhy("", zdroje), []);
+});

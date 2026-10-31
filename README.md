@@ -24,9 +24,12 @@ Tři podoby jednoho systému:
   z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
   obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
   stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
-- **Linsoft Browser 2.0.32** — webový prohlížeč v doku: adresní řádek
-  (adresa nebo hledání Google), úvodní stránka s rychlým přístupem
-  (Wikipédia, Mapy, Počasí…), karty, záložky, historie, „Otevřít mimo";
+- **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
+  s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
+  Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé
+  karty bez historie, záložky, historie, sdílení odkazu, „Otevřít mimo";
+  YouTube videa hraje přímo (vložitelná verze), u blokovaných webů a bez
+  připojení ukáže srozumitelnou stránku;
   stránky běží v sandboxu a nemohou ovládat systém. Weby, které vnoření
   zakazují (Facebook, GitHub, YouTube), se otevřou mimo LinsoftPhone OS
 - **Nastavení → O systému**: verze a sestavení LinsoftPhone OS, rozhraní,
