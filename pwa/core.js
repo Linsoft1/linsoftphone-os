@@ -103,7 +103,17 @@ const TEXTY = {
     st_auto_motiv: "Automatický motiv", st_auto_motiv_info: "Světlý přes den (7:00–19:00)",
     pl_dok: "V doku", pl_max: "Dok má nejvýš 4 aplikace.", pl_nahoru: "Posunout nahoru", pl_dolu: "Posunout dolů",
     st_navigace: "Navigace", nav_tlacitka: "Tlačítka", nav_gesta: "Gesta",
-    nav_gesta_info: "Proužek dole: nahoru = plocha, dlouze nahoru = nedávné, do strany = zpět"
+    nav_gesta_info: "Proužek dole: nahoru = plocha, dlouze nahoru = nedávné, do strany = zpět",
+    app_obchod: "Linsoft Store", ob_podtitul: "Android aplikace pro LinsoftPhone OS", ob_instalovat: "Instalovat",
+    ob_otevrit: "Otevřít", ob_instaluje: "Instaluje se…", ob_jen_play: "Jen Google Play", ob_nejde: "Nedostupné",
+    ob_odinstalovat: "Odinstalovat",
+    ob_info_android: "Aplikace se otevře v Google Play nebo F-Droid, instalaci dokončí Android.",
+    ob_info_ios: "Na iPhonu se Android aplikace instalovat nedají.",
+    ob_info_pc: "Otevře se stránka aplikace. K instalaci použij telefon s Androidem.",
+    ob_info_waydroid: "Aplikace z F-Droid se instalují přímo do LinsoftPhone OS (Waydroid).",
+    ob_bez_waydroid: "Na tomto telefonu chybí Waydroid. Nainstaluj ho: sudo apk add waydroid && sudo waydroid init",
+    ob_kategorie: "Kategorie", ob_balik: "Balík", ob_otevrena: "Otevřený kód",
+    ob_k_vse: "Vše", ob_k_komunikace: "Komunikace", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Ano", ne: "Ne"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -204,7 +214,17 @@ const TEXTY = {
     st_auto_motiv: "Automatický motív", st_auto_motiv_info: "Svetlý cez deň (7:00–19:00)",
     pl_dok: "V doku", pl_max: "Dok má najviac 4 aplikácie.", pl_nahoru: "Posunúť nahor", pl_dolu: "Posunúť nadol",
     st_navigace: "Navigácia", nav_tlacitka: "Tlačidlá", nav_gesta: "Gestá",
-    nav_gesta_info: "Pruh dole: nahor = plocha, dlho nahor = nedávne, do strany = späť"
+    nav_gesta_info: "Pruh dole: nahor = plocha, dlho nahor = nedávne, do strany = späť",
+    app_obchod: "Linsoft Store", ob_podtitul: "Android aplikácie pre LinsoftPhone OS", ob_instalovat: "Inštalovať",
+    ob_otevrit: "Otvoriť", ob_instaluje: "Inštaluje sa…", ob_jen_play: "Iba Google Play", ob_nejde: "Nedostupné",
+    ob_odinstalovat: "Odinštalovať",
+    ob_info_android: "Aplikácia sa otvorí v Google Play alebo F-Droid, inštaláciu dokončí Android.",
+    ob_info_ios: "Na iPhone sa Android aplikácie inštalovať nedajú.",
+    ob_info_pc: "Otvorí sa stránka aplikácie. Na inštaláciu použi telefón s Androidom.",
+    ob_info_waydroid: "Aplikácie z F-Droid sa inštalujú priamo do LinsoftPhone OS (Waydroid).",
+    ob_bez_waydroid: "Na tomto telefóne chýba Waydroid. Nainštaluj ho: sudo apk add waydroid && sudo waydroid init",
+    ob_kategorie: "Kategória", ob_balik: "Balík", ob_otevrena: "Otvorený kód",
+    ob_k_vse: "Všetko", ob_k_komunikace: "Komunikácia", ob_k_zabava: "Zábava", ob_k_mapy: "Mapy", ob_k_nastroje: "Nástroje", ano: "Áno", ne: "Nie"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -304,7 +324,17 @@ const TEXTY = {
     st_auto_motiv: "Automatic theme", st_auto_motiv_info: "Light during the day (7:00–19:00)",
     pl_dok: "In dock", pl_max: "The dock holds up to 4 apps.", pl_nahoru: "Move up", pl_dolu: "Move down",
     st_navigace: "Navigation", nav_tlacitka: "Buttons", nav_gesta: "Gestures",
-    nav_gesta_info: "Bar at the bottom: up = home, long up = recents, sideways = back"
+    nav_gesta_info: "Bar at the bottom: up = home, long up = recents, sideways = back",
+    app_obchod: "Linsoft Store", ob_podtitul: "Android apps for LinsoftPhone OS", ob_instalovat: "Install",
+    ob_otevrit: "Open", ob_instaluje: "Installing…", ob_jen_play: "Google Play only", ob_nejde: "Unavailable",
+    ob_odinstalovat: "Uninstall",
+    ob_info_android: "The app opens in Google Play or F-Droid; Android finishes the installation.",
+    ob_info_ios: "Android apps cannot be installed on iPhone.",
+    ob_info_pc: "The app page opens. Use an Android phone to install it.",
+    ob_info_waydroid: "Apps from F-Droid install directly into LinsoftPhone OS (Waydroid).",
+    ob_bez_waydroid: "Waydroid is missing on this phone. Install it: sudo apk add waydroid && sudo waydroid init",
+    ob_kategorie: "Category", ob_balik: "Package", ob_otevrena: "Open source",
+    ob_k_vse: "All", ob_k_komunikace: "Communication", ob_k_zabava: "Entertainment", ob_k_mapy: "Maps", ob_k_nastroje: "Tools", ano: "Yes", ne: "No"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -544,6 +574,21 @@ function rozdelPoznamku(text) {
   return { nazev: radky[i].slice(0, 80), nahled: radky.slice(i + 1).filter(Boolean).join(" ").slice(0, 140) };
 }
 
+/* ---------------- Linsoft Store ---------------- */
+/* jak se na tomto zarizeni instaluji Android aplikace:
+ * waydroid = LinsoftPhone OS na telefonu (instaluje primo), android = odkaz do Google Play / F-Droid,
+ * ios = nejde, pc = jen stranka aplikace */
+function platformaObchodu(ua, nativ) {
+  if (nativ) return "waydroid";
+  ua = String(ua || "");
+  if (/Android/i.test(ua)) return "android";
+  if (/iPhone|iPad|iPod/.test(ua)) return "ios";
+  return "pc";
+}
+const balikOk = (b) => /^[a-zA-Z][\w]*(\.[a-zA-Z_][\w]*)+$/.test(String(b || ""));
+function odkazPlay(balik) { return "https://play.google.com/store/apps/details?id=" + encodeURIComponent(balik); }
+function odkazFdroid(balik) { return "https://f-droid.org/packages/" + encodeURIComponent(balik) + "/"; }
+
 /* zpravy -> konverzace podle cisla, nejnovejsi nahore: { komu, posledni, pocet } */
 function konverzace(zpravy) {
   const mapa = {};
@@ -561,7 +606,7 @@ const Core = {
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
   prohlizec, platforma, velikost, trvani, HLEDACE, HLEDANI, adresaZVstupu, zobrazAdresu,
   upravAdresu, navrhy, T9, kratkyCas, konverzace, nadpisDne, rozdelPoznamku,
-  udalost, textUdalosti, seradUdalosti
+  udalost, textUdalosti, seradUdalosti, platformaObchodu, balikOk, odkazPlay, odkazFdroid
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

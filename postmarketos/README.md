@@ -91,6 +91,7 @@ LINSOFT_DEMO=1 python3 postmarketos/postmarketos-ui-linsoft/linsoft-sluzba.py pw
 | batéria, signál, operátor | `/sys/class/power_supply`, ModemManager |
 | jas displeja | `/sys/class/backlight` |
 | vypnutie, reštart | `poweroff` / `reboot` |
+| Android aplikácie (Linsoft Store) | Waydroid; inštalácia z F-Droid (`sudo apk add waydroid && sudo waydroid init`) |
 | písanie | vlastná klávesnica LinsoftPhone OS (slovenské QWERTZ, diakritika, čísla) |
 | všetko ostatné | rovnako ako PWA verzia: zámok s PINom, budík, kalendár, poznámky, … |
 

@@ -77,6 +77,18 @@ class TestSluzba(unittest.TestCase):
         self.assertEqual(pozadavek("/api/volat", {"cislo": "123; reboot"})[0], 400)
         self.assertEqual(pozadavek("/api/sms", {"cislo": "--help", "text": "x"})[0], 400)
 
+    def test_android_aplikace(self):
+        s = json.loads(pozadavek("/api/android")[1])
+        self.assertTrue(s["dostupne"])
+        self.assertEqual(pozadavek("/api/android/instalovat", {"balik": "org.schabi.newpipe"})[0], 200)
+        self.assertIn("org.schabi.newpipe", json.loads(pozadavek("/api/android")[1])["nainstalovane"])
+        self.assertEqual(pozadavek("/api/android/odinstalovat", {"balik": "org.schabi.newpipe"})[0], 200)
+        self.assertNotIn("org.schabi.newpipe", json.loads(pozadavek("/api/android")[1])["nainstalovane"])
+
+    def test_android_neplatny_balik(self):
+        for zly in ["vlc", "org.x;reboot", "../etc/passwd", "-rf", None]:
+            self.assertEqual(pozadavek("/api/android/instalovat", {"balik": zly})[0], 400, zly)
+
     def test_neznama_akce(self):
         self.assertEqual(pozadavek("/api/system", {"akce": "rm"})[0], 400)
         self.assertEqual(pozadavek("/api/neexistuje")[0], 404)

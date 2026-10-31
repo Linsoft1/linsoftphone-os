@@ -33,6 +33,7 @@ test("kazdy text ve skriptech a index.html ma preklad ve vsech jazycich", () => 
   /* dynamicke klice: t("app_" + id), t("hd_" + karta) */
   for (const m of app.matchAll(/\{ id: "([a-z]+)"/g)) klice.add("app_" + m[1]);
   for (const k of ["hodiny", "budik", "minutka", "stopky"]) klice.add("hd_" + k);
+  for (const k of ["vse", "komunikace", "zabava", "mapy", "nastroje"]) klice.add("ob_k_" + k);
   for (const m of app.matchAll(/t\(\w+ \? "([a-z0-9_]+)" : "([a-z0-9_]+)"\)/g)) { klice.add(m[1]); klice.add(m[2]); }
   for (const m of cti("index.html").matchAll(/data-i18n(?:-label)?="([a-z0-9_]+)"/g)) klice.add(m[1]);
   assert.ok(klice.size > 40, "nalezeno klicu: " + klice.size);

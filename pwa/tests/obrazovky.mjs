@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const PWA = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SNIMKY = join(PWA, "tests", "snimky");
-const APLIKACE = ["telefon", "zpravy", "kontakty", "kalk", "hodiny", "kalendar", "poznamky", "fotak",
+const APLIKACE = ["telefon", "zpravy", "kontakty", "kalk", "hodiny", "kalendar", "poznamky", "fotak", "obchod",
   "galerie", "prehliadac", "terminal", "nastaveni"];
 const DISPLEJE = [{ w: 360, h: 720 }, { w: 320, h: 568 }];
 const JAZYKY = ["sk", "cs", "en"];

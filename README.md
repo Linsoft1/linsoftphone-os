@@ -40,6 +40,12 @@ Tři podoby jednoho systému:
 - **Galerie**: mřížka náhledů seskupená podle dnů (Dnes, Včera, datum),
   prohlížeč přes celou obrazovku s posouváním prstem, sdílení fotky,
   nastavení jako tapety, stažení a mazání
+- **Linsoft Store** — katalog Android aplikací (WhatsApp, Signal, YouTube,
+  Spotify, VLC, NewPipe, Organic Maps, F-Droid…) s kategoriemi a hledáním.
+  Na telefonu s Androidem otevře aplikaci v Google Play / F-Droid a instalaci
+  dokončí Android; na vlastním systému LinsoftPhone OS (postmarketOS)
+  instaluje aplikace z F-Droid přímo do **Waydroidu** (Android uvnitř Linuxu);
+  na iPhonu Android aplikace nejdou
 - **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
   s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
   Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé

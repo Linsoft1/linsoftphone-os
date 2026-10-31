@@ -229,6 +229,64 @@ def wifi_pripoj(ssid, heslo):
     spust(prikaz, casovac=45)
 
 
+# ---------------- Android aplikace pres Waydroid (Linsoft Store) ----------------
+# Instaluje se jen z F-Droid (otevrene aplikace, podepsane repozitarem) a jen
+# podle nazvu baliku z bezpecneho tvaru; Google Play ve Waydroidu neni.
+
+FDROID = "https://f-droid.org"
+MAX_APK = 300 * 1024 * 1024
+instalace = {}   # balik -> "stahuje" | "instaluje" | "hotovo" | "chyba: ..."
+
+
+def balik_ok(balik):
+    return isinstance(balik, str) and re.fullmatch(r"[a-zA-Z][\w]*(\.[a-zA-Z_][\w]*)+", balik) is not None
+
+
+def waydroid_k_dispozici():
+    return shutil.which("waydroid") is not None
+
+
+def android_aplikace():
+    """Nainstalovane Android aplikace ve Waydroidu (nazvy baliku)."""
+    vystup = spust(["waydroid", "app", "list"], casovac=30)
+    return sorted(set(re.findall(r"packageName:\s*(\S+)", vystup)))
+
+
+def stahni_z_fdroid(balik, cil):
+    import urllib.request
+    with urllib.request.urlopen(FDROID + "/api/v1/packages/" + balik, timeout=30) as r:
+        info = json.load(r)
+    verze = info.get("suggestedVersionCode")
+    if not isinstance(verze, int):
+        raise RuntimeError("aplikace neni ve F-Droid")
+    with urllib.request.urlopen("%s/repo/%s_%d.apk" % (FDROID, balik, verze), timeout=60) as r, open(cil, "wb") as f:
+        nacteno = 0
+        while True:
+            kus = r.read(1 << 16)
+            if not kus:
+                break
+            nacteno += len(kus)
+            if nacteno > MAX_APK:
+                raise RuntimeError("APK je prilis velky")
+            f.write(kus)
+
+
+def instaluj_android(balik):
+    """Bezi ve vlakne: stahne APK z F-Droid a nainstaluje ho do Waydroidu."""
+    import tempfile
+    soubor = os.path.join(tempfile.mkdtemp(prefix="linsoft-apk-"), balik + ".apk")
+    try:
+        instalace[balik] = "stahuje"
+        stahni_z_fdroid(balik, soubor)
+        instalace[balik] = "instaluje"
+        spust(["waydroid", "app", "install", soubor], casovac=300)
+        instalace[balik] = "hotovo"
+    except Exception as e:
+        instalace[balik] = "chyba: " + str(e)[:200]
+    finally:
+        shutil.rmtree(os.path.dirname(soubor), ignore_errors=True)
+
+
 # ---------------- ukazkovy rezim (pocitac bez modemu) ----------------
 
 class Demo:
@@ -237,6 +295,7 @@ class Demo:
     hovory = ([{"id": "2", "cislo": "+421900123456", "smer": "incoming", "stav": "ringing-in"}]
               if os.environ.get("LINSOFT_DEMO_HOVOR") == "1" else [])
     jas = 70
+    android = ["org.videolan.vlc"]
 
     @classmethod
     def stav(cls):
@@ -327,6 +386,16 @@ class Obsluha(SimpleHTTPRequestHandler):
                 return [{"ssid": "Domov", "signal": 82, "zabezpeceni": "WPA2", "pripojeno": True},
                         {"ssid": "Kaviaren", "signal": 41, "zabezpeceni": "", "pripojeno": False}]
             return wifi_seznam()
+        if cesta == "/api/android":
+            if DEMO:
+                return {"dostupne": True, "nainstalovane": Demo.android, "instalace": instalace}
+            if not waydroid_k_dispozici():
+                return {"dostupne": False, "nainstalovane": [], "instalace": {}}
+            try:
+                aplikace = android_aplikace()
+            except Exception:
+                aplikace = []   # Waydroid je nainstalovany, ale nebezi
+            return {"dostupne": True, "nainstalovane": aplikace, "instalace": instalace}
         raise KeyError(cesta)
 
     # ---- POST ----
@@ -357,6 +426,29 @@ class Obsluha(SimpleHTTPRequestHandler):
             if not d.get("ssid"):
                 raise ValueError("chybi nazev site")
             return None if DEMO else wifi_pripoj(d["ssid"], d.get("heslo", ""))
+        if cesta in ("/api/android/instalovat", "/api/android/spustit", "/api/android/odinstalovat"):
+            balik = d.get("balik")
+            if not balik_ok(balik):
+                raise ValueError("neplatny nazev aplikace")
+            if DEMO:
+                if cesta.endswith("instalovat") and balik not in Demo.android:
+                    Demo.android.append(balik)
+                    instalace[balik] = "hotovo"
+                elif cesta.endswith("odinstalovat") and balik in Demo.android:
+                    Demo.android.remove(balik)
+                return None
+            if not waydroid_k_dispozici():
+                raise RuntimeError("na telefonu chybi Waydroid")
+            if cesta.endswith("/instalovat"):
+                if instalace.get(balik) in ("stahuje", "instaluje"):
+                    return None
+                import threading
+                threading.Thread(target=instaluj_android, args=(balik,), daemon=True).start()
+            elif cesta.endswith("/spustit"):
+                subprocess.Popen(["waydroid", "app", "launch", balik])
+            else:
+                spust(["waydroid", "app", "remove", balik], casovac=120)
+            return None
         if cesta == "/api/system":
             akce = {"vypnout": ["poweroff"], "restart": ["reboot"]}.get(d.get("akce"))
             if not akce:

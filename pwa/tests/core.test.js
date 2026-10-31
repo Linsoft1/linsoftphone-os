@@ -189,3 +189,19 @@ test("budik ve vybrane dny a udalosti s casem", () => {
   assert.strictEqual(Core.textUdalosti({ text: "Tréning", cas: "18:30" }), "18:30 Tréning");
   assert.deepStrictEqual(Core.seradUdalosti([{ text: "B", cas: "15:00" }, "A", { text: "C", cas: "09:00" }]).map((u) => u.text), ["A", "C", "B"]);
 });
+
+test("Linsoft Store: platforma a odkazy", () => {
+  const android = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36";
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile Safari/604.1";
+  assert.strictEqual(Core.platformaObchodu(android, false), "android");
+  assert.strictEqual(Core.platformaObchodu(iphone, false), "ios");
+  assert.strictEqual(Core.platformaObchodu("Mozilla/5.0 (Windows NT 10.0)", false), "pc");
+  assert.strictEqual(Core.platformaObchodu(android, true), "waydroid");
+  assert.ok(Core.balikOk("org.videolan.vlc"));
+  assert.ok(Core.balikOk("com.kunzisoft.keepass.libre"));
+  assert.ok(!Core.balikOk("vlc"));
+  assert.ok(!Core.balikOk("org.x;reboot"));
+  assert.ok(!Core.balikOk("../etc/passwd"));
+  assert.strictEqual(Core.odkazPlay("com.whatsapp"), "https://play.google.com/store/apps/details?id=com.whatsapp");
+  assert.strictEqual(Core.odkazFdroid("org.schabi.newpipe"), "https://f-droid.org/packages/org.schabi.newpipe/");
+});
