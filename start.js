@@ -14,6 +14,7 @@ const APPS = [
   { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak, plna: true },
   { id: "galerie", barvy: ["#f9a8d4", "#c026d3"], render: appGalerie },
   { id: "prehliadac", barvy: ["#38bdf8", "#6d28d9"], render: appPrehliadac, dock: true, plna: true },
+  { id: "obchod", barvy: ["#34d399", "#0e7490"], render: appObchod },
   { id: "terminal", barvy: ["#475569", "#0f172a"], render: appTerminal },
   { id: "nastaveni", barvy: ["#cbd5e1", "#475569"], render: appNastaveni, dock: true }
 ];
