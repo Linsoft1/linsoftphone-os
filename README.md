@@ -113,6 +113,11 @@ Lokální spuštění: `.\pwa\serve.ps1` → http://localhost:8080
 **Webová stránka projektu:** <https://linsoft1.github.io/linsoftphone-os/>
 ([web/](./web)) — funkce, živá ukázka v rámečku telefonu, snímky, návod.
 
+**Ke stažení** ([Releases](https://github.com/Linsoft1/linsoftphone-os/releases)): obraz systému
+`linsoftphone-os-2.4-qemu-amd64.img.xz` (postmarketOS, x86-64 / virtuální stroj),
+ARM kernel, offline web a **LinsoftPhone Installer** ([instalator/](./instalator)),
+který zapíše obraz na USB / SD kartu nebo připraví `linsoftPhone.img`.
+
 **LinsoftPhone OS na telefonu:** <https://linsoft1.github.io/linsoftphone-os/app/>
 → „Přidat na plochu".
 

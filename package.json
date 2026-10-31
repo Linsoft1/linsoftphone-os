@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node --test pwa/tests/*.test.js",
     "test:sluzba": "python3 -m unittest discover -s postmarketos/tests",
-    "test:obrazovky": "node pwa/tests/obrazovky.mjs"
+    "test:obrazovky": "node pwa/tests/obrazovky.mjs",
+    "test:instalator": "python3 -m unittest discover -s instalator"
   }
 }
