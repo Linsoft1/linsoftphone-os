@@ -65,7 +65,15 @@ const TEXTY = {
     sk_system: "Systém", sk_telefon: "Telefon", st_verze: "Verze {n}", st_pwa: "Webová aplikace (PWA)",
     kt_hledat: "Hledat", kt_novy: "Nový kontakt", kt_upravit: "Upravit", kt_volat: "Volat", kt_zprava: "Zpráva",
     kt_nic: "Nic nenalezeno", kt_zadne: "Zatím žádné kontakty", kt_smazat_q: "Smazat kontakt {n}?",
-    ulozit: "Uložit", zrusit: "Zrušit"
+    ulozit: "Uložit", zrusit: "Zrušit",
+    info_softver: "Software", info_zarizeni: "Zařízení", info_stav: "Stav", info_data: "Data",
+    info_system: "Systém", info_zostaveni: "Sestavení", info_rozhrani: "Rozhraní", info_nativ: "Vlastní systém telefonu",
+    info_distribuce: "Distribuce", info_jadro: "Jádro", info_prohlizec: "Prohlížeč", info_model: "Model",
+    info_platforma: "Platforma", info_displej: "Displej", info_procesor: "Procesor", info_jader: "{n} jader",
+    info_pamet: "Paměť", info_uloziste: "Úložiště", info_obsazeno: "{n} obsazeno", info_baterie: "Baterie",
+    info_nabiji: "nabíjí se", info_sit: "Síť", info_online: "připojeno", info_offline: "bez připojení",
+    info_operator: "Operátor", info_signal: "Signál", info_beh: "Doba běhu", info_aplikace: "Aplikace",
+    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznámé"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -128,7 +136,15 @@ const TEXTY = {
     sk_system: "Systém", sk_telefon: "Telefón", st_verze: "Verzia {n}", st_pwa: "Webová aplikácia (PWA)",
     kt_hledat: "Hľadať", kt_novy: "Nový kontakt", kt_upravit: "Upraviť", kt_volat: "Volať", kt_zprava: "Správa",
     kt_nic: "Nič sa nenašlo", kt_zadne: "Zatiaľ žiadne kontakty", kt_smazat_q: "Zmazať kontakt {n}?",
-    ulozit: "Uložiť", zrusit: "Zrušiť"
+    ulozit: "Uložiť", zrusit: "Zrušiť",
+    info_softver: "Softvér", info_zarizeni: "Zariadenie", info_stav: "Stav", info_data: "Dáta",
+    info_system: "Systém", info_zostaveni: "Zostavenie", info_rozhrani: "Rozhranie", info_nativ: "Vlastný systém telefónu",
+    info_distribuce: "Distribúcia", info_jadro: "Jadro", info_prohlizec: "Prehliadač", info_model: "Model",
+    info_platforma: "Platforma", info_displej: "Displej", info_procesor: "Procesor", info_jader: "{n} jadier",
+    info_pamet: "Pamäť", info_uloziste: "Úložisko", info_obsazeno: "{n} obsadené", info_baterie: "Batéria",
+    info_nabiji: "nabíja sa", info_sit: "Sieť", info_online: "pripojené", info_offline: "bez pripojenia",
+    info_operator: "Operátor", info_signal: "Signál", info_beh: "Doba behu", info_aplikace: "Aplikácie",
+    info_fotky: "Fotky", info_zdroj: "Zdrojový kód", info_nezname: "neznáme"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -190,7 +206,15 @@ const TEXTY = {
     sk_system: "System", sk_telefon: "Phone", st_verze: "Version {n}", st_pwa: "Web app (PWA)",
     kt_hledat: "Search", kt_novy: "New contact", kt_upravit: "Edit", kt_volat: "Call", kt_zprava: "Message",
     kt_nic: "Nothing found", kt_zadne: "No contacts yet", kt_smazat_q: "Delete contact {n}?",
-    ulozit: "Save", zrusit: "Cancel"
+    ulozit: "Save", zrusit: "Cancel",
+    info_softver: "Software", info_zarizeni: "Device", info_stav: "Status", info_data: "Data",
+    info_system: "System", info_zostaveni: "Build", info_rozhrani: "Interface", info_nativ: "Phone's own system",
+    info_distribuce: "Distribution", info_jadro: "Kernel", info_prohlizec: "Browser", info_model: "Model",
+    info_platforma: "Platform", info_displej: "Display", info_procesor: "Processor", info_jader: "{n} cores",
+    info_pamet: "Memory", info_uloziste: "Storage", info_obsazeno: "{n} used", info_baterie: "Battery",
+    info_nabiji: "charging", info_sit: "Network", info_online: "connected", info_offline: "offline",
+    info_operator: "Carrier", info_signal: "Signal", info_beh: "Uptime", info_aplikace: "Apps",
+    info_fotky: "Photos", info_zdroj: "Source code", info_nezname: "unknown"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -270,9 +294,59 @@ function platnaZaloha(z) {
     Object.keys(z.data).every((k) => k.indexOf("lp_") === 0 && typeof z.data[k] === "string");
 }
 
+/* ---------------- informace o systemu ---------------- */
+/* prohlizec z user agenta: { nazev, verze } */
+function prohlizec(ua) {
+  const PRAVIDLA = [
+    [/Edg(?:A|iOS)?\/(\d+)/, "Edge"], [/SamsungBrowser\/(\d+)/, "Samsung Internet"],
+    [/OPR\/(\d+)/, "Opera"], [/(?:Firefox|FxiOS)\/(\d+)/, "Firefox"],
+    [/(?:Chrome|CriOS)\/(\d+)/, "Chrome"], [/Version\/(\d+)[\d.]* .*Safari/, "Safari"],
+    [/AppleWebKit\/(\d+)/, "WebKit"]
+  ];
+  for (let i = 0; i < PRAVIDLA.length; i++) {
+    const m = String(ua || "").match(PRAVIDLA[i][0]);
+    if (m) return { nazev: PRAVIDLA[i][1], verze: m[1] };
+  }
+  return { nazev: "?", verze: "" };
+}
+
+/* operacni system zarizeni z user agenta */
+function platforma(ua) {
+  ua = String(ua || "");
+  let m = ua.match(/Android (\d+(?:\.\d+)?)/);
+  if (m) return "Android " + m[1];
+  m = ua.match(/(?:iPhone|iPad|iPod).*? OS (\d+)[_.](\d+)/);
+  if (m) return "iOS " + m[1] + "." + m[2];
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Mac OS X/.test(ua)) return "macOS";
+  if (/CrOS/.test(ua)) return "ChromeOS";
+  if (/Linux/.test(ua)) return "Linux";
+  return "?";
+}
+
+/* velikost v bajtech citelne: 1536 -> "1,5 KB" (desetinna carka v cs/sk) */
+function velikost(b, jazyk) {
+  const JEDNOTKY = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0, v = Math.max(0, Number(b) || 0);
+  while (v >= 1024 && i < JEDNOTKY.length - 1) { v /= 1024; i++; }
+  const s = (i === 0 || v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toString();
+  return (jazyk === "en" ? s : s.replace(".", ",")) + " " + JEDNOTKY[i];
+}
+
+/* doba behu ze sekund: "45 s", "12 min", "3 h 5 min", "2 d 4 h" */
+function trvani(sekundy) {
+  const s = Math.max(0, Math.floor(sekundy || 0));
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  if (d) return d + " d " + h + " h";
+  if (h) return h + " h " + m + " min";
+  if (m) return m + " min";
+  return s + " s";
+}
+
 const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
-  budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha
+  budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
+  prohlizec, platforma, velikost, trvani
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

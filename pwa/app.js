@@ -30,6 +30,9 @@ const JE_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 /* ---------------- stav ---------------- */
+const VERZE_OS = "2.3";
+const ZOSTAVENI = "2026.10.31";
+
 const stav = {
   jazyk: store.get("jazyk", Core.vychoziJazyk(navigator.language)),
   bezici: null,
@@ -1245,7 +1248,7 @@ function appTerminal(c) {
   const tm = $("#term");
   const start = Date.now();
   const w = (s) => { tm.textContent += s + "\n"; tm.scrollTop = tm.scrollHeight; };
-  w("=== LinsoftPhone OS 2.3 (PWA) ===");
+  w("=== LinsoftPhone OS " + VERZE_OS + " (PWA) ===");
   w("Napis 'pomoc' pro seznam prikazu.\n");
   $("#term-in").onkeydown = (e) => {
     if (e.key !== "Enter") return;
@@ -1253,7 +1256,7 @@ function appTerminal(c) {
     $("#term-in").value = "";
     w("linsoft> " + cmd);
     if (cmd === "pomoc") w("pomoc, info, cas, datum, kalk <vyraz>, vymaz");
-    else if (cmd === "info") w(`Verze: 2.3 PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
+    else if (cmd === "info") w(`Verze: ${VERZE_OS} PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
     else if (cmd === "cas") w("Doba behu: " + Math.round((Date.now() - start) / 1000) + " s");
     else if (cmd === "datum") w(new Date().toLocaleString(stav.jazyk));
     else if (cmd === "vymaz") tm.textContent = "";
@@ -1282,13 +1285,14 @@ function appNastaveni(c) {
   const tapeta = store.get("tapeta", "polar");
 
   c.innerHTML = `
-    <div class="nast-karta">
+    <button class="nast-karta" id="st-info">
       <img src="icons/logo.svg" alt="">
       <div>
         <strong>LinsoftPhone OS</strong>
-        <span>${esc(t("st_verze", "2.3"))} · ${esc(Nativ.aktivni ? "postmarketOS" : t("st_pwa"))}</span>
+        <span>${esc(t("st_verze", VERZE_OS))} · ${esc(Nativ.aktivni ? "postmarketOS" : t("st_pwa"))}</span>
       </div>
-    </div>
+      ${Ikony.ikona("sipka", "nast-sipka")}
+    </button>
 
     ${skupina("sk_vzhled",
       radek("galerie", "#ec4899", t("st_tapeta"), "",
@@ -1315,7 +1319,8 @@ function appNastaveni(c) {
           `<option value="${k}"${k === stav.jazyk ? " selected" : ""}>${Core.JAZYKY[k]}</option>`).join("")}</select>`) +
       akce("st-zaloha", "stahnout", "#14b8a6", t("st_zaloha")) +
       akce("st-obnov", "nahrat", "#8b5cf6", t("st_obnov")) +
-      `<input type="file" id="st-soubor" accept="application/json,.json" hidden>`)}
+      `<input type="file" id="st-soubor" accept="application/json,.json" hidden>` +
+      akce("st-o", "info", "#64748b", t("st_o")))}
 
     ${Nativ.aktivni ? skupina("sk_telefon",
       akce("st-restart", "restart", "#64748b", t("st_restart")) +
@@ -1339,6 +1344,7 @@ function appNastaveni(c) {
   }
 
   $("#st-theme").onclick = () => { nastavMotiv(!svetly); appNastaveni(c); };
+  $("#st-info").onclick = $("#st-o").onclick = () => infoSystem(c);
   c.querySelectorAll("[data-tapeta]").forEach((b) => b.onclick = () => { nastavTapetu(b.dataset.tapeta); appNastaveni(c); });
   $("#st-jazyk").onchange = () => {
     stav.jazyk = $("#st-jazyk").value;
@@ -1410,6 +1416,83 @@ function appNastaveni(c) {
     Object.keys(localStorage).filter((k) => k.indexOf("lp_") === 0).forEach((k) => localStorage.removeItem(k));
     Fotky.smazVse().then(() => location.reload(), () => location.reload());
   };
+}
+
+/* Nastaveni -> O systemu: podrobnosti o LinsoftPhone OS a zarizeni */
+function infoSystem(c) {
+  vnitrniZpet = () => { $("#app-title").textContent = t("app_nastaveni"); appNastaveni(c); };
+  $("#app-title").textContent = t("st_o");
+  c.scrollTop = 0;
+  const nezname = t("info_nezname");
+  const pr = Core.prohlizec(navigator.userAgent);
+  const dpr = window.devicePixelRatio || 1;
+  const radek = (popis, hodnota, id) =>
+    `<div class="nast-radek"><span class="nast-text">${esc(popis)}</span><span class="nast-hodnota"${id ? ` id="${id}"` : ""}>${esc(hodnota)}</span></div>`;
+  const skupina = (nazev, obsah) =>
+    `<h2 class="nast-nadpis">${esc(t(nazev))}</h2><div class="nast-skupina info">${obsah}</div>`;
+  const bat = (b) => b ? b.uroven + " %" + (b.nabiji ? ", " + t("info_nabiji") : "") : nezname;
+
+  c.innerHTML = `
+    <div class="info-hlava">
+      <img src="icons/logo.svg" alt="">
+      <h2>LinsoftPhone OS</h2>
+      <p>${esc(t("st_verze", VERZE_OS))}</p>
+    </div>
+    ${skupina("info_softver",
+      radek(t("info_system"), "LinsoftPhone OS " + VERZE_OS) +
+      radek(t("info_zostaveni"), ZOSTAVENI) +
+      radek(t("info_rozhrani"), Nativ.aktivni ? t("info_nativ") : t("st_pwa")) +
+      (Nativ.aktivni ? radek(t("info_distribuce"), "…", "in-distribuce") + radek(t("info_jadro"), "…", "in-jadro") : "") +
+      radek(t("info_prohlizec"), pr.nazev + (pr.verze ? " " + pr.verze : "")))}
+    ${skupina("info_zarizeni",
+      (Nativ.aktivni ? radek(t("info_model"), "…", "in-model") : "") +
+      radek(t("info_platforma"), Core.platforma(navigator.userAgent)) +
+      radek(t("info_displej"), Math.round(screen.width * dpr) + " × " + Math.round(screen.height * dpr) + " px") +
+      radek(t("info_procesor"), navigator.hardwareConcurrency ? t("info_jader", navigator.hardwareConcurrency) : nezname) +
+      radek(t("info_pamet"), navigator.deviceMemory ? "≥ " + navigator.deviceMemory + " GB" : nezname, "in-pamet") +
+      radek(t("info_uloziste"), "…", "in-uloziste"))}
+    ${skupina("info_stav",
+      radek(t("info_baterie"), bat(sb.bat), "in-baterie") +
+      radek(t("info_sit"), navigator.onLine === false ? t("info_offline") : t("info_online")) +
+      (Nativ.aktivni ? radek(t("info_operator"), "…", "in-operator") + radek(t("info_signal"), "…", "in-signal") : "") +
+      radek(t("info_beh"), Core.trvani(performance.now() / 1000), "in-beh"))}
+    ${skupina("info_data",
+      radek(t("info_aplikace"), String(APPS.length)) +
+      radek(t("app_kontakty"), String(nactiKontakty().length)) +
+      radek(t("info_fotky"), "…", "in-fotky") +
+      radek(t("st_jazyk"), Core.JAZYKY[stav.jazyk]))}
+    <div class="nast-skupina" style="margin-top:22px">
+      <a class="nast-radek nast-akce" href="https://github.com/Linsoft1/linsoftphone-os" target="_blank" rel="noopener">
+        <span class="nast-ik" style="background:#334155">${Ikony.ikona("terminal")}</span>
+        <span class="nast-text">${esc(t("info_zdroj"))}<small>github.com/Linsoft1/linsoftphone-os</small></span>
+        ${Ikony.ikona("sipka", "nast-sipka")}
+      </a>
+    </div>`;
+
+  /* hodnoty, ktere prijdou pozdeji */
+  const nastav = (id, text) => { const el = $("#" + id); if (el) el.textContent = text; };
+  const uloziste = (obsazeno, celkem) =>
+    t("info_obsazeno", Core.velikost(obsazeno, stav.jazyk)) + " / " + Core.velikost(celkem, stav.jazyk);
+  Fotky.vse().then((f) => nastav("in-fotky", String(f.length)));
+  if (Nativ.aktivni) {
+    /* skutecny telefon: udaje od sluzby linsoft-sluzba */
+    Nativ.api("stav").then((s) => {
+      const y = s.system || {};
+      nastav("in-model", y.model || nezname);
+      nastav("in-distribuce", y.distribuce || nezname);
+      nastav("in-jadro", y.jadro ? y.jadro + (y.arch ? " (" + y.arch + ")" : "") : nezname);
+      if (y.pamet) nastav("in-pamet", Core.velikost(y.pamet, stav.jazyk));
+      nastav("in-uloziste", y.uloziste ? uloziste(y.uloziste.obsazeno, y.uloziste.celkem) : nezname);
+      if (y.beh) nastav("in-beh", Core.trvani(y.beh));
+      nastav("in-baterie", bat(s.baterie));
+      nastav("in-operator", (s.modem && s.modem.operator) || nezname);
+      nastav("in-signal", s.modem ? s.modem.signal + " %" + (s.modem.technologie ? " · " + s.modem.technologie.toUpperCase() : "") : nezname);
+    }).catch(() => {});
+  } else if (navigator.storage && navigator.storage.estimate) {
+    /* PWA: kolik mista zabiraji data LinsoftOS v prohlizeci */
+    navigator.storage.estimate().then((e) => nastav("in-uloziste", uloziste(e.usage, e.quota)),
+      () => nastav("in-uloziste", nezname));
+  } else nastav("in-uloziste", nezname);
 }
 
 /* Wi-Fi site (jen LinsoftPhone OS na telefonu) */

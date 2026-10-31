@@ -54,6 +54,8 @@ class TestSluzba(unittest.TestCase):
         self.assertTrue(s["demo"])
         self.assertIn("baterie", s)
         self.assertIn("modem", s)
+        self.assertIn("jadro", s["system"])
+        self.assertEqual(s["verze"], "2.3")
 
     def test_api_bez_hlavicky_je_zakazane(self):
         self.assertEqual(pozadavek("/api/stav", hlavicky={})[0], 403)
@@ -81,6 +83,13 @@ class TestSluzba(unittest.TestCase):
 
 
 class TestPomocneFunkce(unittest.TestCase):
+    def test_system_info(self):
+        """na kazdem systemu vrati vsechny klice (co nejde zjistit, je None)"""
+        info = sluzba.system_info()
+        for k in ("jadro", "arch", "model", "distribuce", "pamet", "uloziste", "beh"):
+            self.assertIn(k, info)
+        self.assertTrue(info["jadro"])
+
     def test_cislo(self):
         self.assertTrue(sluzba.cislo_ok("+421900123456"))
         self.assertTrue(sluzba.cislo_ok("*100#"))

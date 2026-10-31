@@ -24,6 +24,10 @@ Tři podoby jednoho systému:
   z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
   obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
   stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
+- **Nastavení → O systému**: verze a sestavení LinsoftPhone OS, rozhraní,
+  prohlížeč, platforma, displej, procesor, paměť, úložiště, baterie, síť,
+  doba běhu, počet kontaktů a fotek; na telefonu s postmarketOS navíc model,
+  distribuce, jádro, operátor a signál (od služby `linsoft-sluzba`)
 
 - **úvodní obrazovka s logem** při startu, logo v Nastavení → O systému,
   ikony aplikace a favicon z vlastního loga

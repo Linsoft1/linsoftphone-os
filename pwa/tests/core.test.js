@@ -83,3 +83,29 @@ test("kontrola souboru zalohy", () => {
   assert.ok(!Core.platnaZaloha(Object.assign({}, ok, { data: { cizi: "1" } })));
   assert.ok(!Core.platnaZaloha(Object.assign({}, ok, { fotky: ["javascript:alert(1)"] })));
 });
+
+test("prohlizec a platforma z user agenta", () => {
+  const android = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+  const samsung = "Mozilla/5.0 (Linux; Android 13; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36";
+  const cog = "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 Cog/0.18";
+  assert.deepStrictEqual(Core.prohlizec(android), { nazev: "Chrome", verze: "126" });
+  assert.deepStrictEqual(Core.prohlizec(iphone), { nazev: "Safari", verze: "17" });
+  assert.strictEqual(Core.prohlizec(samsung).nazev, "Samsung Internet");
+  assert.strictEqual(Core.platforma(android), "Android 14");
+  assert.strictEqual(Core.platforma(iphone), "iOS 17.5");
+  assert.strictEqual(Core.platforma(cog), "Linux");
+  assert.strictEqual(Core.platforma(""), "?");
+});
+
+test("velikost a doba behu", () => {
+  assert.strictEqual(Core.velikost(512, "sk"), "512 B");
+  assert.strictEqual(Core.velikost(1536, "sk"), "1,5 KB");
+  assert.strictEqual(Core.velikost(1536, "en"), "1.5 KB");
+  assert.strictEqual(Core.velikost(4 * 1024 ** 3, "cs"), "4 GB");
+  assert.strictEqual(Core.velikost(250 * 1024 ** 2, "cs"), "250 MB");
+  assert.strictEqual(Core.trvani(45), "45 s");
+  assert.strictEqual(Core.trvani(125), "2 min");
+  assert.strictEqual(Core.trvani(3 * 3600 + 5 * 60), "3 h 5 min");
+  assert.strictEqual(Core.trvani(2 * 86400 + 4 * 3600), "2 d 4 h");
+});

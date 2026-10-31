@@ -712,3 +712,19 @@ body.light.v-app #navbar { background: rgba(255,255,255,.75); }
 .kt-tlacitka .btn { flex: 1; margin: 0 5px; padding: 12px; }
 #kt-seznam { padding-bottom: 84px; }
 .kt-formular input:focus { outline: none; background: rgba(127,127,127,.1); }
+
+/* ================= nastaveni -> o systemu ================= */
+button.nast-karta { width: 100%; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.nast-karta > div { flex: 1; min-width: 0; }
+.nast-karta:active { filter: brightness(1.1); }
+a.nast-radek { text-decoration: none; }
+.nast-hodnota {
+  color: var(--muted); text-align: right; margin-left: 12px; max-width: 58%;
+  font-size: 15px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums;
+}
+.nast-skupina.info .nast-radek { min-height: 48px; }
+.nast-skupina.info .nast-radek + .nast-radek::before { left: 14px; }
+.info-hlava { text-align: center; padding: 10px 0 2px; }
+.info-hlava img { width: 88px; height: 88px; filter: drop-shadow(0 10px 24px rgba(91,108,240,.4)); }
+.info-hlava h2 { font-size: 24px; font-weight: 600; margin-top: 12px; }
+.info-hlava p { color: var(--muted); margin-top: 2px; }

@@ -23,7 +23,8 @@ import sys
 import time
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-VERZE = "2.2"
+VERZE = "2.3"
+START = time.time()
 PORT = int(os.environ.get("LINSOFT_PORT", "8640"))
 WWW = os.environ.get("LINSOFT_WWW", "/usr/share/linsoftphone-os/www")
 DEMO = os.environ.get("LINSOFT_DEMO") == "1" or shutil.which("mmcli") is None
@@ -95,6 +96,33 @@ def nastav_jas(procenta):
     hodnota = max(1, round(mx * max(5, min(100, int(procenta))) / 100))
     with open(d + "/brightness", "w") as f:
         f.write(str(hodnota))
+
+
+# ---------------- informace o zarizeni (Nastaveni -> O systemu) ----------------
+
+def system_info():
+    import platform
+    info = {"jadro": platform.release(), "arch": platform.machine(), "model": None,
+            "distribuce": None, "pamet": None, "uloziste": None, "beh": None}
+    # model telefonu: device tree (ARM telefony), jinak DMI (PC)
+    model = cti_soubor("/proc/device-tree/model") or cti_soubor("/sys/class/dmi/id/product_name")
+    if model:
+        info["model"] = model.strip("\x00").strip()
+    for radek in (cti_soubor("/etc/os-release", "") or "").splitlines():
+        if radek.startswith("PRETTY_NAME="):
+            info["distribuce"] = radek.split("=", 1)[1].strip('"')
+    for radek in (cti_soubor("/proc/meminfo", "") or "").splitlines():
+        if radek.startswith("MemTotal:"):
+            info["pamet"] = int(radek.split()[1]) * 1024
+    try:
+        du = shutil.disk_usage("/")
+        info["uloziste"] = {"celkem": du.total, "obsazeno": du.used}
+    except OSError:
+        pass
+    beh = cti_soubor("/proc/uptime")
+    if beh:
+        info["beh"] = int(float(beh.split()[0]))
+    return info
 
 
 # ---------------- modem: stav, hovory, SMS ----------------
@@ -206,13 +234,18 @@ def wifi_pripoj(ssid, heslo):
 class Demo:
     sms = [{"id": "1", "cislo": "+421900123456", "text": "Ahoj, funguje LinsoftPhone OS?", "cas": ""}]
     # LINSOFT_DEMO_HOVOR=1: ukazkovy prichozi hovor (vyzkouseni obrazovky hovoru)
-    hovory = [{"id": "2", "cislo": "+421900123456", "smer": "incoming", "stav": "ringing-in"}]         if os.environ.get("LINSOFT_DEMO_HOVOR") == "1" else []
+    hovory = ([{"id": "2", "cislo": "+421900123456", "smer": "incoming", "stav": "ringing-in"}]
+              if os.environ.get("LINSOFT_DEMO_HOVOR") == "1" else [])
     jas = 70
 
     @classmethod
     def stav(cls):
         return {"baterie": {"uroven": 76, "nabiji": False}, "jas": cls.jas,
-                "modem": {"operator": "Linsoft 5G", "signal": 80, "stav": "registered", "technologie": "lte"}}
+                "modem": {"operator": "Linsoft 5G", "signal": 80, "stav": "registered", "technologie": "lte"},
+                "system": {"model": "PINE64 PinePhone (ukazka)", "distribuce": "postmarketOS v24.12",
+                           "jadro": "6.12.1", "arch": "aarch64", "pamet": 2 * 1024 ** 3,
+                           "uloziste": {"celkem": 32 * 1024 ** 3, "obsazeno": 5 * 1024 ** 3},
+                           "beh": int(time.time() - START)}}
 
 
 # ---------------- HTTP ----------------
@@ -281,7 +314,8 @@ class Obsluha(SimpleHTTPRequestHandler):
     # ---- GET ----
     def api_get(self, cesta):
         if cesta == "/api/stav":
-            stav = Demo.stav() if DEMO else {"baterie": baterie(), "jas": jas(), "modem": modem()}
+            stav = Demo.stav() if DEMO else {"baterie": baterie(), "jas": jas(), "modem": modem(),
+                                              "system": system_info()}
             stav.update({"verze": VERZE, "demo": DEMO, "cas": int(time.time())})
             return stav
         if cesta == "/api/hovory":
