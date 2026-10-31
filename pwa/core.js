@@ -62,7 +62,10 @@ const TEXTY = {
     tap_noc: "Noc", tap_foto: "Fotka z Galerie", gal_tapeta: "Nastavit jako tapetu",
     tapeta_ok: "Tapeta nastavena.", w_volno: "Dnes nic v kalendáři", w_budik: "Budík",
     sk_vzhled: "Vzhled", sk_pripojeni: "Připojení", sk_zabezpeceni: "Zabezpečení a soukromí",
-    sk_system: "Systém", sk_telefon: "Telefon", st_verze: "Verze {n}", st_pwa: "Webová aplikace (PWA)"
+    sk_system: "Systém", sk_telefon: "Telefon", st_verze: "Verze {n}", st_pwa: "Webová aplikace (PWA)",
+    kt_hledat: "Hledat", kt_novy: "Nový kontakt", kt_upravit: "Upravit", kt_volat: "Volat", kt_zprava: "Zpráva",
+    kt_nic: "Nic nenalezeno", kt_zadne: "Zatím žádné kontakty", kt_smazat_q: "Smazat kontakt {n}?",
+    ulozit: "Uložit", zrusit: "Zrušit"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -122,7 +125,10 @@ const TEXTY = {
     tap_noc: "Noc", tap_foto: "Fotka z Galérie", gal_tapeta: "Nastaviť ako tapetu",
     tapeta_ok: "Tapeta nastavená.", w_volno: "Dnes nič v kalendári", w_budik: "Budík",
     sk_vzhled: "Vzhľad", sk_pripojeni: "Pripojenie", sk_zabezpeceni: "Zabezpečenie a súkromie",
-    sk_system: "Systém", sk_telefon: "Telefón", st_verze: "Verzia {n}", st_pwa: "Webová aplikácia (PWA)"
+    sk_system: "Systém", sk_telefon: "Telefón", st_verze: "Verzia {n}", st_pwa: "Webová aplikácia (PWA)",
+    kt_hledat: "Hľadať", kt_novy: "Nový kontakt", kt_upravit: "Upraviť", kt_volat: "Volať", kt_zprava: "Správa",
+    kt_nic: "Nič sa nenašlo", kt_zadne: "Zatiaľ žiadne kontakty", kt_smazat_q: "Zmazať kontakt {n}?",
+    ulozit: "Uložiť", zrusit: "Zrušiť"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -181,7 +187,10 @@ const TEXTY = {
     tap_noc: "Night", tap_foto: "Photo from Gallery", gal_tapeta: "Set as wallpaper",
     tapeta_ok: "Wallpaper set.", w_volno: "Nothing in the calendar today", w_budik: "Alarm",
     sk_vzhled: "Appearance", sk_pripojeni: "Connections", sk_zabezpeceni: "Security & privacy",
-    sk_system: "System", sk_telefon: "Phone", st_verze: "Version {n}", st_pwa: "Web app (PWA)"
+    sk_system: "System", sk_telefon: "Phone", st_verze: "Version {n}", st_pwa: "Web app (PWA)",
+    kt_hledat: "Search", kt_novy: "New contact", kt_upravit: "Edit", kt_volat: "Call", kt_zprava: "Message",
+    kt_nic: "Nothing found", kt_zadne: "No contacts yet", kt_smazat_q: "Delete contact {n}?",
+    ulozit: "Save", zrusit: "Cancel"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };

@@ -401,9 +401,13 @@ function zapisHistorii(id) {
   if (history.state && history.state.app) history.replaceState({ app: id }, "");
   else history.pushState({ app: id }, "");
 }
+/* "Zpet" uvnitr aplikace (napr. z detailu kontaktu do seznamu) - nastavuje aplikace */
+let vnitrniZpet = null;
+
 function domu() {
   if (stav.bezici || nedavneOtevrene()) animujPlochu();
   stav.bezici = null;
+  vnitrniZpet = null;
   kresliDnes(new Date());
   panel(false);
   ukazObrazovku("#homescreen");
@@ -421,6 +425,7 @@ function otevri(id, param) {
   const app = najdiApp(id);
   if (!app) return;
   stav.bezici = id;
+  vnitrniZpet = null;
   stav.nedavne = [id].concat(stav.nedavne.filter((x) => x !== id)).slice(0, 8);
   store.set("nedavne", stav.nedavne);
   $("#app-title").textContent = t("app_" + id);
@@ -461,6 +466,7 @@ $("#recents-clear").onclick = () => { stav.nedavne = []; store.set("nedavne", []
 $("#nav-home").onclick = zavriApp;
 $("#nav-back").onclick = $("#app-back").onclick = () => {
   if (panelOtevreny()) panel(false);
+  else if (vnitrniZpet) { const f = vnitrniZpet; vnitrniZpet = null; f(); }
   else if (stav.bezici || nedavneOtevrene()) zavriApp();
 };
 $("#nav-recent").onclick = () => nedavneOtevrene() ? zavriApp() : ukazNedavne();
@@ -841,32 +847,130 @@ function appZpravy(c, komu) {
 }
 
 /* Kontakty */
-function appKontakty(c) {
+/* avatar s inicialami; barva podle jmena, aby mel kazdy kontakt vzdy stejnou */
+const BARVY_AVATARU = [["#60a5fa", "#2563eb"], ["#f472b6", "#db2777"], ["#34d399", "#059669"],
+  ["#fbbf24", "#d97706"], ["#a78bfa", "#7c3aed"], ["#f87171", "#dc2626"], ["#2dd4bf", "#0d9488"]];
+function avatar(jmeno, trida) {
+  let h = 0;
+  for (const ch of jmeno) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const b = BARVY_AVATARU[h % BARVY_AVATARU.length];
+  const inicialy = jmeno.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join("").toUpperCase() || "?";
+  return `<span class="avatar${trida ? " " + trida : ""}" style="background:linear-gradient(145deg,${b[0]},${b[1]})" aria-hidden="true">${esc(inicialy)}</span>`;
+}
+
+function appKontakty(c, rezim) {
   const k = nactiKontakty();
+  const uloz = () => store.set("kontakty", k);
+  rezim = rezim || {};
+  c.scrollTop = 0;
+
+  /* ---- detail kontaktu ---- */
+  if (typeof rezim.detail === "number" && k[rezim.detail]) {
+    const i = rezim.detail, x = k[i];
+    vnitrniZpet = () => appKontakty(c);
+    c.innerHTML = `
+      <div class="kt-hlava">
+        ${avatar(x.j, "velky")}
+        <h2>${esc(x.j)}</h2>
+        <p>${esc(x.t)}</p>
+      </div>
+      <div class="kt-akce">
+        <a href="tel:${esc(Core.cisloTel(x.t))}">${Ikony.ikona("telefon")}<span>${esc(t("kt_volat"))}</span></a>
+        <button id="kt-sms">${Ikony.ikona("zpravy")}<span>${esc(t("kt_zprava"))}</span></button>
+        <button id="kt-upravit">${Ikony.ikona("upravit")}<span>${esc(t("kt_upravit"))}</span></button>
+      </div>
+      <div class="nast-skupina">
+        <div class="nast-radek"><span class="nast-text"><small>${esc(t("kt_cislo"))}</small>${esc(x.t || "—")}</span></div>
+      </div>
+      <div class="nast-skupina" style="margin-top:16px">
+        <button class="nast-radek nast-akce nast-cervena" id="kt-smazat">
+          <span class="nast-ik" style="background:#ef4444">${Ikony.ikona("kos")}</span>
+          <span class="nast-text">${esc(t("smazat"))}</span>
+        </button>
+      </div>`;
+    $("#kt-sms").onclick = () => otevri("zpravy", x.t);
+    $("#kt-upravit").onclick = () => appKontakty(c, { upravit: i });
+    $("#kt-smazat").onclick = () => {
+      if (!confirm(t("kt_smazat_q", x.j))) return;
+      k.splice(i, 1);
+      uloz();
+      appKontakty(c);
+    };
+    return;
+  }
+
+  /* ---- novy kontakt / uprava ---- */
+  if (typeof rezim.upravit === "number") {
+    const i = rezim.upravit, x = k[i] || { j: "", t: "" };
+    vnitrniZpet = () => i >= 0 ? appKontakty(c, { detail: i }) : appKontakty(c);
+    c.innerHTML = `
+      <div class="kt-hlava" id="kt-nahled">${avatar(x.j || "?", "velky")}</div>
+      <div class="nast-skupina kt-formular">
+        <input id="kt-j" value="${esc(x.j)}" placeholder="${esc(t("kt_jmeno"))}" aria-label="${esc(t("kt_jmeno"))}" autocomplete="off">
+        <input id="kt-t" value="${esc(x.t)}" type="tel" placeholder="${esc(t("kt_cislo"))}" aria-label="${esc(t("kt_cislo"))}" autocomplete="off">
+      </div>
+      <div class="kt-tlacitka">
+        <button class="btn ghost" id="kt-zrusit">${esc(t("zrusit"))}</button>
+        <button class="btn" id="kt-ulozit">${esc(t("ulozit"))}</button>
+      </div>`;
+    /* avatar se meni s psanim jmena */
+    $("#kt-j").oninput = () => { $("#kt-nahled").innerHTML = avatar($("#kt-j").value.trim() || "?", "velky"); };
+    $("#kt-zrusit").onclick = vnitrniZpet;
+    $("#kt-ulozit").onclick = () => {
+      const j = $("#kt-j").value.trim();
+      if (!j) return $("#kt-j").focus();
+      const novy = { j, t: $("#kt-t").value.trim() };
+      if (i >= 0) k[i] = novy; else k.push(novy);
+      uloz();
+      appKontakty(c, { detail: i >= 0 ? i : k.length - 1 });
+    };
+    if (i < 0) $("#kt-j").focus();
+    return;
+  }
+
+  /* ---- seznam: hledani, abecedni skupiny ---- */
   const umiImport = "contacts" in navigator && "ContactsManager" in window;
   c.innerHTML = `
-    <div>${k.map((x, i) => `
-      <div class="list-item">
-        <div class="avatar">${esc(x.j[0] || "?")}</div>
-        <div class="grow"><div>${esc(x.j)}</div><div class="sub">${esc(x.t)}</div></div>
-        <a class="btn sm" href="tel:${esc(Core.cisloTel(x.t))}" aria-label="${esc(t("app_telefon"))}">📞</a>
-        <button class="btn sm" data-sms="${i}" aria-label="SMS">💬</button>
-        <button class="btn sm ghost" data-del="${i}" aria-label="${esc(t("smazat"))}">✕</button>
-      </div>`).join("")}</div>
-    <div class="row" style="margin-top:14px">
-      <input id="kt-j" placeholder="${esc(t("kt_jmeno"))}" aria-label="${esc(t("kt_jmeno"))}">
-      <input id="kt-t" type="tel" placeholder="${esc(t("kt_cislo"))}" aria-label="${esc(t("kt_cislo"))}">
-    </div>
-    <button class="btn full" id="kt-add">${esc(t("kt_pridat"))}</button>
-    ${umiImport ? `<button class="btn ghost full" id="kt-import">📲 ${esc(t("kt_import"))}</button>` : ""}`;
-  const uloz = () => { store.set("kontakty", k); appKontakty(c); };
-  $("#kt-add").onclick = () => {
-    if (!$("#kt-j").value.trim()) return $("#kt-j").focus();
-    k.push({ j: $("#kt-j").value.trim(), t: $("#kt-t").value.trim() });
-    uloz();
+    <label class="kt-hledat">${Ikony.ikona("hledat")}
+      <input id="kt-q" type="search" placeholder="${esc(t("kt_hledat"))}" aria-label="${esc(t("kt_hledat"))}" autocomplete="off">
+    </label>
+    <div id="kt-seznam"></div>
+    ${umiImport ? `<div class="nast-skupina" style="margin-top:18px">
+      <button class="nast-radek nast-akce" id="kt-import">
+        <span class="nast-ik" style="background:#14b8a6">${Ikony.ikona("stahnout")}</span>
+        <span class="nast-text">${esc(t("kt_import"))}</span>
+      </button></div>` : ""}
+    <button class="fab" id="kt-novy" aria-label="${esc(t("kt_novy"))}">${Ikony.ikona("plus")}</button>`;
+
+  const kresli = () => {
+    const q = $("#kt-q").value.trim().toLowerCase();
+    const seznam = k.map((x, i) => ({ x, i }))
+      .filter((o) => !q || o.x.j.toLowerCase().indexOf(q) >= 0 || Core.cisloTel(o.x.t).indexOf(Core.cisloTel(q) || "~") >= 0)
+      .sort((a, b) => a.x.j.localeCompare(b.x.j, stav.jazyk));
+    if (!seznam.length) {
+      $("#kt-seznam").innerHTML = `<p class="kt-nic">${esc(t(k.length ? "kt_nic" : "kt_zadne"))}</p>`;
+      return;
+    }
+    /* skupiny podle prvniho pismena */
+    let html = "", pismeno = null;
+    seznam.forEach((o) => {
+      const p = (o.x.j[0] || "#").toUpperCase();
+      if (p !== pismeno) {
+        if (pismeno !== null) html += "</div>";
+        html += `<h3 class="kt-pismeno">${esc(p)}</h3><div class="nast-skupina">`;
+        pismeno = p;
+      }
+      html += `<button class="nast-radek nast-akce kt-radek" data-i="${o.i}">${avatar(o.x.j)}
+        <span class="nast-text">${esc(o.x.j)}<small>${esc(o.x.t)}</small></span></button>`;
+    });
+    $("#kt-seznam").innerHTML = html + "</div>";
+    $("#kt-seznam").querySelectorAll("[data-i]").forEach((b) =>
+      b.onclick = () => appKontakty(c, { detail: +b.dataset.i }));
   };
-  c.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => { k.splice(+b.dataset.del, 1); uloz(); });
-  c.querySelectorAll("[data-sms]").forEach((b) => b.onclick = () => otevri("zpravy", k[+b.dataset.sms].t));
+  $("#kt-q").oninput = kresli;
+  kresli();
+  $("#kt-novy").onclick = () => appKontakty(c, { upravit: -1 });
+
   /* skutecne kontakty z telefonu (Contact Picker API - Android Chrome) */
   if (umiImport) $("#kt-import").onclick = () => {
     navigator.contacts.select(["name", "tel"], { multiple: true }).then((vyber) => {
@@ -876,8 +980,9 @@ function appKontakty(c) {
         const j = (v.name && v.name[0]) || tel;
         if (j) { k.push({ j, t: tel }); n++; }
       });
-      pridejNotif(t("app_kontakty"), t("kt_importovano", n));
       uloz();
+      pridejNotif(t("app_kontakty"), t("kt_importovano", n));
+      appKontakty(c);
     }).catch(() => {});
   };
 }
