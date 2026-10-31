@@ -162,3 +162,13 @@ test("telefon a zpravy: kratky cas, konverzace", () => {
   assert.deepStrictEqual(Core.konverzace([]), []);
   assert.strictEqual(Core.T9[7], "PQRS");
 });
+
+test("galerie: nadpisy dni", () => {
+  const ted = new Date(2026, 9, 31, 12, 0).getTime();
+  assert.strictEqual(Core.nadpisDne("sk", new Date(2026, 9, 31, 8).getTime(), ted), "Dnes");
+  assert.strictEqual(Core.nadpisDne("sk", new Date(2026, 9, 30, 23).getTime(), ted), "Včera");
+  assert.strictEqual(Core.nadpisDne("en", new Date(2026, 9, 30, 23).getTime(), ted), "Yesterday");
+  assert.strictEqual(Core.nadpisDne("sk", new Date(2026, 9, 1).getTime(), ted), "štvrtok 1. októbra");
+  /* prelom mesice */
+  assert.strictEqual(Core.nadpisDne("cs", new Date(2026, 9, 31).getTime(), new Date(2026, 10, 1, 9).getTime()), "Včera");
+});

@@ -397,20 +397,12 @@ select { width: auto; max-width: 50%; }
 #zpr-komu { margin-bottom: 8px; }
 
 /* ---- galerie ---- */
-.gal-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.gal-foto { padding: 0; border: none; background: none; cursor: pointer; aspect-ratio: 1; overflow: hidden; border-radius: 10px; }
-.gal-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gal-big { width: 100%; border-radius: 14px; }
 
 @media (max-height: 600px) {
   .pin-pad { grid-template-columns: repeat(3, 56px); gap: 8px; }
   .pin-pad button { width: 56px; height: 56px; font-size: 22px; }
   #lock-pin { margin-top: 8px; }
   .big-time { font-size: 44px; }
-}
-/* iOS < 15 nezna aspect-ratio */
-@supports not (aspect-ratio: 1) {
-  .gal-foto { height: 28vw; max-height: 130px; }
 }
 /* dlouha jmena a cisla se nezalamuji (uzke telefony) */
 .list-item .grow > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -937,3 +929,38 @@ a.nast-radek { text-decoration: none; }
 }
 .zpr-odeslat .ik { width: 19px; height: 19px; }
 .zpr-komu input { border-radius: 14px; }
+
+/* ================= Galerie ================= */
+.gal-hlava { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 4px; color: var(--muted); font-size: 14px; }
+.gal-den { font-size: 15px; font-weight: 600; margin: 14px 2px 8px; }
+.gal-mriezka { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 -16px; }
+.gal-nahled { padding: 0; border: none; background: rgba(127,127,127,.15); cursor: pointer; aspect-ratio: 1; overflow: hidden; }
+.gal-nahled img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+.gal-nahled:active img { transform: scale(.94); }
+@supports not (aspect-ratio: 1) { .gal-nahled { height: 33vw; max-height: 140px; } }
+
+/* prohlizec pres celou plochu aplikace */
+.gal-prohlizec {
+  position: absolute; z-index: 30; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; background: #000; color: #fff; animation: app-in .2s ease;
+  padding-top: calc(36px + max(8px, var(--sat))); padding-bottom: calc(54px + max(10px, var(--sab)));
+}
+.gal-lista { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; }
+.gal-lista .pr-tl { color: #fff; }
+.gal-popis { text-align: center; }
+.gal-popis b { display: block; font-size: 14px; font-weight: 600; }
+.gal-popis small { font-size: 12px; opacity: .7; }
+.gal-plocha { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: pan-y; overflow: hidden; }
+.gal-plocha img { max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.gal-plocha img.posun-l { animation: gal-l .22s ease; }
+.gal-plocha img.posun-p { animation: gal-p .22s ease; }
+@keyframes gal-l { from { opacity: .3; transform: translateX(40px); } }
+@keyframes gal-p { from { opacity: .3; transform: translateX(-40px); } }
+.gal-akce { display: flex; justify-content: space-around; padding: 8px 4px 4px; }
+.gal-akce button {
+  display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 6px;
+  border: none; background: none; color: #fff; font: inherit; font-size: 11px; cursor: pointer; border-radius: 12px;
+}
+.gal-akce button:active { background: rgba(255,255,255,.12); }
+.gal-akce .ik { width: 22px; height: 22px; margin-bottom: 4px; }
+#gp-smazat { color: #f87171; }

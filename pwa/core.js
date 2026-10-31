@@ -38,7 +38,7 @@ const TEXTY = {
     pz_ph: "Piš si poznámky… ukládají se automaticky.", pz_ulozeno: "Uloženo v telefonu.",
     cam_vyfot: "📸 Vyfotit", cam_ne: "Kamera není dostupná (potřebuje HTTPS a povolení).",
     cam_ulozeno: "Fotka uložena do Galerie.",
-    gal_prazdna: "Galerie je prázdná. Vyfoť něco ve Fotoaparátu! 📷", gal_smaz_vse: "Smazat vše",
+    gal_prazdna: "Galerie je prázdná. Vyfoť něco ve Fotoaparátu!", gal_smaz_vse: "Smazat vše",
     gal_stahnout: "Stáhnout",
     st_motiv: "Světlý motiv", st_jazyk: "Jazyk", st_pin: "PIN zámek",
     st_pin_novy: "Zadej nový 4místný PIN", st_pin_znovu: "Zopakuj PIN", st_pin_neshoda: "PINy se neshodují",
@@ -89,7 +89,9 @@ const TEXTY = {
     pr_vymazat_vse: "Vymazat všechna data prohlížeče", pr_vymazano: "Data prohlížeče vymazána.",
     tel_klavesnice: "Klávesnice", tel_nedavne: "Nedávné", tel_zadne: "Zatím žádné hovory",
     tel_odchozi: "Odchozí", tel_prichozi: "Příchozí", tel_zmeskany: "Zmeškaný hovor",
-    zpr_nova: "Nová zpráva", zpr_zadne: "Zatím žádné zprávy", zpr_ty: "Ty"
+    zpr_nova: "Nová zpráva", zpr_zadne: "Zatím žádné zprávy", zpr_ty: "Ty",
+    gal_dnes: "Dnes", gal_vcera: "Včera", gal_fotky: "Fotky · {n}", gal_zdilet: "Sdílet",
+    gal_otevrit_fotak: "Otevřít fotoaparát", gal_smazat_q: "Smazat tuto fotku?", gal_smazat_vse_q: "Smazat všechny fotky?"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -125,7 +127,7 @@ const TEXTY = {
     pz_ph: "Píš si poznámky… ukladajú sa automaticky.", pz_ulozeno: "Uložené v telefóne.",
     cam_vyfot: "📸 Odfotiť", cam_ne: "Kamera nie je dostupná (potrebuje HTTPS a povolenie).",
     cam_ulozeno: "Fotka uložená do Galérie.",
-    gal_prazdna: "Galéria je prázdna. Odfoť niečo vo Fotoaparáte! 📷", gal_smaz_vse: "Zmazať všetko",
+    gal_prazdna: "Galéria je prázdna. Odfoť niečo vo Fotoaparáte!", gal_smaz_vse: "Zmazať všetko",
     gal_stahnout: "Stiahnuť",
     st_motiv: "Svetlý motív", st_jazyk: "Jazyk", st_pin: "PIN zámok",
     st_pin_novy: "Zadaj nový 4-miestny PIN", st_pin_znovu: "Zopakuj PIN", st_pin_neshoda: "PIN-y sa nezhodujú",
@@ -176,7 +178,9 @@ const TEXTY = {
     pr_vymazat_vse: "Vymazať všetky údaje prehliadača", pr_vymazano: "Údaje prehliadača vymazané.",
     tel_klavesnice: "Klávesnica", tel_nedavne: "Nedávne", tel_zadne: "Zatiaľ žiadne hovory",
     tel_odchozi: "Odchádzajúci", tel_prichozi: "Prichádzajúci", tel_zmeskany: "Zmeškaný hovor",
-    zpr_nova: "Nová správa", zpr_zadne: "Zatiaľ žiadne správy", zpr_ty: "Ty"
+    zpr_nova: "Nová správa", zpr_zadne: "Zatiaľ žiadne správy", zpr_ty: "Ty",
+    gal_dnes: "Dnes", gal_vcera: "Včera", gal_fotky: "Fotky · {n}", gal_zdilet: "Zdieľať",
+    gal_otevrit_fotak: "Otvoriť fotoaparát", gal_smazat_q: "Zmazať túto fotku?", gal_smazat_vse_q: "Zmazať všetky fotky?"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -211,7 +215,7 @@ const TEXTY = {
     pz_ph: "Write notes… they are saved automatically.", pz_ulozeno: "Saved on this phone.",
     cam_vyfot: "📸 Take photo", cam_ne: "Camera not available (needs HTTPS and permission).",
     cam_ulozeno: "Photo saved to Gallery.",
-    gal_prazdna: "Gallery is empty. Take a photo in Camera! 📷", gal_smaz_vse: "Delete all",
+    gal_prazdna: "Gallery is empty. Take a photo in Camera!", gal_smaz_vse: "Delete all",
     gal_stahnout: "Download",
     st_motiv: "Light theme", st_jazyk: "Language", st_pin: "PIN lock",
     st_pin_novy: "Enter a new 4-digit PIN", st_pin_znovu: "Repeat PIN", st_pin_neshoda: "PINs do not match",
@@ -262,7 +266,9 @@ const TEXTY = {
     pr_vymazat_vse: "Clear all browser data", pr_vymazano: "Browser data cleared.",
     tel_klavesnice: "Keypad", tel_nedavne: "Recents", tel_zadne: "No calls yet",
     tel_odchozi: "Outgoing", tel_prichozi: "Incoming", tel_zmeskany: "Missed call",
-    zpr_nova: "New message", zpr_zadne: "No messages yet", zpr_ty: "You"
+    zpr_nova: "New message", zpr_zadne: "No messages yet", zpr_ty: "You",
+    gal_dnes: "Today", gal_vcera: "Yesterday", gal_fotky: "Photos · {n}", gal_zdilet: "Share",
+    gal_otevrit_fotak: "Open camera", gal_smazat_q: "Delete this photo?", gal_smazat_vse_q: "Delete all photos?"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
@@ -470,6 +476,15 @@ function kratkyCas(cas, ted) {
   return d.getDate() + ". " + (d.getMonth() + 1) + ".";
 }
 
+/* nadpis skupiny v Galerii: "Dnes", "Včera", jinak datum */
+function nadpisDne(jazyk, cas, ted) {
+  const d = new Date(cas), n = ted ? new Date(ted) : new Date();
+  const vcera = new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1);
+  if (denKlic(d) === denKlic(n)) return preklad(jazyk, "gal_dnes");
+  if (denKlic(d) === denKlic(vcera)) return preklad(jazyk, "gal_vcera");
+  return datumText(jazyk, d);
+}
+
 /* zpravy -> konverzace podle cisla, nejnovejsi nahore: { komu, posledni, pocet } */
 function konverzace(zpravy) {
   const mapa = {};
@@ -486,7 +501,7 @@ const Core = {
   TEXTY, JAZYKY, vychoziJazyk, preklad, dva, hhmm, denKlic, datumText, mesicMrizka,
   budikMaZvonit, spocitej, cisloTel, smsOdkaz, pinHash, pinPlatny, platnaZaloha,
   prohlizec, platforma, velikost, trvani, HLEDACE, HLEDANI, adresaZVstupu, zobrazAdresu,
-  upravAdresu, navrhy, T9, kratkyCas, konverzace
+  upravAdresu, navrhy, T9, kratkyCas, konverzace, nadpisDne
 };
 if (typeof module !== "undefined" && module.exports) module.exports = Core;
 else glob.Core = Core;

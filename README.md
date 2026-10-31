@@ -29,6 +29,9 @@ Tři podoby jednoho systému:
   seznam hovorů (odchozí, příchozí, zmeškané)
 - **Zprávy**: seznam konverzací s avatary a náhledem, vlákno s bublinami
   a oddělením podle dnů, pole na psaní dole, nová zpráva tlačítkem
+- **Galerie**: mřížka náhledů seskupená podle dnů (Dnes, Včera, datum),
+  prohlížeč přes celou obrazovku s posouváním prstem, sdílení fotky,
+  nastavení jako tapety, stažení a mazání
 - **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
   s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
   Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé
