@@ -47,7 +47,8 @@ ZARIADENIA = [
     {"id": "oneplus-enchilada", "nazov": "OnePlus 6", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť +"},
     {"id": "oneplus-fajita", "nazov": "OnePlus 6T", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť +"},
     {"id": "google-sargo", "nazov": "Google Pixel 3a", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
-    {"id": "google-bonito", "nazov": "Google Pixel 3a XL", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
+    {"id": "google-bonito-sdc", "nazov": "Google Pixel 3a XL (displej SDC)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
+    {"id": "google-bonito-tianma", "nazov": "Google Pixel 3a XL (displej Tianma)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
     {"id": "xiaomi-beryllium-tianma", "nazov": "Xiaomi Poco F1 (displej Tianma)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
     {"id": "xiaomi-beryllium-ebbg", "nazov": "Xiaomi Poco F1 (displej EBBG)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
     {"id": "fairphone-fp4", "nazov": "Fairphone 4", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
@@ -348,7 +349,7 @@ def vbmeta_bez_overovania(stranka=4096):
     """Prazdny obraz vbmeta s priznakom 2 (overovanie vypnute) - to iste ako
     'avbtool make_vbmeta_image --flags 2 --padding_size <stranka>', ktory pouziva pmbootstrap."""
     import struct
-    hlavicka = struct.pack(">4sLLQQL11QLL48s80x", b"AVB0", 1, 0, 0, 0, 0, *([0] * 11), 2, 0, b"avbtool 1.3.0")
+    hlavicka = struct.pack(">4sLLQQL11QLL48s80x", b"AVB0", 1, 0, 0, 0, 0, *([0] * 11), 2, 0, b"avbtool 1.4.0")
     return hlavicka + b"\0" * (stranka - len(hlavicka))
 
 

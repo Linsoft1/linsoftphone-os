@@ -22,7 +22,8 @@ VirtualBox / QEMU.
 | OnePlus 6 | USB kábel (fastboot) | `oneplus-enchilada` |
 | OnePlus 6T | USB kábel (fastboot) | `oneplus-fajita` |
 | Google Pixel 3a | USB kábel (fastboot) | `google-sargo` |
-| Google Pixel 3a XL | USB kábel (fastboot) | `google-bonito` |
+| Google Pixel 3a XL, displej SDC | USB kábel (fastboot) | `google-bonito-sdc` |
+| Google Pixel 3a XL, displej Tianma | USB kábel (fastboot) | `google-bonito-tianma` |
 | Xiaomi Poco F1, displej Tianma | USB kábel (fastboot) | `xiaomi-beryllium-tianma` |
 | Xiaomi Poco F1, displej EBBG | USB kábel (fastboot) | `xiaomi-beryllium-ebbg` |
 | Fairphone 4 | USB kábel (fastboot) | `fairphone-fp4` |
@@ -44,8 +45,10 @@ Iné telefóny podporované postmarketOS sa dajú zostaviť cez `pmbootstrap`, p
   pri danom modeli.
 - **Režim fastboot:** vypni telefón, drž **Hlasitosť +** (OnePlus) alebo **Hlasitosť −**
   (Pixel, Poco F1, Fairphone) a zapni ho. Potom ho pripoj USB káblom.
-- **Poco F1** má dva druhy displeja (Tianma, EBBG). Vyber ten svoj, postup je na
-  [wiki pri Poco F1](https://wiki.postmarketos.org/wiki/Xiaomi_Poco_F1_(xiaomi-beryllium)).
+- **Poco F1** (Tianma / EBBG) a **Pixel 3a XL** (SDC / Tianma) sa predávajú s dvoma
+  druhmi displeja. Vyber ten svoj, postup je na wiki postmarketOS pri danom modeli
+  ([Poco F1](https://wiki.postmarketos.org/wiki/Xiaomi_Poco_F1_(xiaomi-beryllium)),
+  [Pixel 3a XL](https://wiki.postmarketos.org/wiki/Google_Pixel_3a_XL_(google-bonito))).
 - **Windows** potrebuje ovládač fastboot
   ([Google USB Driver](https://developer.android.com/studio/run/win-usb)).
   **Linux:** spusti cez `sudo` alebo nastav pravidlá udev pre Android.

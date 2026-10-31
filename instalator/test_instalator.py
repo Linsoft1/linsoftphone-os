@@ -137,11 +137,8 @@ class TestTelefon(unittest.TestCase):
         self.assertTrue(os.path.exists(subory[1]))                                  # boot.img pouzivatela zostal
 
     def test_vbmeta_ako_avbtool(self):
-        """Ak je k dispozicii referencny vbmeta z avbtool (zostavenie obrazov), musi byt zhodny."""
-        ref = os.environ.get("VBMETA_AVBTOOL")
-        if not ref:
-            self.skipTest("VBMETA_AVBTOOL nie je nastavene")
-        with open(ref, "rb") as f:
+        """Bajt po bajte zhodny s 'avbtool make_vbmeta_image --flags 2 --padding_size 4096' (ako pmbootstrap)."""
+        with open(os.path.join(os.path.dirname(__file__), "testdata", "vbmeta-avbtool.img"), "rb") as f:
             self.assertEqual(ins.vbmeta_bez_overovania(), f.read())
 
     def test_chyba_fastboot_zastavi_nahravanie(self):
