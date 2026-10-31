@@ -101,7 +101,9 @@ const TEXTY = {
     hl_hledat: "Hledat v telefonu", hl_web: "Hledat na webu „{n}“", st_plocha: "Plocha",
     st_plocha_info: "Pořadí aplikací na ploše a které jsou v doku (hvězdička, nejvýš 4).",
     st_auto_motiv: "Automatický motiv", st_auto_motiv_info: "Světlý přes den (7:00–19:00)",
-    pl_dok: "V doku", pl_max: "Dok má nejvýš 4 aplikace.", pl_nahoru: "Posunout nahoru", pl_dolu: "Posunout dolů"
+    pl_dok: "V doku", pl_max: "Dok má nejvýš 4 aplikace.", pl_nahoru: "Posunout nahoru", pl_dolu: "Posunout dolů",
+    st_navigace: "Navigace", nav_tlacitka: "Tlačítka", nav_gesta: "Gesta",
+    nav_gesta_info: "Proužek dole: nahoru = plocha, dlouze nahoru = nedávné, do strany = zpět"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -200,7 +202,9 @@ const TEXTY = {
     hl_hledat: "Hľadať v telefóne", hl_web: "Hľadať na webe „{n}“", st_plocha: "Plocha",
     st_plocha_info: "Poradie aplikácií na ploche a ktoré sú v doku (hviezdička, najviac 4).",
     st_auto_motiv: "Automatický motív", st_auto_motiv_info: "Svetlý cez deň (7:00–19:00)",
-    pl_dok: "V doku", pl_max: "Dok má najviac 4 aplikácie.", pl_nahoru: "Posunúť nahor", pl_dolu: "Posunúť nadol"
+    pl_dok: "V doku", pl_max: "Dok má najviac 4 aplikácie.", pl_nahoru: "Posunúť nahor", pl_dolu: "Posunúť nadol",
+    st_navigace: "Navigácia", nav_tlacitka: "Tlačidlá", nav_gesta: "Gestá",
+    nav_gesta_info: "Pruh dole: nahor = plocha, dlho nahor = nedávne, do strany = späť"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -298,7 +302,9 @@ const TEXTY = {
     hl_hledat: "Search phone", hl_web: "Search the web for “{n}”", st_plocha: "Home screen",
     st_plocha_info: "Order of apps on the home screen and which are in the dock (star, up to 4).",
     st_auto_motiv: "Automatic theme", st_auto_motiv_info: "Light during the day (7:00–19:00)",
-    pl_dok: "In dock", pl_max: "The dock holds up to 4 apps.", pl_nahoru: "Move up", pl_dolu: "Move down"
+    pl_dok: "In dock", pl_max: "The dock holds up to 4 apps.", pl_nahoru: "Move up", pl_dolu: "Move down",
+    st_navigace: "Navigation", nav_tlacitka: "Buttons", nav_gesta: "Gestures",
+    nav_gesta_info: "Bar at the bottom: up = home, long up = recents, sideways = back"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };

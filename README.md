@@ -29,6 +29,9 @@ Tři podoby jednoho systému:
   z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
   obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
   stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
+- **Navigace**: skleněná lišta tlačítek ◁ ◯ ▢ s animací a krátkou vibrací,
+  nebo **gesta** (Nastavení → Navigace): proužek dole, nahoru = plocha,
+  dlouze nahoru = nedávné aplikace, do strany = zpět
 - **Telefon**: karty Klávesnice / Nedávné / Kontakty, klávesy s písmeny,
   při vytáčení ukáže odpovídající kontakt, podržením 0 napíše „+",
   seznam hovorů (odchozí, příchozí, zmeškané)

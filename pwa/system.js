@@ -556,13 +556,57 @@ function autoMotiv(d) {
 /* ---------------- jas v panelu notifikaci (jen LinsoftPhone OS na telefonu) ---------------- */
 $("#panel-jas-in").onchange = () => Nativ.api("jas", { hodnota: +$("#panel-jas-in").value }).catch(nativChyba);
 
-$("#nav-home").onclick = zavriApp;
-$("#nav-back").onclick = $("#app-back").onclick = () => {
+/* ---------------- navigacni lista: tlacitka nebo gesta ---------------- */
+function systemZpet() {
   if (panelOtevreny()) panel(false);
   else if (vnitrniZpet) { const f = vnitrniZpet; vnitrniZpet = null; f(); }
   else if (stav.bezici || nedavneOtevrene()) zavriApp();
-};
-$("#nav-recent").onclick = () => nedavneOtevrene() ? zavriApp() : ukazNedavne();
+}
+function systemDomu() {
+  if (stav.zamceno) return pokusOdemknout();
+  zavriApp();
+}
+function systemNedavne() { if (nedavneOtevrene()) zavriApp(); else ukazNedavne(); }
+/* kratka vibrace pri stisku, jako na telefonu */
+const tuk = (fn) => () => { if (navigator.vibrate) navigator.vibrate(8); fn(); };
+
+$("#nav-home").onclick = tuk(systemDomu);
+$("#nav-back").onclick = tuk(systemZpet);
+$("#app-back").onclick = systemZpet;
+$("#nav-recent").onclick = tuk(systemNedavne);
+
+function nastavNavigaci(rezim) {
+  document.body.classList.toggle("gesta", rezim === "gesta");
+  store.set("navigace", rezim);
+}
+/* gesta na prouzku: nahoru = domu, dlouze nahoru / podrzet = nedavne, do strany = zpet */
+(function () {
+  const nav = $("#navbar");
+  let x0 = null, y0 = 0, t0 = 0;
+  nav.addEventListener("pointerdown", (e) => {
+    if (!document.body.classList.contains("gesta")) return;
+    x0 = e.clientX; y0 = e.clientY; t0 = Date.now();
+    nav.classList.add("tahne");
+    try { nav.setPointerCapture(e.pointerId); } catch (er) { /* stary prohlizec */ }
+  });
+  nav.addEventListener("pointermove", (e) => {
+    if (x0 === null) return;
+    /* prouzek jde s prstem */
+    const dy = Math.max(-40, Math.min(0, e.clientY - y0)), dx = Math.max(-40, Math.min(40, e.clientX - x0));
+    $("#nav-prouzek").style.transform = `translate(${dx}px, ${dy}px)`;
+  });
+  const konec = (e) => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0, dt = Date.now() - t0;
+    x0 = null;
+    nav.classList.remove("tahne");
+    $("#nav-prouzek").style.transform = "";
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) return tuk(systemZpet)();
+    if (dy < -20) return tuk(dy < -140 || dt > 600 ? systemNedavne : systemDomu)();
+  };
+  nav.addEventListener("pointerup", konec);
+  nav.addEventListener("pointercancel", konec);
+})();
 
 /* ---------------- fotky: IndexedDB (stovky MB), zalozne localStorage ---------------- */
 const Fotky = (function () {
