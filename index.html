@@ -210,14 +210,24 @@ pmbootstrap flasher flash_rootfs && pmbootstrap flasher flash_kernel</code></pre
       </div>
       <a class="tl tl-hlavne" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-os-2.4-qemu-amd64.img.xz">Stiahnuť obraz</a>
     </article>
+    <article class="subor hlavny">
+      <span class="ik" style="--a:#f472b6;--b:#7b3fe4"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></span>
+      <div class="subor-text">
+        <h3>Priamo do telefónu</h3>
+        <p>LinsoftPhone OS namiesto Androidu. Hotové obrazy pre <b>OnePlus 6</b>, <b>OnePlus 6T</b> (cez USB kábel) a <b>PinePhone</b> (SD karta). Nahráš ich LinsoftPhone Installerom: vyber telefón, zvoľ „Telefón cez USB kábel“ a klikni Zapísať.</p>
+        <p class="subor-info">Telefón sa celý zmaže · potrebuje odomknutý bootloader ·
+          <a href="https://github.com/Linsoft1/linsoftphone-os/releases/latest">súbory pre telefóny</a></p>
+      </div>
+      <a class="tl tl-hlavne" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-installer-1.1.zip">Stiahnuť inštalátor</a>
+    </article>
     <article class="subor">
       <span class="ik" style="--a:#f59e0b;--b:#c2410c"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="12" rx="2"/><path d="M10 6h4M12 14v4M8 18l4 4 4-4"/></svg></span>
       <div class="subor-text">
-        <h3>LinsoftPhone Installer 1.0</h3>
-        <p>Zapíše obraz na USB kľúč alebo SD kartu, alebo pripraví <code>linsoftPhone.img</code> pre VirtualBox / QEMU. Sám stiahne a overí najnovší obraz. Windows aj Linux, potrebuje Python.</p>
-        <p class="subor-info"><code>linsoftphone-installer-1.0.zip</code> · 8 kB</p>
+        <h3>LinsoftPhone Installer 1.1</h3>
+        <p>Nahrá LinsoftPhone OS do telefónu cez USB kábel (fastboot si stiahne sám), zapíše obraz na USB kľúč alebo SD kartu, alebo pripraví <code>linsoftPhone.img</code> pre VirtualBox / QEMU. Sám stiahne a overí najnovší obraz. Windows aj Linux, potrebuje Python.</p>
+        <p class="subor-info"><code>linsoftphone-installer-1.1.zip</code> · <span data-velkost="ins">12 kB</span></p>
       </div>
-      <a class="tl tl-druhe" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-installer-1.0.zip">Stiahnuť</a>
+      <a class="tl tl-druhe" href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/linsoftphone-installer-1.1.zip">Stiahnuť</a>
     </article>
     <article class="subor">
       <span class="ik" style="--a:#475569;--b:#0f172a"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>
@@ -246,7 +256,15 @@ qemu-system-x86_64 -enable-kvm -m 3G -smp 2 \
   -drive file=linsoftphone-os-2.4-qemu-amd64.img,format=raw,if=virtio \
   -device virtio-vga -device virtio-tablet-pci -device virtio-keyboard-pci</code></pre>
     <p>Prihlásenie (napr. cez SSH alebo konzolu): používateľ <code>user</code>, heslo <code>147147</code> — po prvom spustení ho zmeň príkazom <code>passwd</code>.</p>
-    <p>Pre konkrétny telefón sa obraz zostavuje zvlášť — pozri <a href="#instalacia">Inštaláciu → Ako systém telefónu</a>.
+    <h3>Ako nahrať LinsoftPhone OS do telefónu</h3>
+    <ol>
+      <li>Zálohuj si telefón — inštalácia z neho zmaže všetko vrátane Androidu.</li>
+      <li>Odomkni bootloader (návod pre <a href="https://wiki.postmarketos.org/wiki/OnePlus_6_(oneplus-enchilada)">OnePlus 6</a> / <a href="https://wiki.postmarketos.org/wiki/OnePlus_6T_(oneplus-fajita)">6T</a> na wiki postmarketOS).</li>
+      <li>Vypni telefón, drž <b>Hlasitosť +</b> a zapni ho — naštartuje do režimu fastboot. Pripoj ho USB káblom.</li>
+      <li>Spusti LinsoftPhone Installer, vyber telefón, klikni <b>Stiahnuť najnovší</b>, zvoľ <b>Telefón cez USB kábel</b> a <b>Zapísať</b>.</li>
+    </ol>
+<pre><code>python linsoft_instalator.py --telefon --zariadenie oneplus-enchilada   # to isté z príkazového riadku</code></pre>
+    <p>PinePhone: vyber „PINE64 PinePhone“, stiahni obraz a zapíš ho na SD kartu. Iný telefón sa dá zostaviť cez pmbootstrap — pozri <a href="#instalacia">Inštaláciu → Ako systém telefónu</a>.
       Kontrolné súčty: <a href="https://github.com/Linsoft1/linsoftphone-os/releases/latest/download/SHA256SUMS">SHA256SUMS</a> ·
       <a href="https://github.com/Linsoft1/linsoftphone-os/releases">všetky vydania</a></p>
   </div>
