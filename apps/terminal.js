@@ -31,7 +31,7 @@ function appTerminal(c) {
     w("linsoft> " + cmd, "ter-zadani");
     if (cmd) { historie.push(cmd); pozice = historie.length; }
     if (cmd === "pomoc") w("pomoc, info, cas, datum, kalk <vyraz>, vymaz");
-    else if (cmd === "info") w(`Verze: ${VERZE_OS} PWA\nPlatforma: ${Core.platforma(navigator.userAgent)}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
+    else if (cmd === "info") w(`Verze: ${VERZE_OS} PWA\nAutor: ${AUTOR_OS}\nPlatforma: ${Core.platforma(navigator.userAgent)}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
     else if (cmd === "cas") w("Doba behu: " + Core.trvani((Date.now() - start) / 1000));
     else if (cmd === "datum") w(new Date().toLocaleString(stav.jazyk));
     else if (cmd === "vymaz") tm.textContent = "";
