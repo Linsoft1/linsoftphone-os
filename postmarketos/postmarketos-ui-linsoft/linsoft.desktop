@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=LinsoftPhone OS
+Comment=Vlastni telefonni rozhrani LinsoftPhone OS
+Exec=linsoft-session
+Type=Application

@@ -6,12 +6,16 @@ Vlastní logo systému: písmeno **L** tvoří dvě osy a z jejich rohu se ší�
 signál ([pwa/icons/logo.svg](pwa/icons/logo.svg)). Stejné logo vykresluje
 i kernel přímo do framebufferu — bez obrázku, výpočtem ([gfx.c](gfx.c)).
 
-Dvě podoby jednoho systému:
+Tři podoby jednoho systému:
 
 1. **Kernel** (kořen repa) — skutečný mini-OS pro ARM běžící v QEMU
 2. **PWA** ([pwa/](./pwa)) — moderní telefonní prostředí, které funguje na
    **jakémkoli smartphonu** (Android i iPhone) přes prohlížeč a dá se
    nainstalovat jako aplikace („Přidat na plochu")
+3. **Vlastní systém telefonu** ([postmarketos/](./postmarketos)) — Android se
+   z telefonu smaže a po zapnutí naběhne přímo LinsoftPhone OS (postmarketOS
+   + kiosk + lokální služba pro hovory, SMS, Wi-Fi); funguje na telefonech,
+   které podporuje postmarketOS. Návod: [postmarketos/README.md](./postmarketos/README.md)
 
 ## PWA verze 2.2 — pro skutečné telefony
 

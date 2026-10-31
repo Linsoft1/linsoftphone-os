@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+# LinsoftPhone OS - lokalni sluzba (rozhrani + hovory, SMS, Wi-Fi, baterie, jas)
+
+name="LinsoftPhone OS"
+description="Lokalni API LinsoftPhone OS na 127.0.0.1:8640"
+command="/usr/bin/linsoft-sluzba"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/linsoft-sluzba.log"
+error_log="/var/log/linsoft-sluzba.log"
+
+depend() {
+	need localmount
+	after modemmanager networkmanager
+}

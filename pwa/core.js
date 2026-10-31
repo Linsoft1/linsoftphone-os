@@ -49,7 +49,15 @@ const TEXTY = {
     st_o: "📱 O systému",
     st_o_text: "Běží jako progresivní webová aplikace — funguje na Androidu, iPhonu i počítači.<br>Nainstaluj přes menu prohlížeče: „Přidat na plochu“.",
     st_reset: "🗑 Tovární nastavení (smazat data)", st_reset_q: "Opravdu smazat všechna data?",
-    zap: "Zap", vyp: "Vyp"
+    zap: "Zap", vyp: "Vyp",
+    hovor_prichozi: "Příchozí hovor", hovor_volam: "Volám…", hovor_aktivni: "Probíhá hovor",
+    prijmout: "Přijmout", zavesit: "Zavěsit", chyba_n: "Chyba: {n}",
+    sms_info_nativ: "Zpráva se odešle přímo z modemu telefonu.",
+    nativ_info: "Běží jako vlastní systém telefonu (postmarketOS).",
+    st_jas: "☀️ Jas", st_wifi: "📶 Wi-Fi sítě", st_wifi_heslo: "Heslo Wi-Fi", st_pripojit: "Připojit",
+    st_pripojeno: "Připojeno: {n}", st_vypnout: "⏻ Vypnout telefon", st_restart: "🔄 Restartovat",
+    st_vypnout_q: "Opravdu vypnout telefon?", st_restart_q: "Opravdu restartovat telefon?",
+    kb_skryt: "Skrýt klávesnici", mezera: "mezera"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -96,7 +104,15 @@ const TEXTY = {
     st_o: "📱 O systéme",
     st_o_text: "Beží ako progresívna webová aplikácia — funguje na Androide, iPhone aj počítači.<br>Nainštaluj cez menu prehliadača: „Pridať na plochu“.",
     st_reset: "🗑 Továrenské nastavenia (zmazať dáta)", st_reset_q: "Naozaj zmazať všetky dáta?",
-    zap: "Zap", vyp: "Vyp"
+    zap: "Zap", vyp: "Vyp",
+    hovor_prichozi: "Prichádzajúci hovor", hovor_volam: "Volám…", hovor_aktivni: "Prebieha hovor",
+    prijmout: "Prijať", zavesit: "Zložiť", chyba_n: "Chyba: {n}",
+    sms_info_nativ: "Správa sa odošle priamo z modemu telefónu.",
+    nativ_info: "Beží ako vlastný systém telefónu (postmarketOS).",
+    st_jas: "☀️ Jas", st_wifi: "📶 Wi-Fi siete", st_wifi_heslo: "Heslo Wi-Fi", st_pripojit: "Pripojiť",
+    st_pripojeno: "Pripojené: {n}", st_vypnout: "⏻ Vypnúť telefón", st_restart: "🔄 Reštartovať",
+    st_vypnout_q: "Naozaj vypnúť telefón?", st_restart_q: "Naozaj reštartovať telefón?",
+    kb_skryt: "Skryť klávesnicu", mezera: "medzera"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -142,7 +158,15 @@ const TEXTY = {
     st_o: "📱 About",
     st_o_text: "Runs as a progressive web app — works on Android, iPhone and desktop.<br>Install it from the browser menu: “Add to Home screen”.",
     st_reset: "🗑 Factory reset (delete data)", st_reset_q: "Really delete all data?",
-    zap: "On", vyp: "Off"
+    zap: "On", vyp: "Off",
+    hovor_prichozi: "Incoming call", hovor_volam: "Calling…", hovor_aktivni: "Call in progress",
+    prijmout: "Answer", zavesit: "Hang up", chyba_n: "Error: {n}",
+    sms_info_nativ: "The message is sent directly by the phone's modem.",
+    nativ_info: "Running as the phone's own operating system (postmarketOS).",
+    st_jas: "☀️ Brightness", st_wifi: "📶 Wi-Fi networks", st_wifi_heslo: "Wi-Fi password", st_pripojit: "Connect",
+    st_pripojeno: "Connected: {n}", st_vypnout: "⏻ Power off", st_restart: "🔄 Restart",
+    st_vypnout_q: "Really power off the phone?", st_restart_q: "Really restart the phone?",
+    kb_skryt: "Hide keyboard", mezera: "space"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };

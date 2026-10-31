@@ -1,5 +1,5 @@
 /* LinsoftPhone OS - service worker (offline rezim) */
-const CACHE = "linsoftos-v4";
+const CACHE = "linsoftos-v5";
 const SOUBORY = [
   "./", "index.html", "app.css", "core.js", "app.js", "manifest.webmanifest",
   "icons/logo.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"
@@ -21,7 +21,9 @@ self.addEventListener("activate", (e) => {
 /* nejdriv sit (at se nova verze dostane do telefonu), bez signalu cache */
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  const url = new URL(req.url);
+  /* /api/ = zive udaje telefonu (LinsoftPhone OS), nikdy z cache */
+  if (req.method !== "GET" || url.origin !== location.origin || url.pathname.indexOf("/api/") === 0) return;
   e.respondWith(
     fetch(req)
       .then((r) => {

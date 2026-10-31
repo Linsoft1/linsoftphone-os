@@ -1,0 +1,44 @@
+# Maintainer: Linsoft1 <Linsoft1@users.noreply.github.com>
+# LinsoftPhone OS jako uzivatelske rozhrani postmarketOS.
+# Zdroj linsoftphone-www.tar.gz vyrabi skript postmarketos/priprav.sh z adresare pwa/.
+pkgname=postmarketos-ui-linsoft
+pkgver=2.2
+pkgrel=0
+pkgdesc="LinsoftPhone OS: vlastni telefonni rozhrani (kiosk Cage + Cog)"
+url="https://github.com/Linsoft1/linsoftphone-os"
+arch="noarch"
+license="custom"
+depends="
+	cage
+	cog
+	modemmanager
+	networkmanager
+	postmarketos-base-ui
+	python3
+	tinydm
+	"
+install="$pkgname.post-install"
+source="
+	linsoftphone-www.tar.gz
+	linsoft-sluzba.py
+	linsoft-sluzba.initd
+	linsoft-session
+	linsoft.desktop
+	"
+options="!check" # jen soubory, neni co testovat pri sestaveni
+builddir="$srcdir"
+
+package() {
+	install -Dm755 "$srcdir"/linsoft-sluzba.py "$pkgdir"/usr/bin/linsoft-sluzba
+	install -Dm755 "$srcdir"/linsoft-sluzba.initd "$pkgdir"/etc/init.d/linsoft-sluzba
+	install -Dm755 "$srcdir"/linsoft-session "$pkgdir"/usr/bin/linsoft-session
+	install -Dm644 "$srcdir"/linsoft.desktop "$pkgdir"/usr/share/wayland-sessions/linsoft.desktop
+
+	# rozhrani (PWA) - abuild archiv rozbalil do $srcdir/www
+	mkdir -p "$pkgdir"/usr/share/linsoftphone-os
+	cp -r "$srcdir"/www "$pkgdir"/usr/share/linsoftphone-os/www
+}
+
+sha512sums="
+SPUST_PRIPRAV_SH
+"

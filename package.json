@@ -3,6 +3,7 @@
   "private": true,
   "description": "LinsoftPhone OS - testy PWA verze",
   "scripts": {
-    "test": "node --test pwa/tests/*.test.js"
+    "test": "node --test pwa/tests/*.test.js",
+    "test:sluzba": "python3 -m unittest discover -s postmarketos/tests"
   }
 }

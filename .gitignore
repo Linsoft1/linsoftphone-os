@@ -1,2 +1,3 @@
 kernel.elf
 *.ppm
+__pycache__/

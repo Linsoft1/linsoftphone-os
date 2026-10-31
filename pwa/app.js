@@ -74,8 +74,10 @@ function tick() {
 /* skutecna baterie, pokud ji prohlizec umi */
 if (navigator.getBattery) {
   navigator.getBattery().then((b) => {
-    const uk = () => $("#sb-batt").textContent =
-      (b.charging ? "⚡ " : "🔋 ") + Math.round(b.level * 100) + " %";
+    const uk = () => {
+      if (Nativ.aktivni) return; /* na LinsoftPhone OS hlasi baterii sluzba telefonu */
+      $("#sb-batt").textContent = (b.charging ? "⚡ " : "🔋 ") + Math.round(b.level * 100) + " %";
+    };
     b.addEventListener("levelchange", uk);
     b.addEventListener("chargingchange", uk);
     uk();
@@ -461,6 +463,223 @@ function obnov(soubor, hotovo) {
   r.readAsText(soubor);
 }
 
+/* ---------------- nativni rezim: LinsoftPhone OS jako system telefonu ----------------
+ * Na telefonu s postmarketOS bezi lokalni sluzba linsoft-sluzba (postmarketos/),
+ * ktera pres /api/ zpristupni modem (hovory, SMS), Wi-Fi, baterii, jas a vypnuti. */
+const Nativ = {
+  aktivni: false,
+  api(cesta, data) {
+    const opt = { headers: { "X-Linsoft": "1" } };
+    if (data !== undefined) {
+      opt.method = "POST";
+      opt.headers["Content-Type"] = "application/json";
+      opt.body = JSON.stringify(data);
+    }
+    return fetch("/api/" + cesta, opt).then((r) => r.json().then((j) => {
+      if (!r.ok) throw new Error(j.chyba || r.status);
+      return j;
+    }));
+  }
+};
+function nativChyba(e) { pridejNotif("LinsoftPhone OS", t("chyba_n", e && e.message ? e.message : e)); }
+
+function volat(cislo) {
+  if (!Nativ.aktivni) {
+    pridejNotif(t("app_telefon"), t("volam", jmenoKCislu(cislo)));
+    location.href = "tel:" + cislo; /* telefon s Androidem/iOS otevre sve vytaceni */
+    return;
+  }
+  Nativ.api("volat", { cislo }).then(hlidejHovory, nativChyba);
+}
+/* odkazy tel: (napr. v Kontaktech) na LinsoftPhone OS voli pres modem */
+document.addEventListener("click", (e) => {
+  const a = Nativ.aktivni && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
+  if (!a) return;
+  e.preventDefault();
+  volat(Core.cisloTel(a.getAttribute("href").slice(4)));
+});
+
+/* ---- hovor: prichozi / odchozi / probihajici ---- */
+let hovorId = null, hovorZacatek = 0;
+function hlidejHovory() {
+  Nativ.api("hovory").then((seznam) => {
+    const h = seznam.filter((x) => x.stav !== "terminated")[0];
+    if (!h) { hovorId = null; $("#hovor").hidden = true; return; }
+    if (h.id !== hovorId) { hovorId = h.id; hovorZacatek = 0; }
+    const prichozi = h.stav === "ringing-in" || h.stav === "waiting";
+    let text = t("hovor_volam");
+    if (prichozi) text = t("hovor_prichozi");
+    else if (h.stav === "active") {
+      if (!hovorZacatek) hovorZacatek = Date.now();
+      const s = Math.floor((Date.now() - hovorZacatek) / 1000);
+      text = t("hovor_aktivni") + " · " + Core.dva(Math.floor(s / 60)) + ":" + Core.dva(s % 60);
+    }
+    const kdo = jmenoKCislu(h.cislo) || h.cislo;
+    $("#hovor-avatar").textContent = kdo === h.cislo ? "👤" : kdo[0].toUpperCase();
+    $("#hovor-kdo").textContent = kdo;
+    $("#hovor-stav").textContent = text;
+    $("#hovor-prijmout").hidden = !prichozi;
+    if (prichozi) { pipni(); if (navigator.vibrate) navigator.vibrate(400); }
+    if ($("#hovor").hidden) {
+      $("#hovor").hidden = false;
+      if (prichozi) pridejNotif(t("hovor_prichozi"), kdo, true);
+    }
+  }).catch(() => {});
+}
+$("#hovor-prijmout").onclick = () => Nativ.api("hovor", { id: hovorId, akce: "accept" }).then(hlidejHovory, nativChyba);
+$("#hovor-zavesit").onclick = () => Nativ.api("hovor", { id: hovorId, akce: "hangup" })
+  .then(() => { $("#hovor").hidden = true; hlidejHovory(); }, nativChyba);
+
+/* ---- prijate SMS se ukladaji do Zprav ---- */
+function hlidejSms() {
+  Nativ.api("sms").then((seznam) => {
+    const videne = store.get("smsVidene", []);
+    const nove = seznam.filter((s) => videne.indexOf(s.id) < 0);
+    if (!nove.length) return;
+    const z = store.get("zpravy", []);
+    nove.forEach((s) => {
+      const cas = Date.parse(s.cas);
+      z.push({ txt: s.text, komu: s.cislo, cas: isNaN(cas) ? Date.now() : cas, prijata: true });
+      pridejNotif("💬 " + jmenoKCislu(s.cislo), s.text, true);
+    });
+    store.set("zpravy", z.slice(-200));
+    store.set("smsVidene", videne.concat(nove.map((s) => s.id)).slice(-500));
+    if (stav.bezici === "zpravy") appZpravy($("#app-content"));
+  }).catch(() => {});
+}
+
+/* ---- stavovy radek: operator, signal, baterie ze skutecneho hardwaru ---- */
+function obnovStav() {
+  Nativ.api("stav").then((s) => {
+    if (s.baterie) $("#sb-batt").textContent = (s.baterie.nabiji ? "⚡ " : "🔋 ") + s.baterie.uroven + " %";
+    $("#sb-operator").textContent = s.modem && s.modem.operator ? s.modem.operator : "LinsoftPhone OS";
+    const sila = s.modem ? s.modem.signal : 0;
+    $("#sb-net").textContent = !s.modem ? "✕" : sila > 60 ? "▂▄▆█" : sila > 30 ? "▂▄▆" : sila > 0 ? "▂▄" : "▂";
+    stav.jas = s.jas;
+  }).catch(() => {});
+}
+
+function spustNativ() {
+  /* sluzba bezi jen na telefonu s LinsoftPhone OS (127.0.0.1); jinde se nic nedeje */
+  if (["127.0.0.1", "localhost"].indexOf(location.hostname) < 0) return;
+  Nativ.api("stav").then(() => {
+    Nativ.aktivni = true;
+    document.body.classList.add("nativ");
+    obnovStav();
+    hlidejHovory();
+    hlidejSms();
+    setInterval(obnovStav, 20000);
+    setInterval(hlidejHovory, 1500);
+    setInterval(hlidejSms, 10000);
+    Klavesnice.zapni();
+  }).catch(() => {});
+}
+
+/* ---------------- vlastni klavesnice na obrazovce ----------------
+ * V kiosku (Cage + Cog) neni systemova klavesnice, proto ma LinsoftPhone OS vlastni. */
+const Klavesnice = (function () {
+  /* rady: retezec = kazdy znak jedna klavesa; spodni rada jako seznam (prepinace vrstev) */
+  const SPODNI = ["123", "áé", "␣", ".", "⏎", "▾"];
+  const VRSTVY = {
+    abc: ["qwertzuiop", "asdfghjkl", "⇧yxcvbnm⌫", SPODNI],
+    ABC: ["QWERTZUIOP", "ASDFGHJKL", "⇧YXCVBNM⌫", SPODNI],
+    dia: ["áäčďéíĺľňó", "ôŕšťúýž", "ÁČĎÉÍĽŠŤŽ⌫", ["abc", ",", "␣", ".", "⏎", "▾"]],
+    num: ["1234567890", "+-*/()#@&", ":;'\"?!%=⌫", ["abc", ",", "␣", ".", "⏎", "▾"]]
+  };
+  const SPECIALNI = ["⇧", "⌫", "⏎", "␣", "123", "abc", "áé", "▾"];
+  let vrstva = "abc", pole = null, skryt = null;
+  const kb = $("#klavesnice");
+
+  function kresli() {
+    kb.innerHTML = VRSTVY[vrstva].map((radek) => {
+      const klavesy = Array.isArray(radek) ? radek : radek.split("");
+      return `<div class="kb-radek">${klavesy.map((k) => {
+        const zvl = SPECIALNI.indexOf(k) >= 0;
+        const popis = k === "␣" ? t("mezera") : k === "▾" ? t("kb_skryt") : k;
+        return `<button class="kb-k${zvl ? " zvl" : ""}${k === "␣" ? " mezera" : ""}" data-k="${esc(k)}" aria-label="${esc(popis)}">${esc(k === "␣" ? " " : k)}</button>`;
+      }).join("")}</div>`;
+    }).join("");
+  }
+
+  /* pozice kurzoru; u nekterych typu poli (number, email) ji prohlizec nepovoli */
+  function kurzor() {
+    try { return typeof pole.selectionStart === "number" ? [pole.selectionStart, pole.selectionEnd] : null; }
+    catch (e) { return null; }
+  }
+  function zmen(hodnota, novyKurzor) {
+    pole.value = hodnota;
+    try { if (novyKurzor !== null) pole.selectionStart = pole.selectionEnd = novyKurzor; } catch (e) { /* nejde */ }
+    pole.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function vloz(s) {
+    if (!pole) return;
+    const v = pole.value, kz = kurzor();
+    if (!kz) return zmen(v + s, null);
+    zmen(v.slice(0, kz[0]) + s + v.slice(kz[1]), kz[0] + s.length);
+  }
+  function smaz() {
+    if (!pole) return;
+    const v = pole.value, kz = kurzor();
+    if (!kz) return zmen(v.slice(0, -1), null);
+    if (kz[0] !== kz[1]) return zmen(v.slice(0, kz[0]) + v.slice(kz[1]), kz[0]);
+    if (kz[0] > 0) zmen(v.slice(0, kz[0] - 1) + v.slice(kz[0]), kz[0] - 1);
+  }
+
+  function stisk(k) {
+    if (k === "⇧") vrstva = vrstva === "abc" ? "ABC" : "abc";
+    else if (k === "123") vrstva = "num";
+    else if (k === "abc") vrstva = "abc";
+    else if (k === "áé") vrstva = "dia";
+    else if (k === "⌫") return smaz();
+    else if (k === "▾") return schovej();
+    else if (k === "⏎") {
+      if (pole && pole.tagName === "TEXTAREA") return vloz("\n");
+      if (pole) pole.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      return;
+    } else {
+      vloz(k === "␣" ? " " : k);
+      if (vrstva === "ABC") vrstva = "abc"; /* velke pismeno jen jednou, jako na telefonu */
+      else return;
+    }
+    kresli();
+  }
+
+  function ukaz(el) {
+    clearTimeout(skryt);
+    pole = el;
+    vrstva = el.type === "tel" || el.type === "number" ? "num" : "abc";
+    kresli();
+    kb.hidden = false;
+    $("#phone").classList.add("kb");
+    setTimeout(() => el.scrollIntoView({ block: "center" }), 50);
+  }
+  function schovej() {
+    kb.hidden = true;
+    $("#phone").classList.remove("kb");
+    if (pole) pole.blur();
+    pole = null;
+  }
+
+  return {
+    zapni() {
+      /* klepnuti do klavesnice nesmi vzit fokus textovemu poli */
+      kb.addEventListener("pointerdown", (e) => e.preventDefault());
+      kb.addEventListener("mousedown", (e) => e.preventDefault());
+      kb.addEventListener("click", (e) => {
+        const b = e.target.closest ? e.target.closest("[data-k]") : null;
+        if (b) stisk(b.dataset.k);
+      });
+      document.addEventListener("focusin", (e) => {
+        const el = e.target;
+        const textove = el.tagName === "TEXTAREA" ||
+          (el.tagName === "INPUT" && /^(text|tel|search|password|email|number|url)$/.test(el.type));
+        if (textove) ukaz(el);
+      });
+      document.addEventListener("focusout", () => { skryt = setTimeout(schovej, 150); });
+    }
+  };
+})();
+
 /* ---------------- APLIKACE ---------------- */
 const nactiKontakty = () => store.get("kontakty", [
   { j: "Máma", t: "+420 601 111 222" },
@@ -492,8 +711,7 @@ function appTelefon(c) {
   $("#dial-call").onclick = () => {
     const n = Core.cisloTel(num.textContent);
     if (!n) return;
-    pridejNotif(t("app_telefon"), t("volam", jmenoKCislu(n)));
-    location.href = "tel:" + n; /* na skutecnem telefonu otevre vytaceni */
+    volat(n);
   };
 }
 
@@ -502,8 +720,9 @@ function appZpravy(c, komu) {
   const z = store.get("zpravy", []);
   const kontakty = nactiKontakty();
   c.innerHTML = `
-    <div id="zpr-list">${z.map((m) =>
-      `<div class="bubble">${esc(m.txt)}<small>${m.komu ? "→ " + esc(jmenoKCislu(m.komu)) + " · " : ""}${Core.hhmm(new Date(m.cas))}</small></div>`).join("")
+    <div id="zpr-list">${z.map((m) => m.prijata
+      ? `<div class="bubble in">${esc(m.txt)}<small>← ${esc(jmenoKCislu(m.komu))} · ${Core.hhmm(new Date(m.cas))}</small></div>`
+      : `<div class="bubble">${esc(m.txt)}<small>${m.komu ? "→ " + esc(jmenoKCislu(m.komu)) + " · " : ""}${Core.hhmm(new Date(m.cas))}</small></div>`).join("")
       || `<p class="muted">${esc(t("sms_zadne"))}</p>`}</div>
     <div id="zpr-form">
       <input id="zpr-komu" type="tel" list="zpr-kontakty" autocomplete="off"
@@ -514,7 +733,7 @@ function appZpravy(c, komu) {
         <input id="zpr-in" placeholder="${esc(t("sms_text"))}" aria-label="${esc(t("sms_text"))}">
         <button class="btn" id="zpr-send" aria-label="SMS">➤</button>
       </div>
-      <p class="muted small">${esc(t("sms_info"))}</p>
+      <p class="muted small">${esc(t(Nativ.aktivni ? "sms_info_nativ" : "sms_info"))}</p>
     </div>`;
   c.scrollTop = c.scrollHeight;
   const posli = () => {
@@ -522,11 +741,15 @@ function appZpravy(c, komu) {
     const cislo = Core.cisloTel($("#zpr-komu").value);
     if (!cislo) return $("#zpr-komu").focus();
     if (!text) return $("#zpr-in").focus();
-    z.push({ txt: text, komu: cislo, cas: Date.now() });
-    store.set("zpravy", z.slice(-200));
-    pridejNotif(t("app_zpravy"), t("sms_odeslano", jmenoKCislu(cislo)));
-    location.href = Core.smsOdkaz(cislo, text, JE_IOS);
-    appZpravy(c, cislo);
+    const ulozeno = () => {
+      z.push({ txt: text, komu: cislo, cas: Date.now() });
+      store.set("zpravy", z.slice(-200));
+      pridejNotif(t("app_zpravy"), t("sms_odeslano", jmenoKCislu(cislo)));
+      if (stav.bezici === "zpravy") appZpravy(c, cislo);
+    };
+    /* LinsoftPhone OS na telefonu posila primo pres modem, jinak SMS aplikace telefonu */
+    if (Nativ.aktivni) Nativ.api("sms", { cislo, text }).then(ulozeno, nativChyba);
+    else { location.href = Core.smsOdkaz(cislo, text, JE_IOS); ulozeno(); }
   };
   $("#zpr-send").onclick = posli;
   $("#zpr-in").onkeydown = (e) => { if (e.key === "Enter") posli(); };
@@ -618,6 +841,9 @@ function appHodiny(c, karta) {
   }
   else if (karta === "budik") {
     const uloz = () => { store.set("budiky", stav.budiky); appHodiny(c, "budik"); tick(); };
+    /* vyber casu pres dva seznamy - funguje vsude, i bez systemove klavesnice */
+    const moznosti = (n, vybrano) => Array.from({ length: n }, (_, i) =>
+      `<option value="${i}"${i === vybrano ? " selected" : ""}>${Core.dva(i)}</option>`).join("");
     o.innerHTML = (stav.budiky.length ? stav.budiky.map((b, i) => `
       <div class="list-item">
         <div class="grow big">${Core.dva(b.h)}:${Core.dva(b.m)}</div>
@@ -625,7 +851,8 @@ function appHodiny(c, karta) {
         <button class="btn sm ghost" data-smaz="${i}" aria-label="${esc(t("smazat"))}">✕</button>
       </div>`).join("") : `<p class="muted">${esc(t("budik_zadny"))}</p>`) + `
       <div class="row" style="margin-top:12px">
-        <input type="time" id="bd-cas" value="07:00" aria-label="${esc(t("hd_budik"))}">
+        <select id="bd-h" aria-label="${esc(t("hd_budik"))} h">${moznosti(24, 7)}</select>
+        <select id="bd-m" aria-label="${esc(t("hd_budik"))} min">${moznosti(60, 0)}</select>
         <button class="btn" id="bd-pridat">${esc(t("pridat"))}</button>
       </div>
       <p class="muted small">${esc(t("budik_info"))}</p>`;
@@ -636,9 +863,7 @@ function appHodiny(c, karta) {
     });
     o.querySelectorAll("[data-smaz]").forEach((b) => b.onclick = () => { stav.budiky.splice(+b.dataset.smaz, 1); uloz(); });
     $("#bd-pridat").onclick = () => {
-      const v = $("#bd-cas").value.split(":");
-      if (v.length < 2) return;
-      stav.budiky.push({ h: +v[0], m: +v[1], zap: true, posledni: null });
+      stav.budiky.push({ h: +$("#bd-h").value, m: +$("#bd-m").value, zap: true, posledni: null });
       stav.budiky.sort((a, b) => a.h * 60 + a.m - b.h * 60 - b.m);
       uloz();
     };
@@ -857,13 +1082,32 @@ function appNastaveni(c) {
     <div class="list-item"><div class="grow">${esc(t("st_pin"))}</div>${prepinac("st-pin", !!stav.pin)}</div>
     <div id="st-pin-box"></div>
     ${umiNotif ? `<div class="list-item"><div class="grow">${esc(t("st_notif"))}</div>${prepinac("st-notif", stav.notifSys)}</div>` : ""}
+    ${Nativ.aktivni ? `
+    <div class="list-item"><div class="grow">${esc(t("st_jas"))}</div>
+      <input type="range" id="st-jas" min="5" max="100" value="${stav.jas || 70}" aria-label="${esc(t("st_jas"))}"></div>
+    <button class="btn ghost full" id="st-wifi">${esc(t("st_wifi"))}</button>
+    <div id="st-wifi-seznam"></div>` : ""}
     <button class="btn ghost full" id="st-zaloha">${esc(t("st_zaloha"))}</button>
     <button class="btn ghost full" id="st-obnov">${esc(t("st_obnov"))}</button>
     <input type="file" id="st-soubor" accept="application/json,.json" hidden>
     <div class="list-item" style="margin-top:16px"><div class="grow">${esc(t("st_o"))}</div></div>
     <img class="about-logo" src="icons/logo.svg" alt="LinsoftPhone OS">
-    <div class="muted about center">LinsoftPhone OS 2.2 (PWA)<br>${t("st_o_text")}</div>
+    <div class="muted about center">LinsoftPhone OS 2.2${Nativ.aktivni ? "<br>" + esc(t("nativ_info")) : " (PWA)<br>" + t("st_o_text")}</div>
+    ${Nativ.aktivni ? `
+    <button class="btn ghost full" id="st-restart">${esc(t("st_restart"))}</button>
+    <button class="btn ghost full danger" id="st-vypnout">${esc(t("st_vypnout"))}</button>` : ""}
     <button class="btn ghost full danger" id="st-reset">${esc(t("st_reset"))}</button>`;
+
+  if (Nativ.aktivni) {
+    $("#st-jas").onchange = () => Nativ.api("jas", { hodnota: +$("#st-jas").value }).catch(nativChyba);
+    $("#st-wifi").onclick = () => wifiSeznam($("#st-wifi-seznam"));
+    $("#st-restart").onclick = () => {
+      if (confirm(t("st_restart_q"))) Nativ.api("system", { akce: "restart" }).catch(nativChyba);
+    };
+    $("#st-vypnout").onclick = () => {
+      if (confirm(t("st_vypnout_q"))) Nativ.api("system", { akce: "vypnout" }).catch(nativChyba);
+    };
+  }
 
   $("#st-theme").onclick = () => { nastavMotiv(!svetly); appNastaveni(c); };
   $("#st-jazyk").onchange = () => {
@@ -938,6 +1182,33 @@ function appNastaveni(c) {
   };
 }
 
+/* Wi-Fi site (jen LinsoftPhone OS na telefonu) */
+function wifiSeznam(box) {
+  box.innerHTML = `<p class="muted">…</p>`;
+  Nativ.api("wifi").then((site) => {
+    box.innerHTML = site.map((s, i) => `
+      <button class="list-item wifi" data-i="${i}">
+        <div class="grow"><div>${s.zabezpeceni ? "🔒 " : ""}${esc(s.ssid)}</div></div>
+        <span class="sub">${s.pripojeno ? "✓ " : ""}${s.signal} %</span>
+      </button>`).join("") || `<p class="muted">—</p>`;
+    box.querySelectorAll(".wifi").forEach((b) => b.onclick = () => {
+      const s = site[+b.dataset.i];
+      const pripoj = (heslo) => Nativ.api("wifi", { ssid: s.ssid, heslo }).then(() => {
+        pridejNotif("Wi-Fi", t("st_pripojeno", s.ssid));
+        wifiSeznam(box);
+      }, nativChyba);
+      if (!s.zabezpeceni || s.pripojeno) return pripoj("");
+      const f = document.createElement("div");
+      f.className = "row";
+      f.innerHTML = `<input type="password" placeholder="${esc(t("st_wifi_heslo"))}" aria-label="${esc(t("st_wifi_heslo"))}">` +
+        `<button class="btn">${esc(t("st_pripojit"))}</button>`;
+      b.parentNode.insertBefore(f, b.nextSibling);
+      f.querySelector("button").onclick = () => pripoj(f.querySelector("input").value);
+      f.querySelector("input").focus();
+    });
+  }, (e) => { box.innerHTML = ""; nativChyba(e); });
+}
+
 /* ---------------- registr aplikaci ---------------- */
 const APPS = [
   { id: "telefon", ikona: "📞", barva: "#44cc66", render: appTelefon, dock: true },
@@ -986,6 +1257,7 @@ stavDlazdic();
 Fotky.migrace();
 tick();
 setInterval(tick, 1000);
+spustNativ();
 /* zkratky z ikony na plose (manifest "shortcuts"): ./#telefon, ./#fotak */
 if (najdiApp(location.hash.slice(1))) otevri(location.hash.slice(1));
 

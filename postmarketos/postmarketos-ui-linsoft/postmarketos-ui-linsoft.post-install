@@ -1,0 +1,7 @@
+#!/bin/sh
+# po instalaci: zapnout sluzby a nastavit LinsoftPhone OS jako jedinou grafickou relaci
+rc-update add linsoft-sluzba default
+rc-update add modemmanager default
+rc-update add networkmanager default
+tinydm-set-session -f -s /usr/share/wayland-sessions/linsoft.desktop
+exit 0

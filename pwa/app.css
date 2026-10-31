@@ -64,6 +64,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   cursor: pointer;
 }
 #sb-operator { color: var(--muted); font-size: 12px; }
+body.nativ #sb-net { font-size: 10px; letter-spacing: -1px; }
 
 /* ---- obrazovky ---- */
 .screen {
@@ -445,3 +446,47 @@ select { width: auto; max-width: 50%; }
   #boot-logo, #boot-nazev, #boot-pruh span { animation: none; }
 }
 .about-logo { display: block; width: 72px; height: 72px; margin: 6px auto 10px; }
+
+/* ---- LinsoftPhone OS na skutecnem telefonu (nativni rezim) ---- */
+.bubble.in {
+  background: var(--panel); color: var(--text);
+  border-radius: 16px 16px 16px 4px; margin: 6px auto 6px 0;
+}
+button.list-item { width: 100%; border: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+input[type="range"] { width: 45%; padding: 0; border: none; background: none; -webkit-appearance: auto; appearance: auto; accent-color: var(--accent); }
+
+/* hovor */
+#hovor {
+  position: absolute; z-index: 80; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #15224a, #0b1220 60%, #1b1035); color: #eef4fb; text-align: center;
+}
+#hovor-avatar {
+  width: 96px; height: 96px; border-radius: 50%; background: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 600;
+}
+#hovor-kdo { font-size: 28px; margin-top: 18px; padding: 0 16px; }
+#hovor-stav { color: #8fa3bd; margin-top: 8px; font-variant-numeric: tabular-nums; }
+#hovor-tlacitka { display: flex; margin-top: 80px; }
+#hovor-tlacitka button {
+  width: 72px; height: 72px; border-radius: 50%; border: none; font-size: 30px; margin: 0 28px; cursor: pointer;
+}
+#hovor-prijmout { background: #44cc66; animation: puls 1s infinite; }
+#hovor-zavesit { background: #f0556c; transform: rotate(135deg); }
+
+/* klavesnice na obrazovce */
+#klavesnice {
+  position: absolute; z-index: 70; left: 0; right: 0; bottom: 0;
+  background: #1a2233; padding: 6px 3px;
+  padding-bottom: max(6px, var(--sab));
+  -webkit-user-select: none; user-select: none;
+}
+.kb-radek { display: flex; justify-content: center; margin-bottom: 6px; }
+.kb-k {
+  flex: 1; max-width: 44px; height: 44px; margin: 0 2px; padding: 0;
+  border: none; border-radius: 7px; background: #3a4458; color: #fff; font-size: 19px;
+}
+.kb-k.zvl { background: #273042; font-size: 15px; max-width: 58px; flex: 1.4; }
+.kb-k.mezera { flex: 4; max-width: none; }
+.kb-k:active { background: var(--accent); }
+#phone.kb #app-content { padding-bottom: 250px; }

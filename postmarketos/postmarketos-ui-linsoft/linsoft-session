@@ -1,0 +1,18 @@
+#!/bin/sh
+# LinsoftPhone OS - graficka relace (spousti ji tinydm po startu telefonu):
+# Cage = kiosk compositor (jedna aplikace pres celou obrazovku),
+# Cog  = WebKit prohlizec bez listy, ktery zobrazi rozhrani LinsoftPhone OS.
+#
+# LINSOFT_SKALA: zvetseni pro displeje s vysokym rozlisenim (vychozi 2;
+# 720p telefony radeji 1.5, viz /etc/conf.d nebo ~/.profile)
+
+ADRESA="http://127.0.0.1:8640/"
+
+# pockat, az nabehne lokalni sluzba (max. ~10 s)
+i=0
+while [ $i -lt 50 ] && ! wget -q -O /dev/null "$ADRESA"; do
+	sleep 0.2
+	i=$((i + 1))
+done
+
+exec cage -s -- cog --platform=wl --device-scale="${LINSOFT_SKALA:-2}" "$ADRESA"
