@@ -317,6 +317,50 @@ def instaluj_apk_soubor(klic, soubor):
         shutil.rmtree(os.path.dirname(soubor), ignore_errors=True)
 
 
+# ---------------- Terminal: skutecny shell telefonu ----------------
+# Prikaz bezi jako bezny uzivatel telefonu (ne root), bez vstupu, s casovym limitem
+# a omezenym vystupem. Interaktivni programy (vim, top) nefunguji.
+
+def uzivatel_telefonu():
+    """Uzivatel graficke relace: LINSOFT_UZIVATEL, jinak prvni bezny ucet (uid 10000 v postmarketOS, 1000 jinde)."""
+    import pwd
+    jmeno = os.environ.get("LINSOFT_UZIVATEL")
+    if jmeno:
+        return pwd.getpwnam(jmeno)
+    ucty = sorted((u for u in pwd.getpwall() if 1000 <= u.pw_uid < 60000), key=lambda u: u.pw_uid)
+    if not ucty:
+        raise RuntimeError("na telefonu neni zadny bezny uzivatel")
+    return next((u for u in ucty if u.pw_uid == 10000), ucty[0])
+
+
+def terminal_prikaz(prikaz, cwd):
+    u = uzivatel_telefonu()
+    skript = 'cd -- "$1" 2>/dev/null || cd; eval "$2"; k=$?; printf "\\n\\036%s" "$PWD"; exit $k'
+    prostredi = {"HOME": u.pw_dir, "USER": u.pw_name, "LOGNAME": u.pw_name, "SHELL": u.pw_shell or "/bin/sh",
+                 "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb", "LANG": "C.UTF-8"}
+
+    def jako_uzivatel():
+        if os.getuid() == 0:
+            os.setgroups([])
+            os.setgid(u.pw_gid)
+            os.setuid(u.pw_uid)
+
+    try:
+        r = subprocess.run(["/bin/sh", "-c", skript, "sh", cwd or u.pw_dir, prikaz], stdin=subprocess.DEVNULL,
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=prostredi,
+                           preexec_fn=jako_uzivatel, timeout=20)
+        vystup, kod = r.stdout, r.returncode
+    except subprocess.TimeoutExpired as e:
+        vystup, kod = (e.stdout or b"") + "\n[prerusene po 20 s]\n".encode(), 124
+    text = vystup[-100000:].decode("utf-8", "replace")
+    nove_cwd = cwd or u.pw_dir
+    if "\x1e" in text:
+        text, nove_cwd = text.rsplit("\x1e", 1)
+        text = text[:-1] if text.endswith("\n") else text
+    return {"vystup": text, "kod": kod, "cwd": nove_cwd.strip() or u.pw_dir, "uzivatel": u.pw_name,
+            "host": (cti_soubor("/etc/hostname") or "linsoftphone").strip(), "home": u.pw_dir}
+
+
 # ---------------- ukazkovy rezim (pocitac bez modemu) ----------------
 
 class Demo:
@@ -456,6 +500,8 @@ class Obsluha(SimpleHTTPRequestHandler):
             self.odpoved(404, {"chyba": "neznamy pozadavek"})
         except ValueError as e:
             self.odpoved(400, {"chyba": str(e)})
+        except NotImplementedError as e:
+            self.odpoved(501, {"chyba": str(e)})
         except Exception as e:
             self.odpoved(500, {"chyba": str(e)})
 
@@ -515,6 +561,14 @@ class Obsluha(SimpleHTTPRequestHandler):
             if not d.get("ssid"):
                 raise ValueError("chybi nazev site")
             return None if DEMO else wifi_pripoj(d["ssid"], d.get("heslo", ""))
+        if cesta == "/api/terminal":
+            prikaz = d.get("prikaz")
+            if not isinstance(prikaz, str) or len(prikaz) > 4000:
+                raise ValueError("neplatny prikaz")
+            if DEMO:
+                # na pocitaci se nic nespousti - Terminal pouzije vestaveny shell
+                raise NotImplementedError("v ukazkovem rezimu neni skutecny shell")
+            return terminal_prikaz(prikaz, d.get("cwd") if isinstance(d.get("cwd"), str) else "")
         if cesta in ("/api/android/instalovat", "/api/android/spustit", "/api/android/odinstalovat"):
             balik = d.get("balik")
             if not balik_ok(balik):

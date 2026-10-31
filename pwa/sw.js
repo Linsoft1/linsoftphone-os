@@ -1,7 +1,7 @@
 /* LinsoftPhone OS - service worker (offline rezim) */
 const CACHE = "linsoftos-v7";
 const SOUBORY = [
-  "./", "index.html", "app.css", "core.js", "ikony.js", "system.js", "start.js", "manifest.webmanifest",
+  "./", "index.html", "app.css", "core.js", "ikony.js", "shell.js", "system.js", "start.js", "manifest.webmanifest",
   "apps/telefon.js", "apps/zpravy.js", "apps/kontakty.js", "apps/kalkulacka.js", "apps/hodiny.js", "apps/kalendar.js", "apps/poznamky.js", "apps/galerie.js", "apps/fotak.js", "apps/terminal.js", "apps/prehliadac.js", "apps/obchod.js", "apps/nastaveni.js",
   "icons/logo.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"
 ];

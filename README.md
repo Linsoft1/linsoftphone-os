@@ -49,6 +49,13 @@ Tři podoby jednoho systému:
   na LinsoftPhone OS vybereš soubor `.apk`, Store ověří, že jde o APK do
   300 MB, upozorní na riziko a nainstaluje ho do Waydroidu; na Androidu ukáže
   postup (aplikace Soubory → povolit neznámé aplikace)
+- **Terminál jako v Linuxu**: výzva `user@linsoftphone:~$`, historie šipkami,
+  Tab doplňuje, Ctrl+C / Ctrl+L. Na telefonu s LinsoftPhone OS (postmarketOS)
+  běží **skutečný shell telefonu** (jako běžný uživatel, ne root, s limitem
+  20 s); jinde vestavěný linuxový shell ([pwa/shell.js](pwa/shell.js)) s vlastním
+  souborovým systémem: `ls -la`, `cd`, `mkdir -p`, `cat`, `echo > soubor`,
+  `rm -r`, `cp`, `mv`, `grep`, `head`, `tail`, `wc`, `uname -a`, `export`,
+  roury `|`, `>` `>>`, `;` `&&`, `$PROMENNE`
 - **Linsoft Browser 2.1** — webový prohlížeč v doku: adresní řádek
   s našeptávačem (záložky, historie, hledání), volba vyhledávače (Google,
   Bing, Wikipédia), úvodní stránka s rychlým přístupem, karty i soukromé

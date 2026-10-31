@@ -119,6 +119,12 @@ class TestSluzba(unittest.TestCase):
         self.assertEqual(self.apk(b"PK..", nazev="virus.exe")[0], 400)
         self.assertEqual(self.apk(b"PK..", hlavicky={"X-Nazev": "a.apk"})[0], 403)
 
+    def test_terminal_v_ukazke_nespusta_nic(self):
+        """na pocitaci (ukazkovy rezim) sa ziadny prikaz nespusti - Terminal pouzije vstavany shell"""
+        self.assertEqual(pozadavek("/api/terminal", {"prikaz": "echo ahoj"})[0], 501)
+        self.assertEqual(pozadavek("/api/terminal", {"prikaz": 5})[0], 400)
+        self.assertEqual(pozadavek("/api/terminal", {"prikaz": "ls"}, hlavicky={})[0], 403)
+
     def test_android_neplatny_balik(self):
         for zly in ["vlc", "org.x;reboot", "../etc/passwd", "-rf", None]:
             self.assertEqual(pozadavek("/api/android/instalovat", {"balik": zly})[0], 400, zly)
