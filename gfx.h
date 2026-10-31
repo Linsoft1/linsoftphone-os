@@ -12,8 +12,11 @@ void gfx_putc(char c);
 /* smazani graficke konzole */
 void gfx_clear(void);
 
-/* aktualizace stavoveho radku (hodiny doby behu) */
-void gfx_tick(unsigned int uptime_s);
+/* aktualizace stavoveho radku (hodiny HH:MM, dvojtecka blika) */
+void gfx_tick(unsigned int hod, unsigned int min, int dvojtecka);
+
+/* tlacitko domu: prekresli celou obrazovku a smaze konzoli */
+void gfx_domu(void);
 
 /* je displej aktivni? */
 int gfx_active(void);

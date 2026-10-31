@@ -1,0 +1,85 @@
+/* testy ciste logiky (core.js) - spusteni: npm test */
+"use strict";
+const test = require("node:test");
+const assert = require("node:assert");
+const Core = require("../core.js");
+
+test("vsechny jazyky maji stejne klice", () => {
+  const klice = Object.keys(Core.TEXTY.cs).sort();
+  for (const j of Object.keys(Core.TEXTY)) {
+    assert.deepStrictEqual(Object.keys(Core.TEXTY[j]).sort(), klice, "jazyk " + j);
+    assert.ok(Core.JAZYKY[j], "nazev jazyka " + j);
+  }
+});
+
+test("vychozi jazyk podle telefonu", () => {
+  assert.strictEqual(Core.vychoziJazyk("sk-SK"), "sk");
+  assert.strictEqual(Core.vychoziJazyk("cs"), "cs");
+  assert.strictEqual(Core.vychoziJazyk("de-DE"), "en");
+  assert.strictEqual(Core.vychoziJazyk(undefined), "en");
+});
+
+test("preklad s parametrem a zalozni anglictinou", () => {
+  assert.strictEqual(Core.preklad("sk", "volam", "Mama"), "Volám Mama…");
+  assert.strictEqual(Core.preklad("xx", "app_telefon"), "Phone");
+  assert.strictEqual(Core.preklad("cs", "neexistuje"), "neexistuje");
+});
+
+test("datum v cestine, slovencine a anglictine", () => {
+  const d = new Date(2026, 9, 31);
+  assert.strictEqual(Core.datumText("cs", d), "sobota 31. října");
+  assert.strictEqual(Core.datumText("sk", d), "sobota 31. októbra");
+  assert.strictEqual(Core.datumText("en", d), "Saturday, October 31");
+  assert.strictEqual(Core.denKlic(new Date(2026, 0, 5)), "2026-01-05");
+  assert.strictEqual(Core.hhmm(new Date(2026, 0, 5, 7, 3)), "07:03");
+});
+
+test("mrizka mesice zacina pondelim", () => {
+  const rijen = Core.mesicMrizka(2026, 9); /* 1. 10. 2026 je ctvrtek */
+  assert.deepStrictEqual(rijen.slice(0, 4), [null, null, null, 1]);
+  assert.strictEqual(rijen.filter((x) => x !== null).length, 31);
+  assert.strictEqual(Core.mesicMrizka(2028, 1).filter((x) => x !== null).length, 29); /* prestupny rok */
+});
+
+test("budik zazvoni jednou denne", () => {
+  const d = new Date(2026, 9, 31, 7, 0, 30);
+  const b = { h: 7, m: 0, zap: true, posledni: null };
+  assert.ok(Core.budikMaZvonit(b, d));
+  assert.ok(!Core.budikMaZvonit(Object.assign({}, b, { posledni: "2026-10-31" }), d));
+  assert.ok(!Core.budikMaZvonit(Object.assign({}, b, { zap: false }), d));
+  assert.ok(!Core.budikMaZvonit(Object.assign({}, b, { m: 1 }), d));
+});
+
+test("kalkulacka", () => {
+  assert.strictEqual(Core.spocitej("1+2×3"), 7);
+  assert.strictEqual(Core.spocitej("(1+2)×3"), 9);
+  assert.strictEqual(Core.spocitej("0,1+0,2"), 0.3);
+  assert.strictEqual(Core.spocitej("10÷4"), 2.5);
+  assert.strictEqual(Core.spocitej("5−8"), -3);
+  assert.throws(() => Core.spocitej("1÷0"));
+  assert.throws(() => Core.spocitej("alert(1)"));
+  assert.throws(() => Core.spocitej("1+"));
+});
+
+test("SMS odkaz pro Android a iPhone", () => {
+  assert.strictEqual(Core.smsOdkaz("+420 601 111", "ahoj & cau", false), "sms:+420601111?body=ahoj%20%26%20cau");
+  assert.strictEqual(Core.smsOdkaz("601-111", "x", true), "sms:601111&body=x");
+  assert.strictEqual(Core.cisloTel("tel: +420 (601) 111"), "+420601111");
+});
+
+test("PIN", () => {
+  assert.strictEqual(Core.pinHash("1234"), Core.pinHash("1234"));
+  assert.notStrictEqual(Core.pinHash("1234"), Core.pinHash("1235"));
+  assert.ok(Core.pinPlatny("0000"));
+  assert.ok(!Core.pinPlatny("123"));
+  assert.ok(!Core.pinPlatny("12a4"));
+});
+
+test("kontrola souboru zalohy", () => {
+  const ok = { app: "linsoftos", verze: 1, data: { lp_jazyk: '"sk"' }, fotky: ["data:image/jpeg;base64,AA"] };
+  assert.ok(Core.platnaZaloha(ok));
+  assert.ok(!Core.platnaZaloha(null));
+  assert.ok(!Core.platnaZaloha(Object.assign({}, ok, { app: "jine" })));
+  assert.ok(!Core.platnaZaloha(Object.assign({}, ok, { data: { cizi: "1" } })));
+  assert.ok(!Core.platnaZaloha(Object.assign({}, ok, { fotky: ["javascript:alert(1)"] })));
+});

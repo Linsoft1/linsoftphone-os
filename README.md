@@ -7,23 +7,53 @@ Dvě podoby jednoho systému:
    **jakémkoli smartphonu** (Android i iPhone) přes prohlížeč a dá se
    nainstalovat jako aplikace („Přidat na plochu")
 
-## PWA verze 2.0 — pro skutečné telefony
+## PWA verze 2.1 — pro skutečné telefony
 
-- zamykací obrazovka, moderní plocha s widgetem hodin, mřížka aplikací, dock
-- stahovací panel notifikací s rychlými přepínači (Wi-Fi, Bluetooth, …)
-- navigační lišta ◁ ◯ ▢ jako Android
-- aplikace: Telefon (vytáčí přes `tel:`), Zprávy, Kontakty, Kalkulačka,
-  Hodiny + stopky, Kalendář, Poznámky, **Fotoaparát (skutečná kamera)**,
-  Galerie, Terminál (stejné příkazy jako kernel), Nastavení (světlý/tmavý motiv)
-- skutečný stav baterie (Battery API), data v localStorage, offline režim
-  přes service worker
+- zamykací obrazovka s volitelným **PIN zámkem** (zamkne se při každém odchodu
+  z aplikace), odemknutí klepnutím nebo potažením nahoru
+- plocha s widgetem hodin, mřížka aplikací, dock; **gesta** (potažením dolů
+  panel notifikací, nahoru zavřít)
+- panel notifikací s rychlými přepínači, které **skutečně fungují**: svítilna
+  (blesk fotoaparátu, Android), světlý/tmavý motiv, celá obrazovka, zamknout
+- navigační lišta ◁ ◯ ▢: Zpět funguje i se systémovým gestem Androidu,
+  ▢ = **přepínač nedávných aplikací**
+- aplikace: Telefon (vytáčí přes `tel:`), **Zprávy — odesílá skutečné SMS**
+  přes SMS aplikaci telefonu, Kontakty (volání, SMS, **import kontaktů
+  z telefonu** na Androidu), Kalkulačka, **Hodiny: budík, minutka, stopky**,
+  **Kalendář s událostmi** a listováním měsíců, Poznámky, Fotoaparát (skutečná
+  kamera), Galerie (náhled, stažení, mazání), Terminál, Nastavení
+- **systémové notifikace** telefonu (budík, minutka; na iPhonu jen v
+  nainstalované PWA, iOS 16.4+)
+- **čeština, slovenčina, angličtina** — jazyk se vybere podle telefonu,
+  změna v Nastavení
+- fotky v **IndexedDB** (stovky MB místo ~5 MB), **záloha a obnova** všech dat
+  do souboru `.json`
+- přístupnost: popisy tlačítek pro čtečky obrazovky, povolené zvětšení,
+  viditelné ohraničení při ovládání klávesnicí
+- maskovatelná ikona pro Android, ikona 180 px pro iPhone, zkratky
+  Telefon/Fotoaparát po podržení ikony
+- skutečný stav baterie, offline režim přes service worker
+
+Budík a minutka zvoní jen tehdy, když je LinsoftOS otevřený — webová aplikace
+nemůže probudit zamknutý telefon.
+
+Testy (Node 18+, bez závislostí): `npm test` — logika, překlady všech jazyků,
+kompatibilita se staršími telefony. Na GitHubu běží automaticky
+([.github/workflows/test.yml](.github/workflows/test.yml)).
 
 Lokální spuštění: `.\pwa\serve.ps1` → http://localhost:8080
 
-Na skutečný telefon: nahrát obsah [pwa/](./pwa) na libovolný HTTPS hosting
-(např. GitHub Pages) a na telefonu otevřít adresu → „Přidat na plochu".
+Na skutečný telefon: po pushi do `main` se [pwa/](./pwa) samo nasadí na GitHub
+Pages ([.github/workflows/pages.yml](.github/workflows/pages.yml)) — jednou je
+třeba v repozitáři zapnout *Settings → Pages → Source: GitHub Actions*. Pak na
+telefonu otevřít `https://<uživatel>.github.io/linsoftphone-os/` → „Přidat na plochu".
 
-## Kernel verze 1.0 — skutečný OS v QEMU
+Podporované telefony: Android 7+ (Chrome / Samsung Internet / Firefox, i starší
+WebView), iPhone s iOS 12+ (Safari). Ošetřeno: výřez displeje (notch), malé
+displeje od 320 px, telefon na šířku, gesto Zpět na Androidu, zoom při psaní na
+iOS, plné úložiště fotkami, aktualizace přes service worker.
+
+## Kernel verze 1.1 — skutečný OS v QEMU
 
 Mini operační systém (kernel) pro ARM, běžící v emulátoru QEMU. Napsaný v C a
 assembleru, bez jakékoli knihovny — vlastní ovladač UART, shell a aplikace.
@@ -41,6 +71,25 @@ assembleru, bez jakékoli knihovny — vlastní ovladač UART, shell a aplikace.
                   |_|   |_| |_|\___/|_| |_|\___| \___/|____/
 ```
 
+### Novinky ve verzi 1.1
+
+- **Hodiny reálného času** — RTC PL031 ([rtc.c](./rtc.c)); stavový řádek
+  ukazuje skutečný čas HH:MM s blikající dvojtečkou, `run.ps1` spouští QEMU
+  s `-rtc base=localtime`
+- **Přerušení (GICv2)** ([irq.c](./irq.c)) — tabulka vektorů výjimek, virtuální
+  generic timer tiká každých 100 ms, UART přijímá přes přerušení do kruhové
+  fronty; nečinný procesor spí (`wfi`) místo aktivního čekání. Pády CPU se
+  vypíšou na UART (`!!! Vyjimka: …`)
+- **Klávesnice v okně QEMU** — virtio-keyboard ([virtio.c](./virtio.c),
+  virtio-mmio legacy i 1.0): psát lze přímo do displeje, vstup jde do stejného
+  shellu jako sériová linka (rozložení US)
+- **Dotyk** — virtio-tablet: klik na spodní lištu `<` smaže rozepsaný řádek,
+  `O` vrátí domovskou obrazovku, `[]` vypíše seznam příkazů
+- bez ramfb nebo virtio zařízení systém dál funguje (jen sériová konzole)
+- nový příkaz `datum`; `info` ukazuje RTC, přerušení a vstupní zařízení
+- oprava: při posunu konzole (scroll) kernel padal na nezarovnaném přístupu do
+  paměti — sestavuje se nyní s `+strict_align`
+
 ## Co umí
 
 Interaktivní shell na sériové konzoli s příkazy:
@@ -50,6 +99,7 @@ Interaktivní shell na sériové konzoli s příkazy:
 | `pomoc`         | seznam příkazů                         |
 | `info`          | informace o systému (CPU, UART, timer) |
 | `cas`           | doba běhu systému (generic timer)      |
+| `datum`         | dnešní datum a čas (RTC)               |
 | `kalk <výraz>`  | kalkulačka: `+ - * /` a závorky        |
 | `zprava <text>` | uložit zprávu                          |
 | `zpravy`        | vypsat uložené zprávy                  |

@@ -1,0 +1,8 @@
+{
+  "name": "linsoftphone-os",
+  "private": true,
+  "description": "LinsoftPhone OS - testy PWA verze",
+  "scripts": {
+    "test": "node --test pwa/tests/*.test.js"
+  }
+}

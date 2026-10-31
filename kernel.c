@@ -1,15 +1,16 @@
 /*
  * LinsoftPhone OS - mini kernel pro ARM (QEMU -M virt, Cortex-A15)
  * Seriova konzole PL011, interaktivni shell s aplikacemi.
+ * Preruseni (GICv2): timer tika hodiny, UART a virtio klavesnice/tablet
+ * plni vstupni frontu, mezi znaky procesor spi (wfi). Realny cas z RTC PL031.
  * Poznamka: cestina bez diakritiky kvuli seriove konzoli.
  */
 
-typedef unsigned int   u32;
-typedef unsigned long long u64;
-
+#include "hw.h"
 #include "gfx.h"
 
 static u32 uptime_s(void);
+static void obnov_hodiny(void);
 
 /* ---------------- UART PL011 (QEMU virt: 0x09000000) ---------------- */
 
@@ -25,11 +26,14 @@ static void uart_putc(char c)
     UART_DR = (u32)c;
 }
 
-static char uart_getc(void)
+/* dalsi vstupni znak (UART nebo virtio klavesnice, pripadne kod tlacitka) */
+static int cti_vstup(void)
 {
-    while (UART_FR & UART_FR_RXFE)
-        gfx_tick(uptime_s());    /* behem cekani aktualizuj hodiny na displeji */
-    return (char)(UART_DR & 0xFF);
+    for (;;) {
+        int c = vstup_cekej();     /* spi pres wfi, dokud neprijde preruseni */
+        if (c >= 0) return c;
+        obnov_hodiny();            /* tik timeru: aktualizuj hodiny na displeji */
+    }
 }
 
 /* vystup na UART i na graficky displej */
@@ -150,11 +154,41 @@ static void psci_call(u32 fn)
 
 /* ---------------- cteni radku ---------------- */
 
+#define PROMPT "linsoft> "
+
+static void app_pomoc(void);
+static void vymaz_obrazovku(void);
+
+/* znovu vypise prompt a rozepsany radek (po akci tlacitka) */
+static void obnov_radek(const char *buf, u32 n)
+{
+    puts_raw(PROMPT);
+    for (u32 j = 0; j < n; j++) kputc(buf[j]);
+}
+
 static void read_line(char *buf, u32 max)
 {
     u32 i = 0;
     for (;;) {
-        char c = uart_getc();
+        int c = cti_vstup();
+        /* tlacitka spodni listy na displeji (virtio tablet) */
+        if (c == VSTUP_ZPET) {          /* zpet: smaze rozepsany radek */
+            while (i > 0) { i--; puts_raw("\b \b"); }
+            continue;
+        }
+        if (c == VSTUP_DOMU) {          /* domu: cista obrazovka */
+            vymaz_obrazovku();
+            gfx_domu();
+            obnov_hodiny();
+            obnov_radek(buf, i);
+            continue;
+        }
+        if (c == VSTUP_APLIKACE) {      /* aplikace: seznam prikazu */
+            puts_raw("\n");
+            app_pomoc();
+            obnov_radek(buf, i);
+            continue;
+        }
         if (c == '\r' || c == '\n') {
             puts_raw("\n");
             buf[i] = 0;
@@ -288,14 +322,27 @@ static void app_info(void)
     u32 midr;
     __asm__ volatile("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
     puts_raw("--- LinsoftPhone OS ---\n");
-    puts_raw("Verze:    1.0 (kernel)\n");
+    puts_raw("Verze:    1.1 (kernel)\n");
     puts_raw("Arch:     ARMv7-A (32bit)\n");
     puts_raw("Stroj:    QEMU virt\n");
     puts_raw("CPU MIDR: "); put_hex(midr); puts_raw("\n");
     puts_raw("UART:     PL011 @ "); put_hex(UART0_BASE); puts_raw("\n");
     puts_raw("Displej:  ");
     puts_raw(gfx_active() ? "ramfb 480x800 (aktivni)\n" : "neni (seriova konzole)\n");
+    puts_raw("RTC:      ");
+    puts_raw(rtc_aktivni() ? "PL031 @ 0x09010000\n" : "neni\n");
     puts_raw("Takt timeru: "); put_u32(read_cntfrq()); puts_raw(" Hz\n");
+    puts_raw("Preruseni: ");
+    if (irq_aktivni()) {
+        puts_raw("GICv2, timer PPI 27, UART IRQ 33\n");
+        puts_raw("  tiku: "); put_u32(irq_tiky());
+        puts_raw(", IRQ celkem: "); put_u32(irq_pocet()); puts_raw("\n");
+    } else {
+        puts_raw("vypnuta (polling)\n");
+    }
+    puts_raw("Vstup:    UART");
+    virtio_info(puts_raw, put_u32);
+    puts_raw("\n");
 }
 
 static void app_cas(void)
@@ -306,6 +353,41 @@ static void app_cas(void)
     put_u32(s % 60); puts_raw(" s\n");
 }
 
+/* dvouciferne cislo s nulou na zacatku */
+static void put_2(u32 n)
+{
+    kputc('0' + (n / 10) % 10);
+    kputc('0' + n % 10);
+}
+
+static void app_datum(void)
+{
+    static const char *dny[7] = { "nedele", "pondeli", "utery", "streda",
+                                  "ctvrtek", "patek", "sobota" };
+    if (!rtc_aktivni()) { puts_raw("RTC neni k dispozici.\n"); return; }
+    struct datum_cas d;
+    rtc_preved(rtc_sekundy(), &d);
+    puts_raw("Dnes je "); puts_raw(dny[d.den_tydne]); puts_raw(" ");
+    put_u32(d.den); puts_raw(". "); put_u32(d.mesic); puts_raw(". ");
+    put_u32(d.rok); puts_raw("\nCas:     ");
+    put_2(d.hod); kputc(':'); put_2(d.min); kputc(':'); put_2(d.sek);
+    puts_raw("\n");
+}
+
+/* hodiny ve stavovem radku: realny cas z RTC, bez RTC aspon doba behu */
+static void obnov_hodiny(void)
+{
+    if (!gfx_active()) return;
+    if (rtc_aktivni()) {
+        struct datum_cas d;
+        rtc_preved(rtc_sekundy(), &d);
+        gfx_tick(d.hod, d.min, (d.sek & 1) == 0);
+    } else {
+        u32 s = uptime_s();
+        gfx_tick((s / 3600) % 24, (s / 60) % 60, (s & 1) == 0);
+    }
+}
+
 /* ---------------- shell ---------------- */
 
 static void app_pomoc(void)
@@ -314,6 +396,7 @@ static void app_pomoc(void)
     puts_raw("  pomoc            - tento seznam\n");
     puts_raw("  info             - informace o systemu\n");
     puts_raw("  cas              - doba behu systemu\n");
+    puts_raw("  datum            - dnesni datum a cas (RTC)\n");
     puts_raw("  kalk <vyraz>     - kalkulacka (+ - * / a zavorky)\n");
     puts_raw("  zprava <text>    - ulozit zpravu\n");
     puts_raw("  zpravy           - vypsat zpravy\n");
@@ -321,6 +404,9 @@ static void app_pomoc(void)
     puts_raw("  vymaz            - smazat obrazovku\n");
     puts_raw("  restart          - restart systemu\n");
     puts_raw("  vypni            - vypnout telefon\n");
+    puts_raw("Psat lze i v okne QEMU (klavesnice).\n");
+    puts_raw("Dotyk na spodni liste: < smaze radek,\n");
+    puts_raw("  O domovska obrazovka, [] seznam prikazu.\n");
 }
 
 /* vystup pouze na UART (bez displeje) */
@@ -350,10 +436,28 @@ static void logo(void)
     puts_uart("\n");
 }
 
+static void vymaz_obrazovku(void)
+{
+    puts_uart("\x1b[2J\x1b[H");     /* ANSI jen na UART */
+    gfx_clear();
+}
+
+/* fatalni vyjimka (volano z boot.S): vypis na UART a stop */
+void vyjimka(u32 typ, u32 adresa)
+{
+    static const char *nazvy[5] = { "?", "nedefinovana instrukce", "svc",
+                                     "prefetch abort", "data abort" };
+    puts_uart("\n!!! Vyjimka: ");
+    puts_uart(nazvy[typ < 5 ? typ : 0]);
+    puts_uart(" na adrese ");
+    put_hex(adresa);
+    puts_uart("\nSystem zastaven.\n");
+}
+
 static void banner(void)
 {
     logo();
-    puts_raw("=== LinsoftPhone OS 1.0 ===\n");
+    puts_raw("=== LinsoftPhone OS 1.1 ===\n");
     puts_raw("Kernel nastartoval. Napis 'pomoc' pro seznam prikazu.\n\n");
 }
 
@@ -362,10 +466,14 @@ void kmain(void)
     char radek[128];
 
     gfx_init();
+    rtc_init();
+    irq_init();         /* GIC + timer + UART RX; pri chybe zustane polling */
+    virtio_init();      /* klavesnice/tablet; bez nich jen seriovy vstup */
+    obnov_hodiny();
     banner();
 
     for (;;) {
-        puts_raw("linsoft> ");
+        puts_raw(PROMPT);
         read_line(radek, sizeof(radek));
 
         /* orez uvodni mezery */
@@ -377,17 +485,14 @@ void kmain(void)
             app_pomoc();
         else if (str_eq(cmd, "info"))    app_info();
         else if (str_eq(cmd, "cas"))     app_cas();
+        else if (str_eq(cmd, "datum"))   app_datum();
         else if (str_starts(cmd, "kalk ")) app_kalk(cmd + 5);
         else if (str_eq(cmd, "kalk"))    puts_raw("Pouziti: kalk <vyraz>, napr. kalk (2+3)*4\n");
         else if (str_starts(cmd, "zprava ")) app_zprava(cmd + 7);
         else if (str_eq(cmd, "zprava")) app_zprava("");
         else if (str_eq(cmd, "zpravy"))  app_zpravy();
         else if (str_eq(cmd, "kontakty")) app_kontakty();
-        else if (str_eq(cmd, "vymaz")) {
-            const char *esc = "\x1b[2J\x1b[H";   /* ANSI jen na UART */
-            while (*esc) uart_putc(*esc++);
-            gfx_clear();
-        }
+        else if (str_eq(cmd, "vymaz"))   vymaz_obrazovku();
         else if (str_eq(cmd, "restart")) {
             logo();
             puts_raw("Restartuji LinsoftPhone OS...\n");

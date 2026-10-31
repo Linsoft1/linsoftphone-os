@@ -234,7 +234,7 @@ void gfx_clear(void)
 
 /* ---------------- stavovy radek + ramecek telefonu ---------------- */
 
-static void stavovy_radek(unsigned int uptime_s)
+static void stavovy_radek(unsigned int hod, unsigned int min, int dvojtecka)
 {
     obdelnik(0, 0, SIRKA, 36, BARVA_PANEL);
 
@@ -244,10 +244,10 @@ static void stavovy_radek(unsigned int uptime_s)
 
     text(70, 10, "Linsoft 5G", 2, BARVA_TEXT);
 
-    /* hodiny (doba behu mm:ss) */
-    unsigned int m = uptime_s / 60, s = uptime_s % 60;
-    char cas[6] = { (char)('0' + (m / 10) % 10), (char)('0' + m % 10), ':',
-                    (char)('0' + s / 10), (char)('0' + s % 10), 0 };
+    /* hodiny realneho casu HH:MM (dvojtecka blika s tikem timeru) */
+    char cas[6] = { (char)('0' + (hod / 10) % 10), (char)('0' + hod % 10),
+                    dvojtecka ? ':' : ' ',
+                    (char)('0' + (min / 10) % 10), (char)('0' + min % 10), 0 };
     text(SIRKA - 170, 10, cas, 2, BARVA_TEXT);
 
     /* baterie */
@@ -285,13 +285,25 @@ static void spodni_listra(void)
 
 /* ---------------- verejne API ---------------- */
 
-static unsigned int posledni_s = 0xFFFFFFFFu;
+static unsigned int posledni_stav = 0xFFFFFFFFu;
 
-void gfx_tick(unsigned int uptime_s)
+void gfx_tick(unsigned int hod, unsigned int min, int dvojtecka)
 {
-    if (!aktivni || uptime_s == posledni_s) return;
-    posledni_s = uptime_s;
-    stavovy_radek(uptime_s);
+    unsigned int stav = (hod << 8) | (min << 1) | (dvojtecka ? 1 : 0);
+    if (!aktivni || stav == posledni_stav) return;
+    posledni_stav = stav;
+    stavovy_radek(hod, min, dvojtecka);
+}
+
+void gfx_domu(void)
+{
+    if (!aktivni) return;
+    obdelnik(0, 0, SIRKA, VYSKA, BARVA_POZADI);
+    posledni_stav = 0xFFFFFFFFu;    /* hodiny se prekresli pri pristim tiku */
+    stavovy_radek(0, 0, 1);
+    hlavicka();
+    spodni_listra();
+    gfx_clear();
 }
 
 int gfx_active(void) { return aktivni; }
@@ -319,7 +331,7 @@ int gfx_init(void)
             mrizka[y][x] = ' ';
 
     aktivni = 1;
-    stavovy_radek(0);
+    stavovy_radek(0, 0, 1);
     hlavicka();
     spodni_listra();
     kurzor(1);
