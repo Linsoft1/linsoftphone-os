@@ -4,6 +4,7 @@
   "description": "LinsoftPhone OS - testy PWA verze",
   "scripts": {
     "test": "node --test pwa/tests/*.test.js",
-    "test:sluzba": "python3 -m unittest discover -s postmarketos/tests"
+    "test:sluzba": "python3 -m unittest discover -s postmarketos/tests",
+    "test:obrazovky": "node pwa/tests/obrazovky.mjs"
   }
 }

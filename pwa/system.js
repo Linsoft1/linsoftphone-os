@@ -32,7 +32,7 @@ const JE_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 /* ---------------- stav ---------------- */
-const VERZE_OS = "2.3";
+const VERZE_OS = "2.4";
 const ZOSTAVENI = "2026.10.31";
 
 const stav = {

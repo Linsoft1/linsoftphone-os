@@ -17,7 +17,7 @@ Tři podoby jednoho systému:
    + kiosk + lokální služba pro hovory, SMS, Wi-Fi); funguje na telefonech,
    které podporuje postmarketOS. Návod: [postmarketos/README.md](./postmarketos/README.md)
 
-## PWA verze 2.3 — pro skutečné telefony
+## PWA verze 2.4 — pro skutečné telefony
 
 - **nový vzhled**: vlastní sada ikon LinsoftPhone OS ([pwa/ikony.js](pwa/ikony.js),
   SVG místo emoji — na každém telefonu stejné), 4 tapety + vlastní fotka
@@ -75,6 +75,10 @@ Tři podoby jednoho systému:
 
 Budík a minutka zvoní jen tehdy, když je LinsoftOS otevřený — webová aplikace
 nemůže probudit zamknutý telefon.
+
+Test obrazovek v opravdovém prohlížeči (Chrome / Edge headless): `npm run test:obrazovky`
+— otevře každou aplikaci ve třech jazycích na velkém i malém displeji, selže
+při jakékoli chybě JavaScriptu a uloží snímky do `pwa/tests/snimky/`.
 
 Testy (Node 18+, bez závislostí): `npm test` — logika, překlady všech jazyků,
 kompatibilita se staršími telefony. Na GitHubu běží automaticky

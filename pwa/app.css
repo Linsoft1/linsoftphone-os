@@ -1103,3 +1103,11 @@ a.nast-radek { text-decoration: none; }
   #w-info { display: none; }
   #appgrid { grid-auto-rows: 74px; }
 }
+/* maly displej: kalkulacka s nizsimi tlacitky, aby se vesla bez posouvani */
+@media (max-height: 640px) {
+  .kalk-displej { min-height: 70px; padding-bottom: 8px; }
+  .kalk-vyraz { font-size: 34px; }
+  .kalk-vysledek { font-size: 17px; min-height: 22px; }
+  .kalk-mriezka { gap: 7px 10px; }
+  .kalk-k { aspect-ratio: auto; height: 50px; border-radius: 25px; font-size: 22px; }
+}
