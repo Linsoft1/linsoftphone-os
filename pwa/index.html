@@ -31,20 +31,29 @@
     <span id="sb-time">00:00</span>
     <span id="sb-operator">Linsoft 5G</span>
     <span id="sb-right">
-      <span id="sb-alarm" hidden>⏰</span>
-      <span id="sb-net">📶</span>
-      <span id="sb-batt">🔋 100 %</span>
+      <span id="sb-alarm" hidden></span>
+      <span id="sb-net"></span>
+      <span id="sb-wifi"></span>
+      <span id="sb-batt"></span>
     </span>
   </div>
 
   <!-- zamykaci obrazovka -->
   <div id="lockscreen" class="screen visible">
-    <div id="lock-clock">00:00</div>
-    <div id="lock-date"></div>
-    <div id="lock-hint" data-i18n="lock_hint"></div>
+    <div id="lock-top">
+      <div id="lock-date"></div>
+      <div id="lock-clock">00:00</div>
+      <div id="lock-info"></div>
+    </div>
+    <div id="lock-notif"></div>
     <div id="lock-pin" hidden>
       <div id="lock-pin-title" class="pin-title" data-i18n="pin_zadej"></div>
       <div id="lock-pin-box"></div>
+    </div>
+    <div id="lock-bottom">
+      <button class="lock-btn" id="lock-torch" data-i18n-label="tile_torch"></button>
+      <div id="lock-hint"><span id="lock-sipka"></span><span data-i18n="lock_hint"></span></div>
+      <button class="lock-btn" id="lock-cam" data-i18n-label="app_fotak"></button>
     </div>
   </div>
 
@@ -53,6 +62,7 @@
     <div id="widget-clock">
       <div id="w-time">00:00</div>
       <div id="w-date"></div>
+      <div id="w-info"></div>
     </div>
     <div id="appgrid"></div>
     <div id="dock"></div>
@@ -82,10 +92,10 @@
     </div>
     <div id="notif-list"></div>
     <div id="quick-tiles">
-      <button class="tile" data-tile="torch">🔦<br><span data-i18n="tile_torch"></span></button>
-      <button class="tile" data-tile="motiv">🌗<br><span data-i18n="tile_motiv"></span></button>
-      <button class="tile" data-tile="full">⛶<br><span data-i18n="tile_full"></span></button>
-      <button class="tile" data-tile="zamek">🔒<br><span data-i18n="tile_zamek"></span></button>
+      <button class="tile" data-tile="torch" data-ikona="svitilna"><span data-i18n="tile_torch"></span></button>
+      <button class="tile" data-tile="motiv" data-ikona="motiv"><span data-i18n="tile_motiv"></span></button>
+      <button class="tile" data-tile="full" data-ikona="cela"><span data-i18n="tile_full"></span></button>
+      <button class="tile" data-tile="zamek" data-ikona="zamek"><span data-i18n="tile_zamek"></span></button>
     </div>
     <div id="notif-grip"></div>
   </div>
@@ -113,13 +123,14 @@
 
   <!-- navigacni lista -->
   <nav id="navbar">
-    <button id="nav-back" data-i18n-label="zpet">◁</button>
-    <button id="nav-home" data-i18n-label="domu">◯</button>
-    <button id="nav-recent" data-i18n-label="nedavne">▢</button>
+    <button id="nav-back" data-i18n-label="zpet" data-ikona="zpet"></button>
+    <button id="nav-home" data-i18n-label="domu" data-ikona="domu"></button>
+    <button id="nav-recent" data-i18n-label="nedavne" data-ikona="nedavne"></button>
   </nav>
 
 </div>
 <script src="core.js"></script>
+<script src="ikony.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

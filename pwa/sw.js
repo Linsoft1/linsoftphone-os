@@ -1,7 +1,7 @@
 /* LinsoftPhone OS - service worker (offline rezim) */
-const CACHE = "linsoftos-v5";
+const CACHE = "linsoftos-v6";
 const SOUBORY = [
-  "./", "index.html", "app.css", "core.js", "app.js", "manifest.webmanifest",
+  "./", "index.html", "app.css", "core.js", "ikony.js", "app.js", "manifest.webmanifest",
   "icons/logo.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"
 ];
 

@@ -11,7 +11,7 @@ const PWA = path.join(__dirname, "..");
 const cti = (f) => fs.readFileSync(path.join(PWA, f), "utf8");
 const bezKomentaru = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-for (const f of ["core.js", "app.js", "sw.js"]) {
+for (const f of ["core.js", "ikony.js", "app.js", "sw.js"]) {
   test(f + ": platna syntaxe", () => { new vm.Script(cti(f), { filename: f }); });
 
   test(f + ": bez syntaxe, kterou starsi Android/iOS neumi", () => {
@@ -39,7 +39,7 @@ test("kazdy text v app.js a index.html ma preklad ve vsech jazycich", () => {
 
 test("service worker cachuje vsechny soubory aplikace", () => {
   const sw = cti("sw.js");
-  for (const f of ["index.html", "app.css", "core.js", "app.js", "manifest.webmanifest"])
+  for (const f of ["index.html", "app.css", "core.js", "ikony.js", "app.js", "manifest.webmanifest"])
     assert.ok(sw.includes(`"${f}"`), "sw.js necachuje " + f);
   for (const m of sw.matchAll(/"(icons\/[^"]+)"/g))
     assert.ok(fs.existsSync(path.join(PWA, m[1])), "chybi soubor " + m[1]);

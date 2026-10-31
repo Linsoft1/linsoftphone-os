@@ -17,7 +17,6 @@ body.light {
   --panel: rgba(255, 255, 255, .88);
   --text: #15233c;
   --muted: #5a6c87;
-  --tapis: linear-gradient(160deg, #cfe3ff 0%, #e9eef6 45%, #e5d9ff 100%);
 }
 
 html, body { height: 100%; }
@@ -490,3 +489,114 @@ input[type="range"] { width: 45%; padding: 0; border: none; background: none; -w
 .kb-k.mezera { flex: 4; max-width: none; }
 .kb-k:active { background: var(--accent); }
 #phone.kb #app-content { padding-bottom: 250px; }
+
+/* ================= vzhled 2.3: tapety, vlastni ikony, sklo ================= */
+.tapeta-polar { --tapis: radial-gradient(120% 60% at 15% 5%, rgba(63,180,247,.55), transparent 60%), radial-gradient(90% 60% at 95% 85%, rgba(123,63,228,.6), transparent 60%), linear-gradient(165deg, #0e1a3a, #0a1020 55%, #160c2e); }
+.tapeta-zapad { --tapis: radial-gradient(110% 60% at 20% 8%, rgba(251,146,60,.65), transparent 60%), radial-gradient(90% 60% at 90% 85%, rgba(219,39,119,.6), transparent 60%), linear-gradient(165deg, #2b1238, #140a22 60%, #0c0716); }
+.tapeta-les { --tapis: radial-gradient(110% 60% at 18% 8%, rgba(45,212,191,.5), transparent 60%), radial-gradient(90% 60% at 90% 88%, rgba(34,197,94,.45), transparent 60%), linear-gradient(165deg, #06282a, #04161a 60%, #03100c); }
+.tapeta-noc { --tapis: radial-gradient(80% 40% at 50% 0%, rgba(91,108,240,.28), transparent 70%), linear-gradient(180deg, #0a0e1a, #05070d); }
+.tapeta-foto { --tapis: linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.45)), var(--foto) center / cover no-repeat; }
+
+.ik { width: 22px; height: 22px; flex-shrink: 0; vertical-align: middle; }
+
+/* plocha a zamek: bily text na tapete (v obou motivech) */
+#homescreen, #lockscreen { color: #fff; }
+#homescreen .appicon { color: #fff; }
+#homescreen .appicon span:last-child { text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.glyph { color: #fff; }
+.appicon .glyph { box-shadow: 0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.35); }
+.glyph .ik { width: 54%; height: 54%; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+
+/* sklo: widget a dok */
+#widget-clock, #dock {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%);
+}
+#w-time { font-size: 52px; font-weight: 200; line-height: 1.05; letter-spacing: -1px; }
+#w-date { color: rgba(255,255,255,.75); }
+#w-info { margin-top: 10px; }
+.w-radek { display: flex; align-items: center; font-size: 13px; color: rgba(255,255,255,.88); margin-top: 4px; }
+.w-radek .ik { width: 15px; height: 15px; margin-right: 8px; opacity: .85; }
+.w-radek span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* stavovy radek a navigace: bile na tapete, v aplikaci se svetlym motivem tmave */
+#statusbar, #navbar { color: #fff; }
+body.light.v-app #statusbar, body.light.v-app #navbar { color: var(--text); }
+body.light.v-app #navbar { background: rgba(255,255,255,.75); }
+#navbar button { color: inherit; display: flex; align-items: center; justify-content: center; }
+#sb-operator { color: inherit; opacity: .7; }
+#sb-right { display: flex; align-items: center; }
+#sb-right > span { display: inline-flex; align-items: center; margin-left: 5px; }
+.ik.sb { width: 17px; height: 17px; }
+.ik.sb.bat { width: 25px; height: 20px; }
+.sb-pct { font-size: 12px; margin-right: 2px; }
+
+/* rychle dlazdice */
+.tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 74px; border-radius: 20px; background: rgba(127,127,127,.16);
+}
+.tile .ik { width: 24px; height: 24px; margin-bottom: 6px; }
+
+/* zamykaci obrazovka */
+#lockscreen { justify-content: space-between; align-items: stretch; padding-left: 20px; padding-right: 20px; }
+#lock-top { text-align: center; margin-top: 6vh; }
+#lock-date { font-size: 17px; color: rgba(255,255,255,.85); margin-top: 0; }
+#lock-clock { font-size: 92px; font-weight: 200; letter-spacing: -3px; line-height: 1; margin-top: 4px; text-shadow: 0 2px 24px rgba(0,0,0,.25); }
+#lock-info { display: flex; justify-content: center; align-items: center; min-height: 20px; margin-top: 10px; font-size: 14px; color: rgba(255,255,255,.85); }
+#lock-info .ik { width: 16px; height: 16px; margin-right: 6px; }
+#lock-notif { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px 0; overflow: hidden; }
+.lock-karta {
+  display: grid; grid-template-columns: 1fr auto; margin-top: 8px; padding: 10px 14px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; font-size: 14px;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.lock-karta small { grid-column: 2; grid-row: 1; opacity: .7; }
+.lock-karta span { grid-column: 1 / 3; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lock-bottom { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+.lock-btn {
+  width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.14); color: #fff;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.lock-btn.on { background: #fff; color: #0b1220; }
+#lock-hint { display: flex; flex-direction: column; align-items: center; margin-top: 0; font-size: 12px; color: rgba(255,255,255,.7); animation: none; }
+#lock-sipka .ik { width: 20px; height: 20px; animation: sipka 1.6s ease-in-out infinite; }
+@keyframes sipka { 50% { transform: translateY(-6px); opacity: .5; } }
+#lockscreen.pin { justify-content: flex-start; }
+#lockscreen.pin #lock-notif, #lockscreen.pin #lock-bottom, #lockscreen.pin #lock-info { display: none; }
+#lockscreen.pin #lock-clock { font-size: 56px; }
+#lockscreen .pin-title { color: rgba(255,255,255,.8); }
+#lockscreen .pin-dots span { border-color: #fff; }
+#lockscreen .pin-dots span.full { background: #fff; }
+#lockscreen .pin-pad button { background: rgba(255,255,255,.14); color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* nedavne aplikace */
+.recent-open .glyph .ik { width: 26px; height: 26px; }
+
+/* nastaveni: vyber tapety */
+.tapety { display: flex; margin: -2px -4px 10px; }
+.tapeta-vzor { flex: 1; height: 72px; margin: 0 4px; border-radius: 14px; border: 2px solid transparent; background: var(--tapis); cursor: pointer; }
+.tapeta-vzor.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg) inset; }
+
+/* animace */
+#appscreen.visible { animation: app-in .26s cubic-bezier(.2, .8, .2, 1); }
+@keyframes app-in { from { opacity: 0; transform: scale(.94); } }
+#homescreen.vstup .appicon { animation: ikona-in .42s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 22ms); }
+#homescreen.vstup #widget-clock, #homescreen.vstup #dock { animation: ikona-in .4s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes ikona-in { from { opacity: 0; transform: translateY(14px) scale(.92); } }
+#recents.visible .recent-card { animation: ikona-in .3s both; }
+@media (prefers-reduced-motion: reduce) {
+  #appscreen.visible, #homescreen.vstup .appicon, #homescreen.vstup #widget-clock, #homescreen.vstup #dock,
+  #recents.visible .recent-card, #lock-sipka .ik { animation: none; }
+}
+@media (max-height: 600px) {
+  #lock-clock { font-size: 64px; }
+  #lock-top { margin-top: 2vh; }
+  #w-time { font-size: 38px; }
+  #w-info { margin-top: 6px; }
+  #w-info .w-radek + .w-radek { display: none; }
+  #appgrid { gap: 2px; padding-top: 8px; }
+  .lock-karta:nth-child(2) { display: none; }
+}

@@ -68,15 +68,57 @@ function tick() {
   $("#w-time").textContent = c;
   $("#w-date").textContent = dt;
   $("#sb-alarm").hidden = !stav.minutka && !stav.budiky.some((b) => b.zap);
+  if (d.getSeconds() === 0 || !tick.hotovo) { kresliDnes(d); tick.hotovo = true; }
   hlidejBudiky(d);
 }
+
+/* nejblizsi zapnuty budik od ted (dnes nebo zitra) */
+function dalsiBudik(d) {
+  const ted = d.getHours() * 60 + d.getMinutes();
+  let nej = null;
+  stav.budiky.forEach((b) => {
+    if (!b.zap) return;
+    const za = (b.h * 60 + b.m - ted + 1440) % 1440;
+    if (nej === null || za < nej.za) nej = { za, text: Core.dva(b.h) + ":" + Core.dva(b.m) };
+  });
+  return nej;
+}
+/* widget "Dnes" na plose a radek na zamykaci obrazovce */
+function kresliDnes(d) {
+  const b = dalsiBudik(d);
+  const udalosti = store.get("udalosti", {})[Core.denKlic(d)] || [];
+  const radek = (ik, text) => `<div class="w-radek">${Ikony.ikona(ik)}<span>${esc(text)}</span></div>`;
+  $("#w-info").innerHTML =
+    (b ? radek("budik", t("w_budik") + " " + b.text) : "") +
+    (udalosti.length ? udalosti.slice(0, 2).map((u) => radek("udalost", u)).join("") : radek("udalost", t("w_volno")));
+  $("#lock-info").innerHTML = b ? Ikony.ikona("budik") + " " + b.text : "";
+}
+
+/* ---------------- stavovy radek (vlastni ikony) ---------------- */
+const sb = { sila: 4, wifi: navigator.onLine !== false, bat: null };
+function kresliStavovyRadek() {
+  $("#sb-net").innerHTML = sb.sila === null ? "" : Ikony.signal(sb.sila);
+  $("#sb-wifi").innerHTML = sb.wifi ? Ikony.ikona("wifi", "sb") : "";
+  $("#sb-batt").innerHTML = sb.bat ? `<span class="sb-pct">${sb.bat.uroven}</span>${Ikony.baterie(sb.bat.uroven, sb.bat.nabiji)}` : "";
+}
+window.addEventListener("online", () => { sb.wifi = true; kresliStavovyRadek(); });
+window.addEventListener("offline", () => { sb.wifi = false; kresliStavovyRadek(); });
+
+/* staticke ikony v HTML: data-ikona="nazev" */
+document.querySelectorAll("[data-ikona]").forEach((el) =>
+  el.insertAdjacentHTML("afterbegin", Ikony.ikona(el.dataset.ikona)));
+$("#sb-alarm").innerHTML = Ikony.ikona("budik", "sb");
+$("#lock-torch").innerHTML = Ikony.ikona("svitilna");
+$("#lock-cam").innerHTML = Ikony.ikona("fotak");
+$("#lock-sipka").innerHTML = Ikony.ikona("nahoru");
 
 /* skutecna baterie, pokud ji prohlizec umi */
 if (navigator.getBattery) {
   navigator.getBattery().then((b) => {
     const uk = () => {
       if (Nativ.aktivni) return; /* na LinsoftPhone OS hlasi baterii sluzba telefonu */
-      $("#sb-batt").textContent = (b.charging ? "⚡ " : "🔋 ") + Math.round(b.level * 100) + " %";
+      sb.bat = { uroven: Math.round(b.level * 100), nabiji: b.charging };
+      kresliStavovyRadek();
     };
     b.addEventListener("levelchange", uk);
     b.addEventListener("chargingchange", uk);
@@ -157,6 +199,10 @@ function kresliNotif() {
   $("#notif-list").innerHTML = stav.notifikace.map((n) =>
     `<div class="notif"><strong>${esc(n.t)}</strong> ${esc(n.s)}<small>${Core.hhmm(new Date(n.cas))}</small></div>`
   ).join("") || `<div class="notif">${esc(t("notif_zadne"))}</div>`;
+  /* na zamykaci obrazovce dve posledni */
+  $("#lock-notif").innerHTML = stav.notifikace.slice(0, 2).map((n) =>
+    `<div class="lock-karta"><strong>${esc(n.t)}</strong><span>${esc(n.s)}</span><small>${Core.hhmm(new Date(n.cas))}</small></div>`
+  ).join("");
 }
 function panel(otevrit) { $("#notifpanel").classList.toggle("open", otevrit); }
 const panelOtevreny = () => $("#notifpanel").classList.contains("open");
@@ -170,6 +216,7 @@ let svitilna = null;
 const celaObrazovka = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 
 function stavDlazdic() {
+  $("#lock-torch").classList.toggle("on", !!svitilna);
   const zap = { torch: !!svitilna, motiv: document.body.classList.contains("light"), full: celaObrazovka(), zamek: false };
   document.querySelectorAll(".tile").forEach((tl) => {
     tl.classList.toggle("on", zap[tl.dataset.tile]);
@@ -217,6 +264,23 @@ document.querySelectorAll(".tile").forEach((tl) => {
     zamek: zamkni
   })[tl.dataset.tile]();
 });
+
+/* ---------------- tapety ---------------- */
+const TAPETY = ["polar", "zapad", "les", "noc"];
+function nastavTapetu(nazev, data) {
+  TAPETY.concat("foto").forEach((x) => document.body.classList.toggle("tapeta-" + x, x === nazev));
+  if (data) document.body.style.setProperty("--foto", `url("${data}")`);
+  store.set("tapeta", nazev);
+}
+function nactiTapetu() {
+  const nazev = store.get("tapeta", "polar");
+  if (nazev !== "foto") return nastavTapetu(TAPETY.indexOf(nazev) >= 0 ? nazev : "polar");
+  nastavTapetu("polar");
+  Fotky.vse().then((f) => {
+    const x = f.find((y) => String(y.id) === String(store.get("tapetaFoto", "")));
+    if (x) nastavTapetu("foto", x.data);
+  });
+}
 
 /* ---------------- gesta (potahnuti prstem) ---------------- */
 function swipe(el, cb) {
@@ -280,23 +344,27 @@ function zamkni() {
   stav.zamceno = true;
   panel(false);
   $("#lock-pin").hidden = true;
-  $("#lock-hint").hidden = false;
+  $("#lockscreen").classList.remove("pin");
   $("#lockscreen").classList.add("visible");
+  barvyListy();
 }
+let poOdemknuti = null; /* aplikace, ktera se otevre po odemknuti (tlacitko fotoaparatu) */
 function odemkni() {
   stav.zamceno = false;
   $("#lockscreen").classList.add("unlocking");
   setTimeout(() => {
-    $("#lockscreen").classList.remove("visible", "unlocking");
+    $("#lockscreen").classList.remove("visible", "unlocking", "pin");
     $("#lock-pin").hidden = true;
-    $("#lock-hint").hidden = false;
+    barvyListy();
+    if (!stav.bezici) animujPlochu();
+    if (poOdemknuti) { otevri(poOdemknuti); poOdemknuti = null; }
   }, 350);
 }
 function pokusOdemknout() {
   if (!stav.zamceno) return;
   if (!stav.pin) return odemkni();
   if (!$("#lock-pin").hidden) return;
-  $("#lock-hint").hidden = true;
+  $("#lockscreen").classList.add("pin");
   $("#lock-pin").hidden = false;
   $("#lock-pin-title").textContent = t("pin_zadej");
   const pad = pinPad($("#lock-pin-box"), (p) => {
@@ -305,6 +373,9 @@ function pokusOdemknout() {
   });
 }
 $("#lockscreen").onclick = pokusOdemknout;
+/* rychla tlacitka na zamykaci obrazovce: svitilna hned, fotoaparat po odemknuti */
+$("#lock-torch").onclick = (e) => { e.stopPropagation(); prepniSvitilnu(); };
+$("#lock-cam").onclick = (e) => { e.stopPropagation(); poOdemknuti = "fotak"; pokusOdemknout(); };
 /* s PINem se telefon zamkne pri kazdem odchodu z aplikace */
 document.addEventListener("visibilitychange", () => { if (document.hidden && stav.pin) zamkni(); });
 
@@ -312,6 +383,18 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && sta
 function ukazObrazovku(id) {
   ["#homescreen", "#appscreen", "#recents"].forEach((s) =>
     $(s).classList.toggle("visible", s === id));
+  barvyListy();
+}
+/* stavovy radek a navigace: bile na tapete, v aplikaci podle motivu */
+function barvyListy() {
+  document.body.classList.toggle("v-app", !stav.zamceno && !$("#homescreen").classList.contains("visible"));
+}
+/* ikony na plose "priletí" po odemknuti a pri navratu z aplikace */
+function animujPlochu() {
+  const h = $("#homescreen");
+  h.classList.remove("vstup");
+  void h.offsetWidth;
+  h.classList.add("vstup");
 }
 /* zaznam v historii -> systemove gesto/tlacitko Zpet na Androidu vrati na plochu */
 function zapisHistorii(id) {
@@ -319,7 +402,9 @@ function zapisHistorii(id) {
   else history.pushState({ app: id }, "");
 }
 function domu() {
+  if (stav.bezici || nedavneOtevrene()) animujPlochu();
   stav.bezici = null;
+  kresliDnes(new Date());
   panel(false);
   ukazObrazovku("#homescreen");
 }
@@ -357,7 +442,7 @@ function ukazNedavne() {
   appky.forEach((a) => {
     const k = document.createElement("div");
     k.className = "recent-card";
-    k.innerHTML = `<button class="recent-open"><span class="glyph" style="background:${a.barva}">${a.ikona}</span>` +
+    k.innerHTML = `<button class="recent-open">${glyph(a)}` +
       `<span>${esc(t("app_" + a.id))}</span></button>` +
       `<button class="recent-x" aria-label="${esc(t("smazat"))}">✕</button>`;
     k.querySelector(".recent-open").onclick = () => otevri(a.id);
@@ -551,10 +636,10 @@ function hlidejSms() {
 /* ---- stavovy radek: operator, signal, baterie ze skutecneho hardwaru ---- */
 function obnovStav() {
   Nativ.api("stav").then((s) => {
-    if (s.baterie) $("#sb-batt").textContent = (s.baterie.nabiji ? "⚡ " : "🔋 ") + s.baterie.uroven + " %";
+    if (s.baterie) sb.bat = { uroven: s.baterie.uroven, nabiji: s.baterie.nabiji };
     $("#sb-operator").textContent = s.modem && s.modem.operator ? s.modem.operator : "LinsoftPhone OS";
-    const sila = s.modem ? s.modem.signal : 0;
-    $("#sb-net").textContent = !s.modem ? "✕" : sila > 60 ? "▂▄▆█" : sila > 30 ? "▂▄▆" : sila > 0 ? "▂▄" : "▂";
+    sb.sila = s.modem ? Math.min(4, Math.ceil(s.modem.signal / 25)) : null;
+    kresliStavovyRadek();
     stav.jas = s.jas;
   }).catch(() => {});
 }
@@ -991,7 +1076,13 @@ function appGalerie(c, detail) {
           <button class="btn ghost" id="gal-zpet" aria-label="${esc(t("zpet"))}">←</button>
           <a class="btn" id="gal-dl" download="linsoftos-foto.jpg">${esc(t("gal_stahnout"))}</a>
           <button class="btn ghost" id="gal-smaz">${esc(t("smazat"))}</button>
-        </div>`;
+        </div>
+        <button class="btn ghost full" id="gal-tapeta">${esc(t("gal_tapeta"))}</button>`;
+      $("#gal-tapeta").onclick = () => {
+        store.set("tapetaFoto", foto.id);
+        nastavTapetu("foto", foto.data);
+        pridejNotif(t("st_tapeta"), t("tapeta_ok"));
+      };
       $("#gal-dl").href = foto.data;
       $("#gal-zpet").onclick = () => appGalerie(c);
       $("#gal-smaz").onclick = () => Fotky.smaz(foto.id).then(() => appGalerie(c));
@@ -1049,7 +1140,7 @@ function appTerminal(c) {
   const tm = $("#term");
   const start = Date.now();
   const w = (s) => { tm.textContent += s + "\n"; tm.scrollTop = tm.scrollHeight; };
-  w("=== LinsoftPhone OS 2.2 (PWA) ===");
+  w("=== LinsoftPhone OS 2.3 (PWA) ===");
   w("Napis 'pomoc' pro seznam prikazu.\n");
   $("#term-in").onkeydown = (e) => {
     if (e.key !== "Enter") return;
@@ -1057,7 +1148,7 @@ function appTerminal(c) {
     $("#term-in").value = "";
     w("linsoft> " + cmd);
     if (cmd === "pomoc") w("pomoc, info, cas, datum, kalk <vyraz>, vymaz");
-    else if (cmd === "info") w(`Verze: 2.2 PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
+    else if (cmd === "info") w(`Verze: 2.3 PWA\nPlatforma: ${navigator.platform}\nJazyk: ${navigator.language}\nOnline: ${navigator.onLine ? "ano" : "ne"}`);
     else if (cmd === "cas") w("Doba behu: " + Math.round((Date.now() - start) / 1000) + " s");
     else if (cmd === "datum") w(new Date().toLocaleString(stav.jazyk));
     else if (cmd === "vymaz") tm.textContent = "";
@@ -1076,6 +1167,10 @@ function appNastaveni(c) {
     `<button class="btn sm${zap ? "" : " ghost"}" id="${id}" aria-pressed="${zap}">${esc(t(zap ? "zap" : "vyp"))}</button>`;
   c.innerHTML = `
     <div class="list-item"><div class="grow">${esc(t("st_motiv"))}</div>${prepinac("st-theme", svetly)}</div>
+    <div class="list-item"><div class="grow">${esc(t("st_tapeta"))}</div></div>
+    <div class="tapety">${TAPETY.map((x) =>
+      `<button class="tapeta-vzor tapeta-${x}${store.get("tapeta", "polar") === x ? " on" : ""}" data-tapeta="${x}" aria-label="${esc(t("tap_" + x))}"></button>`).join("")}</div>
+    <p class="muted small" style="margin:-4px 4px 10px">${esc(t("tap_foto"))}: ${esc(t("app_galerie"))} → ${esc(t("gal_tapeta"))}</p>
     <div class="list-item"><div class="grow">${esc(t("st_jazyk"))}</div>
       <select id="st-jazyk" aria-label="${esc(t("st_jazyk"))}">${Object.keys(Core.JAZYKY).map((k) =>
         `<option value="${k}"${k === stav.jazyk ? " selected" : ""}>${Core.JAZYKY[k]}</option>`).join("")}</select></div>
@@ -1092,7 +1187,7 @@ function appNastaveni(c) {
     <input type="file" id="st-soubor" accept="application/json,.json" hidden>
     <div class="list-item" style="margin-top:16px"><div class="grow">${esc(t("st_o"))}</div></div>
     <img class="about-logo" src="icons/logo.svg" alt="LinsoftPhone OS">
-    <div class="muted about center">LinsoftPhone OS 2.2${Nativ.aktivni ? "<br>" + esc(t("nativ_info")) : " (PWA)<br>" + t("st_o_text")}</div>
+    <div class="muted about center">LinsoftPhone OS 2.3${Nativ.aktivni ? "<br>" + esc(t("nativ_info")) : " (PWA)<br>" + t("st_o_text")}</div>
     ${Nativ.aktivni ? `
     <button class="btn ghost full" id="st-restart">${esc(t("st_restart"))}</button>
     <button class="btn ghost full danger" id="st-vypnout">${esc(t("st_vypnout"))}</button>` : ""}
@@ -1110,6 +1205,7 @@ function appNastaveni(c) {
   }
 
   $("#st-theme").onclick = () => { nastavMotiv(!svetly); appNastaveni(c); };
+  c.querySelectorAll("[data-tapeta]").forEach((b) => b.onclick = () => { nastavTapetu(b.dataset.tapeta); appNastaveni(c); });
   $("#st-jazyk").onchange = () => {
     stav.jazyk = $("#st-jazyk").value;
     store.set("jazyk", stav.jazyk);
@@ -1211,26 +1307,30 @@ function wifiSeznam(box) {
 
 /* ---------------- registr aplikaci ---------------- */
 const APPS = [
-  { id: "telefon", ikona: "📞", barva: "#44cc66", render: appTelefon, dock: true },
-  { id: "zpravy", ikona: "💬", barva: "#3fa7f5", render: appZpravy, dock: true },
-  { id: "kontakty", ikona: "👤", barva: "#f5913f", render: appKontakty },
-  { id: "kalk", ikona: "🧮", barva: "#8e6cf0", render: appKalk },
-  { id: "hodiny", ikona: "⏰", barva: "#f0556c", render: appHodiny },
-  { id: "kalendar", ikona: "📅", barva: "#2bb8a8", render: appKalendar },
-  { id: "poznamky", ikona: "📝", barva: "#e8c441", render: appPoznamky },
-  { id: "fotak", ikona: "📷", barva: "#5a6c87", render: appFotak, dock: true },
-  { id: "galerie", ikona: "🖼️", barva: "#d05ac4", render: appGalerie },
-  { id: "terminal", ikona: "🖥️", barva: "#1c7a3d", render: appTerminal },
-  { id: "nastaveni", ikona: "⚙️", barva: "#6b7a90", render: appNastaveni, dock: true }
+  /* ikona = nazev v ikony.js, barvy = prechod podkladu */
+  { id: "telefon", barvy: ["#4ade80", "#15a34a"], render: appTelefon, dock: true },
+  { id: "zpravy", barvy: ["#38bdf8", "#2563eb"], render: appZpravy, dock: true },
+  { id: "kontakty", barvy: ["#fdba74", "#ea580c"], render: appKontakty },
+  { id: "kalk", barvy: ["#c4b5fd", "#7c3aed"], render: appKalk },
+  { id: "hodiny", barvy: ["#fda4af", "#e11d48"], render: appHodiny },
+  { id: "kalendar", barvy: ["#5eead4", "#0d9488"], render: appKalendar },
+  { id: "poznamky", barvy: ["#fde047", "#ca8a04"], render: appPoznamky },
+  { id: "fotak", barvy: ["#94a3b8", "#334155"], render: appFotak, dock: true },
+  { id: "galerie", barvy: ["#f9a8d4", "#c026d3"], render: appGalerie },
+  { id: "terminal", barvy: ["#475569", "#0f172a"], render: appTerminal },
+  { id: "nastaveni", barvy: ["#cbd5e1", "#475569"], render: appNastaveni, dock: true }
 ];
 function najdiApp(id) { return APPS.find((a) => a.id === id); }
+/* podklad ikony: zaobleny ctverec s prechodem + bily symbol z ikony.js */
+const glyph = (a) =>
+  `<span class="glyph" style="background:linear-gradient(145deg,${a.barvy[0]},${a.barvy[1]})" aria-hidden="true">${Ikony.ikona(a.id)}</span>`;
 
 function ikonka(app, bezPopisku) {
   const b = document.createElement("button");
   const nazev = t("app_" + app.id);
   b.className = "appicon";
   b.setAttribute("aria-label", nazev);
-  b.innerHTML = `<span class="glyph" style="background:${app.barva}" aria-hidden="true">${app.ikona}</span>` +
+  b.innerHTML = glyph(app) +
     (bezPopisku ? "" : `<span aria-hidden="true">${esc(nazev)}</span>`);
   b.onclick = () => otevri(app.id);
   return b;
@@ -1238,7 +1338,11 @@ function ikonka(app, bezPopisku) {
 function vykresliIkony() {
   $("#appgrid").innerHTML = "";
   $("#dock").innerHTML = "";
-  APPS.forEach((a) => $("#appgrid").appendChild(ikonka(a)));
+  APPS.forEach((a, i) => {
+    const b = ikonka(a);
+    b.style.setProperty("--i", i);
+    $("#appgrid").appendChild(b);
+  });
   APPS.filter((a) => a.dock).forEach((a) => $("#dock").appendChild(ikonka(a, true)));
 }
 
@@ -1250,6 +1354,8 @@ setTimeout(() => {
 }, 1300);
 
 if (store.get("svetly", false)) nastavMotiv(true);
+nactiTapetu();
+kresliStavovyRadek();
 prelozStranku();
 vykresliIkony();
 kresliNotif();

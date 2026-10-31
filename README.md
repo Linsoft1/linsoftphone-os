@@ -17,7 +17,13 @@ Tři podoby jednoho systému:
    + kiosk + lokální služba pro hovory, SMS, Wi-Fi); funguje na telefonech,
    které podporuje postmarketOS. Návod: [postmarketos/README.md](./postmarketos/README.md)
 
-## PWA verze 2.2 — pro skutečné telefony
+## PWA verze 2.3 — pro skutečné telefony
+
+- **nový vzhled**: vlastní sada ikon LinsoftPhone OS ([pwa/ikony.js](pwa/ikony.js),
+  SVG místo emoji — na každém telefonu stejné), 4 tapety + vlastní fotka
+  z Galerie, skleněný widget „Dnes" (budík, dnešní události), zamykací
+  obrazovka s náhledem notifikací a tlačítky svítilny a fotoaparátu,
+  stavový řádek s ikonami signálu, Wi-Fi a baterie, animace otevírání aplikací
 
 - **úvodní obrazovka s logem** při startu, logo v Nastavení → O systému,
   ikony aplikace a favicon z vlastního loga

@@ -15,7 +15,7 @@ const TEXTY = {
     app_kalk: "Kalkulačka", app_hodiny: "Hodiny", app_kalendar: "Kalendář",
     app_poznamky: "Poznámky", app_fotak: "Fotoaparát", app_galerie: "Galerie",
     app_terminal: "Terminál", app_nastaveni: "Nastavení",
-    lock_hint: "Přejeď nahoru nebo klepni 🔓", pin_zadej: "Zadej PIN", pin_spatne: "Špatný PIN",
+    lock_hint: "Přejeď nahoru nebo klepni", pin_zadej: "Zadej PIN", pin_spatne: "Špatný PIN",
     notif: "Notifikace", notif_vymaz: "Vymazat", notif_zadne: "Žádné notifikace",
     vitej_t: "Vítej v LinsoftPhone OS", vitej_s: "Systém je připraven.",
     tile_torch: "Svítilna", tile_motiv: "Motiv", tile_full: "Celá obrazovka", tile_zamek: "Zamknout",
@@ -57,7 +57,10 @@ const TEXTY = {
     st_jas: "☀️ Jas", st_wifi: "📶 Wi-Fi sítě", st_wifi_heslo: "Heslo Wi-Fi", st_pripojit: "Připojit",
     st_pripojeno: "Připojeno: {n}", st_vypnout: "⏻ Vypnout telefon", st_restart: "🔄 Restartovat",
     st_vypnout_q: "Opravdu vypnout telefon?", st_restart_q: "Opravdu restartovat telefon?",
-    kb_skryt: "Skrýt klávesnici", mezera: "mezera"
+    kb_skryt: "Skrýt klávesnici", mezera: "mezera",
+    st_tapeta: "🖼️ Tapeta", tap_polar: "Polární záře", tap_zapad: "Západ slunce", tap_les: "Les",
+    tap_noc: "Noc", tap_foto: "Fotka z Galerie", gal_tapeta: "Nastavit jako tapetu",
+    tapeta_ok: "Tapeta nastavena.", w_volno: "Dnes nic v kalendáři", w_budik: "Budík"
   },
   sk: {
     dny: ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"],
@@ -70,7 +73,7 @@ const TEXTY = {
     app_kalk: "Kalkulačka", app_hodiny: "Hodiny", app_kalendar: "Kalendár",
     app_poznamky: "Poznámky", app_fotak: "Fotoaparát", app_galerie: "Galéria",
     app_terminal: "Terminál", app_nastaveni: "Nastavenia",
-    lock_hint: "Potiahni nahor alebo ťukni 🔓", pin_zadej: "Zadaj PIN", pin_spatne: "Nesprávny PIN",
+    lock_hint: "Potiahni nahor alebo ťukni", pin_zadej: "Zadaj PIN", pin_spatne: "Nesprávny PIN",
     notif: "Notifikácie", notif_vymaz: "Vymazať", notif_zadne: "Žiadne notifikácie",
     vitej_t: "Vitaj v LinsoftPhone OS", vitej_s: "Systém je pripravený.",
     tile_torch: "Baterka", tile_motiv: "Motív", tile_full: "Celá obrazovka", tile_zamek: "Zamknúť",
@@ -112,7 +115,10 @@ const TEXTY = {
     st_jas: "☀️ Jas", st_wifi: "📶 Wi-Fi siete", st_wifi_heslo: "Heslo Wi-Fi", st_pripojit: "Pripojiť",
     st_pripojeno: "Pripojené: {n}", st_vypnout: "⏻ Vypnúť telefón", st_restart: "🔄 Reštartovať",
     st_vypnout_q: "Naozaj vypnúť telefón?", st_restart_q: "Naozaj reštartovať telefón?",
-    kb_skryt: "Skryť klávesnicu", mezera: "medzera"
+    kb_skryt: "Skryť klávesnicu", mezera: "medzera",
+    st_tapeta: "🖼️ Tapeta", tap_polar: "Polárna žiara", tap_zapad: "Západ slnka", tap_les: "Les",
+    tap_noc: "Noc", tap_foto: "Fotka z Galérie", gal_tapeta: "Nastaviť ako tapetu",
+    tapeta_ok: "Tapeta nastavená.", w_volno: "Dnes nič v kalendári", w_budik: "Budík"
   },
   en: {
     dny: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -124,7 +130,7 @@ const TEXTY = {
     app_kalk: "Calculator", app_hodiny: "Clock", app_kalendar: "Calendar",
     app_poznamky: "Notes", app_fotak: "Camera", app_galerie: "Gallery",
     app_terminal: "Terminal", app_nastaveni: "Settings",
-    lock_hint: "Swipe up or tap 🔓", pin_zadej: "Enter PIN", pin_spatne: "Wrong PIN",
+    lock_hint: "Swipe up or tap", pin_zadej: "Enter PIN", pin_spatne: "Wrong PIN",
     notif: "Notifications", notif_vymaz: "Clear", notif_zadne: "No notifications",
     vitej_t: "Welcome to LinsoftPhone OS", vitej_s: "System is ready.",
     tile_torch: "Torch", tile_motiv: "Theme", tile_full: "Fullscreen", tile_zamek: "Lock",
@@ -166,7 +172,10 @@ const TEXTY = {
     st_jas: "☀️ Brightness", st_wifi: "📶 Wi-Fi networks", st_wifi_heslo: "Wi-Fi password", st_pripojit: "Connect",
     st_pripojeno: "Connected: {n}", st_vypnout: "⏻ Power off", st_restart: "🔄 Restart",
     st_vypnout_q: "Really power off the phone?", st_restart_q: "Really restart the phone?",
-    kb_skryt: "Hide keyboard", mezera: "space"
+    kb_skryt: "Hide keyboard", mezera: "space",
+    st_tapeta: "🖼️ Wallpaper", tap_polar: "Aurora", tap_zapad: "Sunset", tap_les: "Forest",
+    tap_noc: "Night", tap_foto: "Photo from Gallery", gal_tapeta: "Set as wallpaper",
+    tapeta_ok: "Wallpaper set.", w_volno: "Nothing in the calendar today", w_budik: "Alarm"
   }
 };
 const JAZYKY = { cs: "Čeština", sk: "Slovenčina", en: "English" };
