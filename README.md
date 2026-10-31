@@ -110,10 +110,16 @@ kompatibilita se staršími telefony. Na GitHubu běží automaticky
 
 Lokální spuštění: `.\pwa\serve.ps1` → http://localhost:8080
 
-Na skutečný telefon: po pushi do `main` se [pwa/](./pwa) samo nasadí na GitHub
-Pages ([.github/workflows/pages.yml](.github/workflows/pages.yml)) — jednou je
-třeba v repozitáři zapnout *Settings → Pages → Source: GitHub Actions*. Pak na
-telefonu otevřít `https://<uživatel>.github.io/linsoftphone-os/` → „Přidat na plochu".
+**Webová stránka projektu:** <https://linsoft1.github.io/linsoftphone-os/>
+([web/](./web)) — funkce, živá ukázka v rámečku telefonu, snímky, návod.
+
+**LinsoftPhone OS na telefonu:** <https://linsoft1.github.io/linsoftphone-os/app/>
+→ „Přidat na plochu".
+
+Nasazení: `node web/zostav.mjs` složí do `_site/` stránku (web/) a PWA do
+`app/`; workflow [pages.yml](.github/workflows/pages.yml) to dělá po pushi do
+`main` (vyžaduje funkční GitHub Actions), jinak se `_site/` nahraje do větve
+`gh-pages`.
 
 Podporované telefony: Android 7+ (Chrome / Samsung Internet / Firefox, i starší
 WebView), iPhone s iOS 12+ (Safari). Ošetřeno: výřez displeje (notch), malé

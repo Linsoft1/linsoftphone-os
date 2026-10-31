@@ -1,10 +1,11 @@
-# Nasazeni PWA na GitHub Pages (HTTPS) -> https://<uzivatel>.github.io/linsoftphone-os/
-name: PWA na GitHub Pages
+# Nasazeni na GitHub Pages: stranka projektu (web/) -> https://<uzivatel>.github.io/linsoftphone-os/
+# a LinsoftPhone OS (pwa/) -> .../linsoftphone-os/app/
+name: Web a PWA na GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths: ["pwa/**", ".github/workflows/pages.yml"]
+    paths: ["pwa/**", "web/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -25,8 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node web/zostav.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: pwa
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

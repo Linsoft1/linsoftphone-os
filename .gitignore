@@ -2,3 +2,4 @@ kernel.elf
 *.ppm
 __pycache__/
 pwa/tests/snimky/
+_site/
