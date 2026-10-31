@@ -37,7 +37,14 @@ Xiaomi Poco F1, Fairphone 4/5 a Pixel 3a.
 - Pri chybe môže telefón prestať štartovať. Vyskúšaj to najprv na starom
   telefóne, nie na tom, ktorý denne používaš.
 
-## Postup
+## Najjednoduchšie: hotový obraz a LinsoftPhone Installer
+
+Pre **OnePlus 6**, **OnePlus 6T** a **PinePhone** sú hotové obrazy vo
+[vydaní na GitHube](https://github.com/Linsoft1/linsoftphone-os/releases/latest).
+[LinsoftPhone Installer](../instalator/README.md) ich sám stiahne a nahrá do
+telefónu cez USB kábel. Pri PinePhone ich zapíše na SD kartu. Netreba nič zostavovať.
+
+## Postup pre iné telefóny (zostavenie cez pmbootstrap)
 
 Potrebuješ Linux alebo Windows s WSL (Ubuntu) a USB kábel.
 
@@ -110,9 +117,11 @@ LINSOFT_DEMO=1 python3 postmarketos/postmarketos-ui-linsoft/linsoft-sluzba.py pw
 
 ## Známe obmedzenia
 
-- Obraz systému je zostavený a vyskúšaný len vo virtuálnom stroji
+- Obraz systému je vyskúšaný len vo virtuálnom stroji
   (qemu-amd64, postmarketOS edge, OpenRC): služba aj zámková obrazovka
-  naštartujú. Na skutočnom telefóne zatiaľ vyskúšaný nebol.
+  naštartujú. Obrazy pre OnePlus 6/6T a PinePhone sú zostavené (balík
+  LinsoftPhone OS je v nich nainštalovaný), ale na skutočnom telefóne zatiaľ
+  vyskúšané neboli.
 - Fotoaparát v prehliadači závisí od toho, či ho daný telefón podporuje v postmarketOS
   (na väčšine zatiaľ nefunguje).
 - Displej, ktorý je od výroby na šírku, treba otočiť (výstup v Cage).

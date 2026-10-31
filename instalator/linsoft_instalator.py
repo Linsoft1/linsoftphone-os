@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""LinsoftPhone Installer - zapise obraz LinsoftPhone OS na USB kluc / SD kartu
-alebo pripravi subor linsoftPhone.img pre virtualny stroj.
+"""LinsoftPhone Installer - nahra LinsoftPhone OS priamo do telefonu (fastboot),
+zapise obraz na USB kluc / SD kartu alebo pripravi subor linsoftPhone.img.
 
-  * stiahne najnovsi obraz z GitHub Releases (alebo pouzije vlastny .img / .img.xz)
+  * stiahne najnovsi obraz pre zvolene zariadenie z GitHub Releases
+    (alebo pouzije vlastny .img / .img.xz)
   * overi kontrolny sucet SHA256
+  * telefon: nahra system cez USB kabel (fastboot), fastboot si stiahne sam
   * ponukne iba vymenitelne disky (USB, SD) - nikdy systemovy disk
-  * pred zapisom dvakrat potvrdi, ze sa disk cely zmaze
+  * pred zapisom dvakrat potvrdi, ze sa telefon / disk cely zmaze
 
 Spustenie: python linsoft_instalator.py   (okno)
            python linsoft_instalator.py --help   (prikazovy riadok)
@@ -18,12 +20,15 @@ import json
 import lzma
 import os
 import platform
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import urllib.request
+import zipfile
 
-VERZIA = "1.0"
+VERZIA = "1.1"
 REPO = "Linsoft1/linsoftphone-os"
 API_VYDANIE = "https://api.github.com/repos/%s/releases/latest" % REPO
 NAZOV_IMG = "linsoftPhone.img"
@@ -31,20 +36,45 @@ BLOK = 4 * 1024 * 1024
 SEKTOR = 512
 MAX_DISK = 256 * 1024 ** 3   # vacsi "vymenitelny" disk je skor externy SSD so zalohami - radsej nie
 
+# Zariadenia, pre ktore vydanie obsahuje hotovy obraz. Subory vo vydani:
+#   linsoftphone-os-<verzia>-<id>.img.xz      system (pri fastboot telefonoch oddiel rootfs)
+#   linsoftphone-os-<verzia>-<id>-boot.img    jadro (iba fastboot telefony)
+# sposob: "fastboot" = telefon cez USB kabel, "sd" = obraz na SD kartu, "pc" = pocitac / virtualny stroj
+# rootfs / boot: oddiely telefonu podla deviceinfo postmarketOS, vymaz: oddiely, ktore treba vyprazdnit
+ZARIADENIA = [
+    {"id": "qemu-amd64", "nazov": "Počítač / virtuálny stroj (x86-64)", "sposob": "pc"},
+    {"id": "oneplus-enchilada", "nazov": "OnePlus 6", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vymaz": ["dtbo"]},
+    {"id": "oneplus-fajita", "nazov": "OnePlus 6T", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vymaz": ["dtbo"]},
+    {"id": "pine64-pinephone", "nazov": "PINE64 PinePhone (SD karta)", "sposob": "sd"},
+]
+PLATFORM_TOOLS = "https://dl.google.com/android/repository/platform-tools-latest-%s.zip"
+
+
+def zariadenie(id_):
+    for z in ZARIADENIA:
+        if z["id"] == id_:
+            return z
+    raise RuntimeError("neznáme zariadenie %s (pozri --zariadenia)" % id_)
+
 
 # ---------------- obraz: stiahnutie, kontrola, rozbalenie ----------------
 
-def najdi_obraz(vydanie):
-    """Z JSON vydania GitHubu vyberie obraz (.img.xz) a SHA256SUMS: (url_obrazu, nazov, url_suctov)."""
-    obraz = sucty = None
+def najdi_obraz(vydanie, id_="qemu-amd64"):
+    """Z JSON vydania GitHubu vyberie obraz zariadenia (.img.xz), jeho boot.img (ak je) a SHA256SUMS:
+    (url_obrazu, nazov, url_suctov, url_boot, nazov_boot)."""
+    obraz = boot = sucty = None
     for a in vydanie.get("assets", []):
-        if a.get("name", "").endswith(".img.xz") and obraz is None:
+        meno = a.get("name", "")
+        if meno.endswith("-%s.img.xz" % id_):
             obraz = a
-        elif a.get("name") == "SHA256SUMS":
+        elif meno.endswith("-%s-boot.img" % id_):
+            boot = a
+        elif meno == "SHA256SUMS":
             sucty = a
     if not obraz:
-        raise RuntimeError("vo vydani nie je obraz .img.xz")
-    return obraz["browser_download_url"], obraz["name"], sucty["browser_download_url"] if sucty else None
+        raise RuntimeError("vo vydaní nie je obraz pre zariadenie %s" % id_)
+    return (obraz["browser_download_url"], obraz["name"], sucty["browser_download_url"] if sucty else None,
+            boot["browser_download_url"] if boot else None, boot["name"] if boot else None)
 
 
 def ocakavany_sucet(text_suctov, nazov):
@@ -228,24 +258,111 @@ def citatelne(b):
 
 # ---------------- ziskanie obrazu (spolocne pre okno aj prikazovy riadok) ----------------
 
-def ziskaj_obraz(adresar, sprava, priebeh):
-    """Stiahne najnovsi obraz z GitHubu do adresara a overi SHA256. Vrati cestu k .img.xz."""
+def ziskaj_obraz(adresar, sprava, priebeh, id_="qemu-amd64"):
+    """Stiahne najnovsi obraz zariadenia z GitHubu do adresara a overi SHA256.
+    Vrati cestu k .img.xz (boot.img fastboot telefonu sa ulozi vedla neho, pozri boot_k_obrazu)."""
     sprava("Hľadám najnovšie vydanie LinsoftPhone OS…")
     req = urllib.request.Request(API_VYDANIE, headers={"User-Agent": "LinsoftPhone-Installer/" + VERZIA,
                                                        "Accept": "application/vnd.github+json"})
     with urllib.request.urlopen(req, timeout=30) as r:
         vydanie = json.load(r)
-    url, nazov, url_suctov = najdi_obraz(vydanie)
-    cesta = os.path.join(adresar, nazov)
-    sprava("Sťahujem %s (%s)…" % (nazov, vydanie.get("tag_name", "")))
-    stiahni(url, cesta, priebeh)
+    url, nazov, url_suctov, url_boot, nazov_boot = najdi_obraz(vydanie, id_)
+    subory = [(url, nazov)] + ([(url_boot, nazov_boot)] if url_boot else [])
+    text_suctov = None
     if url_suctov:
-        sprava("Overujem kontrolný súčet SHA256…")
         with urllib.request.urlopen(url_suctov, timeout=30) as r:
-            ocakavany = ocakavany_sucet(r.read().decode(), nazov)
-        if ocakavany and sha256(cesta, priebeh) != ocakavany:
-            raise RuntimeError("kontrolný súčet nesedí - súbor je poškodený, stiahni ho znova")
-    return cesta
+            text_suctov = r.read().decode()
+    for u, n in subory:
+        cesta = os.path.join(adresar, n)
+        sprava("Sťahujem %s (%s)…" % (n, vydanie.get("tag_name", "")))
+        stiahni(u, cesta, priebeh)
+        ocakavany = ocakavany_sucet(text_suctov or "", n)
+        if ocakavany:
+            sprava("Overujem kontrolný súčet SHA256…")
+            if sha256(cesta, priebeh) != ocakavany:
+                raise RuntimeError("kontrolný súčet %s nesedí - súbor je poškodený, stiahni ho znova" % n)
+    return os.path.join(adresar, nazov)
+
+
+def boot_k_obrazu(obraz):
+    """K obrazu ...-<id>.img(.xz) vrati cestu k ...-<id>-boot.img vedla neho (alebo None)."""
+    zaklad = obraz[:-3] if obraz.lower().endswith(".xz") else obraz
+    boot = zaklad[:-4] + "-boot.img" if zaklad.lower().endswith(".img") else None
+    return boot if boot and os.path.isfile(boot) else None
+
+
+def id_z_obrazu(obraz):
+    """Zariadenie podla nazvu obrazu (linsoftphone-os-2.4-oneplus-enchilada.img.xz -> oneplus-enchilada)."""
+    meno = os.path.basename(obraz).lower()
+    for z in sorted(ZARIADENIA, key=lambda z: -len(z["id"])):
+        if meno.endswith("-%s.img.xz" % z["id"]) or meno.endswith("-%s.img" % z["id"]):
+            return z["id"]
+    return None
+
+
+# ---------------- telefon: nahratie cez fastboot ----------------
+
+def najdi_fastboot(adresar_nastrojov=None, sprava=print):
+    """Cesta k fastboot: zo systemu, z predtym stiahnutych platform-tools, inak ich stiahne od Google."""
+    cesta = shutil.which("fastboot")
+    if cesta:
+        return cesta
+    adresar_nastrojov = adresar_nastrojov or os.path.join(os.path.expanduser("~"), ".linsoftphone")
+    exe = os.path.join(adresar_nastrojov, "platform-tools", "fastboot" + (".exe" if platform.system() == "Windows" else ""))
+    if not os.path.isfile(exe):
+        system = {"Windows": "windows", "Darwin": "darwin"}.get(platform.system(), "linux")
+        os.makedirs(adresar_nastrojov, exist_ok=True)
+        archiv = os.path.join(adresar_nastrojov, "platform-tools.zip")
+        sprava("Sťahujem fastboot (Android platform-tools od Google)…")
+        stiahni(PLATFORM_TOOLS % system, archiv)
+        with zipfile.ZipFile(archiv) as z:
+            z.extractall(adresar_nastrojov)
+        os.remove(archiv)
+        if system != "windows":
+            os.chmod(exe, 0o755)
+    return exe
+
+
+def fastboot_telefony(fastboot):
+    """Seriove cisla telefonov v rezime fastboot."""
+    r = subprocess.run([fastboot, "devices"], capture_output=True, text=True, timeout=30)
+    return [riadok.split()[0] for riadok in r.stdout.splitlines() if riadok.strip().endswith("fastboot")]
+
+
+def prikazy_nahratia(z, rootfs, boot):
+    """Prikazy fastboot na nahratie systemu do telefonu (bez cesty k fastboot)."""
+    prikazy = [["flash", z["rootfs"], rootfs], ["flash", z["boot"], boot]]
+    prikazy += [["erase", oddiel] for oddiel in z.get("vymaz", [])]
+    return prikazy + [["reboot"]]
+
+
+def nahraj_do_telefonu(fastboot, z, obraz, boot, sprava, priebeh=None, seriove=None):
+    """Nahra LinsoftPhone OS do telefonu v rezime fastboot. Obraz .xz najprv rozbali do docasneho suboru."""
+    docasny = None
+    try:
+        rootfs = obraz
+        if obraz.lower().endswith(".xz"):
+            docasny = tempfile.NamedTemporaryFile(suffix=".img", delete=False)
+            docasny.close()
+            rootfs = docasny.name
+            sprava("Rozbaľujem obraz systému…")
+            zapis(obraz, rootfs, priebeh)
+        zaklad = [fastboot] + (["-s", seriove] if seriove else [])
+        kroky = prikazy_nahratia(z, rootfs, boot)
+        for i, prikaz in enumerate(kroky):
+            sprava({"flash": "Nahrávam oddiel %s (%d/%d)…", "erase": "Vymazávam oddiel %s (%d/%d)…",
+                    "reboot": "Reštartujem telefón%s (%d/%d)…"}[prikaz[0]]
+                   % ((prikaz[1] if len(prikaz) > 1 else ""), i + 1, len(kroky)))
+            if priebeh:
+                priebeh(i, len(kroky))
+            r = subprocess.run(zaklad + prikaz, capture_output=True, text=True, timeout=3600)
+            if r.returncode != 0:
+                raise RuntimeError("fastboot %s zlyhal: %s" % (" ".join(prikaz[:2]), (r.stdout + r.stderr).strip()[-400:]))
+        if priebeh:
+            priebeh(1, 1)
+    finally:
+        if docasny:
+            os.remove(docasny.name)
 
 
 # ---------------- okno (tkinter) ----------------
@@ -257,14 +374,14 @@ def okno():
     PREPOZADIE, PANEL, TEXT, TLMENY, MODRA = "#0b1220", "#141d33", "#eef2fb", "#93a1bd", "#5b6cf0"
     hl = tk.Tk()
     hl.title("LinsoftPhone Installer")
-    hl.geometry("560x520")
+    hl.geometry("560x620")
     hl.configure(bg=PREPOZADIE)
     hl.resizable(False, False)
     styl = ttk.Style()
     styl.theme_use("clam")
     styl.configure("TProgressbar", troughcolor=PANEL, background=MODRA, bordercolor=PANEL, lightcolor=MODRA, darkcolor=MODRA)
 
-    stav = {"obraz": None, "disky": [], "bezi": False}
+    stav = {"obraz": None, "boot": None, "disky": [], "bezi": False}
     lbl = lambda rodic, text, **k: tk.Label(rodic, text=text, bg=k.pop("bg", PREPOZADIE), fg=k.pop("fg", TEXT),
                                             font=k.pop("font", ("Segoe UI", 10)), **k)
     tl = lambda rodic, text, prikaz, hlavne=False: tk.Button(
@@ -278,7 +395,10 @@ def okno():
     # 1. obraz
     r1 = tk.Frame(hl, bg=PANEL, padx=16, pady=12)
     r1.pack(fill="x", padx=22, pady=(20, 8))
-    lbl(r1, "1. Obraz systému", bg=PANEL, font=("Segoe UI", 11, "bold")).pack(anchor="w")
+    lbl(r1, "1. Zariadenie a obraz systému", bg=PANEL, font=("Segoe UI", 11, "bold")).pack(anchor="w")
+    zar_box = ttk.Combobox(r1, state="readonly", width=56, values=[z["nazov"] for z in ZARIADENIA])
+    zar_box.current(0)
+    zar_box.pack(anchor="w", pady=(6, 0))
     obraz_txt = lbl(r1, "zatiaľ nevybraný", bg=PANEL, fg=TLMENY)
     obraz_txt.pack(anchor="w", pady=(2, 8))
     r1b = tk.Frame(r1, bg=PANEL)
@@ -292,6 +412,8 @@ def okno():
     tk.Radiobutton(r2, text="Pripraviť súbor %s (VirtualBox / QEMU)" % NAZOV_IMG, variable=volba, value="subor",
                    bg=PANEL, fg=TEXT, selectcolor=PREPOZADIE, activebackground=PANEL, activeforeground=TEXT).pack(anchor="w")
     tk.Radiobutton(r2, text="USB kľúč / SD karta (disk sa celý zmaže)", variable=volba, value="disk",
+                   bg=PANEL, fg=TEXT, selectcolor=PREPOZADIE, activebackground=PANEL, activeforeground=TEXT).pack(anchor="w")
+    tk.Radiobutton(r2, text="Telefón cez USB kábel – fastboot (Android sa zmaže)", variable=volba, value="telefon",
                    bg=PANEL, fg=TEXT, selectcolor=PREPOZADIE, activebackground=PANEL, activeforeground=TEXT).pack(anchor="w")
     disk_box = ttk.Combobox(r2, state="readonly", width=56)
     disk_box.pack(anchor="w", pady=(6, 0))
@@ -310,6 +432,12 @@ def okno():
 
     def nastav_obraz(cesta):
         stav["obraz"] = cesta
+        stav["boot"] = boot_k_obrazu(cesta)
+        id_ = id_z_obrazu(cesta)
+        if id_:
+            zar_box.current([z["id"] for z in ZARIADENIA].index(id_))
+            if zariadenie(id_)["sposob"] == "fastboot":
+                volba.set("telefon")
         obraz_txt.config(text="%s  (%s po rozbalení)" % (os.path.basename(cesta), citatelne(velkost_obrazu(cesta) or 0)), fg=TEXT)
 
     def na_pozadi(praca, hotovo_msg):
@@ -333,8 +461,10 @@ def okno():
         if not adresar:
             return
 
+        id_ = ZARIADENIA[zar_box.current()]["id"]
+
         def praca():
-            cesta = ziskaj_obraz(adresar, sprava, priebeh)
+            cesta = ziskaj_obraz(adresar, sprava, priebeh, id_)
             hl.after(0, lambda: nastav_obraz(cesta))
             return cesta
         na_pozadi(praca, "Obraz stiahnutý a overený.")
@@ -368,6 +498,8 @@ def okno():
             na_pozadi(lambda: zapis(stav["obraz"], ciel, priebeh),
                       "Hotovo: %s je pripravený. Spusti ho vo VirtualBoxe alebo v QEMU." % ciel)
             return
+        if volba.get() == "telefon":
+            return nahrat_telefon()
         if not stav["disky"]:
             return messagebox.showwarning("LinsoftPhone Installer", "Pripoj USB kľúč alebo SD kartu a skús znova.")
         if not je_spravca():
@@ -385,6 +517,32 @@ def okno():
             return zapis(stav["obraz"], d["cesta"], priebeh)
         na_pozadi(praca, "Hotovo! LinsoftPhone OS je na „%s“. Disk môžeš bezpečne odpojiť." % d["nazov"])
 
+    def nahrat_telefon():
+        z = ZARIADENIA[zar_box.current()]
+        if z["sposob"] != "fastboot":
+            return messagebox.showwarning("LinsoftPhone Installer", "„%s“ sa nenahráva cez USB kábel. Vyber telefón zo zoznamu (napr. OnePlus 6), alebo zvoľ USB kľúč / SD kartu." % z["nazov"])
+        if id_z_obrazu(stav["obraz"]) != z["id"] or not stav["boot"]:
+            return messagebox.showwarning("LinsoftPhone Installer", "Vybraný obraz nie je pre %s. Zvoľ telefón a klikni „Stiahnuť najnovší“." % z["nazov"])
+        if not messagebox.askyesno("Nahrať do telefónu?", (
+                "Telefón %s sa CELÝ ZMAŽE (Android, fotky, aplikácie) a nahrá sa doň LinsoftPhone OS.\n\n"
+                "Predtým:\n• odomkni bootloader (návod na wiki postmarketOS pri tvojom modeli)\n"
+                "• vypni telefón, drž Hlasitosť + a zapni ho – naštartuje do režimu fastboot\n"
+                "• pripoj ho USB káblom k počítaču\n\nPokračovať?") % z["nazov"], icon="warning"):
+            return
+        if not messagebox.askyesno("Naozaj?", "Posledná otázka: všetky dáta v telefóne budú nenávratne stratené. Nahrať?", icon="warning"):
+            return
+
+        def praca():
+            fastboot = najdi_fastboot(sprava=sprava)
+            telefony = fastboot_telefony(fastboot)
+            if not telefony:
+                raise RuntimeError("Nenašiel sa žiadny telefón v režime fastboot. Skontroluj kábel a režim fastboot"
+                                   " (na Windows aj ovládač „Google USB Driver“).")
+            if len(telefony) > 1:
+                raise RuntimeError("Pripojených je viac telefónov - nechaj pripojený iba jeden.")
+            nahraj_do_telefonu(fastboot, z, stav["obraz"], stav["boot"], sprava, priebeh, telefony[0])
+        na_pozadi(praca, "Hotovo! Telefón sa reštartuje do LinsoftPhone OS (prvé spustenie trvá dlhšie).")
+
     spodok = tk.Frame(hl, bg=PREPOZADIE)
     spodok.pack(side="bottom", fill="x", padx=22, pady=18)
     tl(spodok, "Obnoviť disky", obnov_disky).pack(side="left")
@@ -395,14 +553,17 @@ def okno():
 # ---------------- prikazovy riadok ----------------
 
 def hlavny(argv=None):
-    p = argparse.ArgumentParser(description="LinsoftPhone Installer %s - zapise LinsoftPhone OS na USB/SD alebo do %s." % (VERZIA, NAZOV_IMG))
+    p = argparse.ArgumentParser(description="LinsoftPhone Installer %s - nahra LinsoftPhone OS do telefonu (fastboot), na USB/SD alebo do %s." % (VERZIA, NAZOV_IMG))
     p.add_argument("--obraz", help="vlastny obraz .img alebo .img.xz (inak sa stiahne najnovsi)")
     p.add_argument("--subor", metavar="CESTA", help="len rozbalit do suboru (napr. %s)" % NAZOV_IMG)
     p.add_argument("--disky", action="store_true", help="vypisat vymenitelne disky")
     p.add_argument("--disk", help="zapisat na disk (cesta z --disky, napr. \\\\.\\PhysicalDrive2 alebo /dev/sdb)")
-    p.add_argument("--ano", action="store_true", help="potvrdit zmazanie disku bez otazky")
+    p.add_argument("--zariadenie", default="qemu-amd64", help="pre ktore zariadenie stiahnut obraz (zoznam: --zariadenia)")
+    p.add_argument("--zariadenia", action="store_true", help="vypisat zariadenia s hotovym obrazom")
+    p.add_argument("--telefon", action="store_true", help="nahrat do telefonu v rezime fastboot (zariadenie z --zariadenie)")
+    p.add_argument("--ano", action="store_true", help="potvrdit zmazanie disku / telefonu bez otazky")
     a = p.parse_args(argv)
-    if not any([a.obraz, a.subor, a.disky, a.disk]):
+    if not any([a.obraz, a.subor, a.disky, a.disk, a.zariadenia, a.telefon]):
         return okno()
     # konzola Windows nemusi byt v UTF-8 - diakritika by sa rozbila
     if hasattr(sys.stdout, "reconfigure"):
@@ -413,8 +574,30 @@ def hlavny(argv=None):
         for d in najdi_disky():
             pis("%-24s %-30s %s" % (d["cesta"], d["nazov"], citatelne(d["velkost"])))
         return 0
-    obraz = a.obraz or ziskaj_obraz(os.getcwd(), pis, ukaz)
+    if a.zariadenia:
+        for z in ZARIADENIA:
+            pis("%-20s %-10s %s" % (z["id"], z["sposob"], z["nazov"]))
+        return 0
+    z = zariadenie(a.zariadenie)
+    if a.telefon and z["sposob"] != "fastboot":
+        sys.exit("%s sa nenahráva cez fastboot (pozri --zariadenia)." % z["nazov"])
+    if a.telefon:
+        fastboot = najdi_fastboot(sprava=pis)   # skor nez sa stiahnu stovky MB
+        telefony = fastboot_telefony(fastboot)
+        if len(telefony) != 1:
+            sys.exit("Pripoj práve jeden telefón v režime fastboot (nájdené: %d)." % len(telefony))
+    obraz = a.obraz or ziskaj_obraz(os.getcwd(), pis, ukaz, z["id"])
     print()
+    if a.telefon:
+        boot = boot_k_obrazu(obraz)
+        if not boot:
+            sys.exit("Vedľa obrazu chýba %s-boot.img." % os.path.basename(obraz).split(".img")[0])
+        if not a.ano and input("Telefón %s (%s) sa CELÝ ZMAŽE. Napíš ZMAZAT pre pokračovanie: " % (
+                z["nazov"], telefony[0])).strip() != "ZMAZAT":
+            sys.exit("Zrušené.")
+        nahraj_do_telefonu(fastboot, z, obraz, boot, lambda t: pis("\n" + t), ukaz, telefony[0])
+        pis("\nHotovo! Telefón sa reštartuje do LinsoftPhone OS.")
+        return 0
     if a.subor:
         pis("Rozbaľujem do %s…" % a.subor)
         zapis(obraz, a.subor, ukaz)

@@ -24,10 +24,16 @@ class TestObraz(unittest.TestCase):
     def test_najdi_obraz_vo_vydani(self):
         v = {"assets": [{"name": "linsoftphone-kernel-1.3.elf", "browser_download_url": "k"},
                         {"name": "linsoftphone-os-2.4-qemu-amd64.img.xz", "browser_download_url": "o"},
+                        {"name": "linsoftphone-os-2.4-oneplus-enchilada.img.xz", "browser_download_url": "t"},
+                        {"name": "linsoftphone-os-2.4-oneplus-enchilada-boot.img", "browser_download_url": "b"},
                         {"name": "SHA256SUMS", "browser_download_url": "s"}]}
-        self.assertEqual(ins.najdi_obraz(v), ("o", "linsoftphone-os-2.4-qemu-amd64.img.xz", "s"))
+        self.assertEqual(ins.najdi_obraz(v), ("o", "linsoftphone-os-2.4-qemu-amd64.img.xz", "s", None, None))
+        self.assertEqual(ins.najdi_obraz(v, "oneplus-enchilada"),
+                         ("t", "linsoftphone-os-2.4-oneplus-enchilada.img.xz", "s", "b", "linsoftphone-os-2.4-oneplus-enchilada-boot.img"))
         with self.assertRaises(RuntimeError):
             ins.najdi_obraz({"assets": []})
+        with self.assertRaises(RuntimeError):
+            ins.najdi_obraz(v, "oneplus-fajita")
 
     def test_sucet_zo_suboru_suctov(self):
         text = "a" * 64 + "  linsoftphone-kernel-1.3.elf\n" + "b" * 64 + "  obraz.img.xz\n"
@@ -56,6 +62,72 @@ class TestObraz(unittest.TestCase):
         ciel = os.path.join(self.adr, "linsoftPhone.img")
         self.assertEqual(ins.hlavny(["--obraz", self.xz, "--subor", ciel]), 0)
         self.assertTrue(os.path.getsize(ciel) >= len(self.data))
+
+
+class TestTelefon(unittest.TestCase):
+    def setUp(self):
+        self.adr = tempfile.mkdtemp()
+        self.obraz = os.path.join(self.adr, "linsoftphone-os-2.4-oneplus-enchilada.img.xz")
+        with lzma.open(self.obraz, "wb", format=lzma.FORMAT_XZ) as f:
+            f.write(b"rootfs" * 1000)
+        self.boot = os.path.join(self.adr, "linsoftphone-os-2.4-oneplus-enchilada-boot.img")
+        with open(self.boot, "wb") as f:
+            f.write(b"ANDROID!")
+
+    def test_zariadenie_a_boot_podla_nazvu(self):
+        self.assertEqual(ins.id_z_obrazu(self.obraz), "oneplus-enchilada")
+        self.assertEqual(ins.id_z_obrazu("linsoftphone-os-2.4-qemu-amd64.img"), "qemu-amd64")
+        self.assertIsNone(ins.id_z_obrazu("iny.img"))
+        self.assertEqual(ins.boot_k_obrazu(self.obraz), self.boot)
+        self.assertIsNone(ins.boot_k_obrazu(os.path.join(self.adr, "x-qemu-amd64.img.xz")))
+        for z in ins.ZARIADENIA:
+            if z["sposob"] == "fastboot":
+                self.assertTrue(z["rootfs"] and z["boot"])
+
+    def test_fastboot_zoznam_telefonov(self):
+        stary = ins.subprocess.run
+        ins.subprocess.run = lambda *a, **k: type("R", (), {"stdout": "a1b2c3d4\tfastboot\n\n", "returncode": 0})()
+        try:
+            self.assertEqual(ins.fastboot_telefony("fastboot"), ["a1b2c3d4"])
+        finally:
+            ins.subprocess.run = stary
+
+    def test_nahratie_do_telefonu(self):
+        """Rozbali rootfs, nahra ho do userdata, jadro do boot, vymaze dtbo a restartuje - v tomto poradi."""
+        volania, stary = [], ins.subprocess.run
+
+        def falosny(prikaz, **k):
+            if prikaz[3] == "flash" and prikaz[4] == "userdata":
+                with open(prikaz[5], "rb") as f:
+                    volania.append(("obsah", f.read(6)))
+            volania.append(tuple(prikaz[1:5]))
+            return type("R", (), {"stdout": "", "stderr": "", "returncode": 0})()
+        ins.subprocess.run = falosny
+        try:
+            ins.nahraj_do_telefonu("fastboot", ins.zariadenie("oneplus-enchilada"), self.obraz, self.boot, lambda t: None, None, "SER")
+        finally:
+            ins.subprocess.run = stary
+        self.assertEqual(volania, [("obsah", b"rootfs"), ("-s", "SER", "flash", "userdata"), ("-s", "SER", "flash", "boot"),
+                                   ("-s", "SER", "erase", "dtbo"), ("-s", "SER", "reboot")])
+
+    def test_chyba_fastboot_zastavi_nahravanie(self):
+        volania, stary = [], ins.subprocess.run
+
+        def falosny(prikaz, **k):
+            volania.append(prikaz[1])
+            return type("R", (), {"stdout": "", "stderr": "FAILED (remote: 'Flashing is not allowed in Lock State')", "returncode": 1})()
+        ins.subprocess.run = falosny
+        try:
+            with self.assertRaises(RuntimeError) as e:
+                ins.nahraj_do_telefonu("fastboot", ins.zariadenie("oneplus-enchilada"), self.obraz, self.boot, lambda t: None)
+        finally:
+            ins.subprocess.run = stary
+        self.assertEqual(volania, ["flash"])
+        self.assertIn("Lock State", str(e.exception))
+
+    def test_telefon_iba_pre_fastboot_zariadenie(self):
+        with self.assertRaises(SystemExit):
+            ins.hlavny(["--telefon", "--zariadenie", "pine64-pinephone"])
 
 
 class TestDisky(unittest.TestCase):
