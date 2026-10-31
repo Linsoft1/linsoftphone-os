@@ -55,7 +55,7 @@ class TestSluzba(unittest.TestCase):
         self.assertIn("baterie", s)
         self.assertIn("modem", s)
         self.assertIn("jadro", s["system"])
-        self.assertEqual(s["verze"], "2.3")
+        self.assertEqual(s["verze"], "2.4")
 
     def test_api_bez_hlavicky_je_zakazane(self):
         self.assertEqual(pozadavek("/api/stav", hlavicky={})[0], 403)

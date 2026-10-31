@@ -23,7 +23,7 @@ import sys
 import time
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-VERZE = "2.3"
+VERZE = "2.4"
 START = time.time()
 PORT = int(os.environ.get("LINSOFT_PORT", "8640"))
 WWW = os.environ.get("LINSOFT_WWW", "/usr/share/linsoftphone-os/www")

@@ -7,7 +7,7 @@ z telefónu zmaže a po zapnutí naštartuje priamo LinsoftPhone OS.
 ┌──────────────────────────────────────────┐
 │  LinsoftPhone OS (rozhranie z pwa/)      │  plocha, zámok, aplikácie, klávesnica
 ├──────────────────────────────────────────┤
-│  Cog (WebKit) v kiosku Cage              │  celá obrazovka, nič iné
+│  Chromium v kiosku Cage                  │  celá obrazovka, nič iné
 ├──────────────────────────────────────────┤
 │  linsoft-sluzba (127.0.0.1:8640)         │  hovory, SMS, Wi-Fi, batéria, jas, vypnutie
 ├──────────────────────────────────────────┤
@@ -102,17 +102,17 @@ LINSOFT_DEMO=1 python3 postmarketos/postmarketos-ui-linsoft/linsoft-sluzba.py pw
   služba. Počúva len na `127.0.0.1` a prijíma iba požiadavky s hlavičkou
   `X-Linsoft` a správnym `Host`, takže ju nemôže ovládať cudzia webová stránka
 - [linsoft-session](postmarketos-ui-linsoft/linsoft-session): spustí kiosk
-  (Cage + Cog). Zväčšenie pre displej sa nastavuje premennou `LINSOFT_SKALA`
-  (predvolene 2)
+  (Cage + Chromium; Cog/WPE v postmarketOS nie je). Zväčšenie pre displej sa
+  nastavuje v `/etc/conf.d/linsoft-session` (`LINSOFT_SKALA=1.5`, predvolene 2)
 - [priprav.sh](priprav.sh): skopíruje balík a rozhranie do pmaports
 - [tests/](tests/): testy služby (`npm run test:sluzba`)
 
 ## Známe obmedzenia
 
-- Celý obraz systému zatiaľ nebol zostavený ani vyskúšaný na skutočnom
-  telefóne. Otestovaná je služba (v ukážkovom režime), rozhranie a syntax
-  skriptov balíka.
-- Fotoaparát v Cog závisí od toho, či ho daný telefón podporuje v postmarketOS
+- Obraz systému je zostavený a vyskúšaný len vo virtuálnom stroji
+  (qemu-amd64, postmarketOS edge, OpenRC): služba aj zámková obrazovka
+  naštartujú. Na skutočnom telefóne zatiaľ vyskúšaný nebol.
+- Fotoaparát v prehliadači závisí od toho, či ho daný telefón podporuje v postmarketOS
   (na väčšine zatiaľ nefunguje).
 - Displej, ktorý je od výroby na šírku, treba otočiť (výstup v Cage).
 - Prichádzajúci hovor zazvoní, len keď je telefón zapnutý a LinsoftPhone OS

@@ -1,0 +1,7 @@
+#!/bin/sh
+# po instalaci (OpenRC): zapnout lokalni sluzbu, modem a sit
+# (seatd, elogind a tinydm zapina postmarketos-base-ui-cage-openrc)
+rc-update add linsoft-sluzba default
+rc-update add modemmanager default
+rc-update add networkmanager default
+exit 0

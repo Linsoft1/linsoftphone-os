@@ -1,18 +1,49 @@
 #!/bin/sh
 # LinsoftPhone OS - graficka relace (spousti ji tinydm po startu telefonu):
-# Cage = kiosk compositor (jedna aplikace pres celou obrazovku),
-# Cog  = WebKit prohlizec bez listy, ktery zobrazi rozhrani LinsoftPhone OS.
+# Cage     = kiosk compositor (jedna aplikace pres celou obrazovku),
+# Chromium = prohlizec v rezimu kiosku (bez listy), zobrazi rozhrani LinsoftPhone OS.
+# (Cog/WPE WebKit v Alpine/postmarketOS neni, proto Chromium.)
 #
 # LINSOFT_SKALA: zvetseni pro displeje s vysokym rozlisenim (vychozi 2;
-# 720p telefony radeji 1.5, viz /etc/conf.d nebo ~/.profile)
+# 720p telefony radeji 1.5). Nastavuje se v /etc/conf.d/linsoft-session:
+#   LINSOFT_SKALA=1.5
 
 ADRESA="http://127.0.0.1:8640/"
+PROFIL="${XDG_DATA_HOME:-$HOME/.local/share}/linsoftphone-os/chromium"
 
-# pockat, az nabehne lokalni sluzba (max. ~10 s)
-i=0
-while [ $i -lt 50 ] && ! wget -q -O /dev/null "$ADRESA"; do
-	sleep 0.2
-	i=$((i + 1))
-done
+# shellcheck source=/dev/null
+[ -r /etc/conf.d/linsoft-session ] && . /etc/conf.d/linsoft-session
+SKALA="${LINSOFT_SKALA:-2}"
 
-exec cage -s -- cog --platform=wl --device-scale="${LINSOFT_SKALA:-2}" "$ADRESA"
+if [ "$1" != "--v-cage" ]; then
+	# pockat, az nabehne lokalni sluzba (max. ~10 s)
+	i=0
+	while [ $i -lt 50 ] && ! wget -q -O /dev/null "$ADRESA"; do
+		sleep 0.2
+		i=$((i + 1))
+	done
+	# tento skript znovu, uz uvnitr Cage
+	exec cage -d -s -- "$0" --v-cage
+fi
+
+# Zvetseni nastavit na vystupu Wayland (wlr-randr), ne pres
+# --force-device-scale-factor: ten pod Waylandem vykresli jen cast obrazovky.
+if [ "$SKALA" != "1" ]; then
+	for vystup in $(wlr-randr | awk '/^[^ ]/ {print $1}'); do
+		wlr-randr --output "$vystup" --scale "$SKALA"
+	done
+fi
+
+mkdir -p "$PROFIL"
+exec chromium \
+	--ozone-platform=wayland \
+	--kiosk \
+	--app="$ADRESA" \
+	--user-data-dir="$PROFIL" \
+	--touch-events=enabled \
+	--no-first-run \
+	--noerrdialogs \
+	--disable-infobars \
+	--disable-session-crashed-bubble \
+	--disable-features=Translate,MediaRouter \
+	--password-store=basic

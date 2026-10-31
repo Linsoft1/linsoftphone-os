@@ -1,7 +1,5 @@
 #!/bin/sh
-# po instalaci: zapnout sluzby a nastavit LinsoftPhone OS jako jedinou grafickou relaci
-rc-update add linsoft-sluzba default
-rc-update add modemmanager default
-rc-update add networkmanager default
+# po instalaci: LinsoftPhone OS jako jedina graficka relace (tinydm)
+# -f: prepise relaci, kterou uz nastavil postmarketos-base-ui-cage (cage-ui)
 tinydm-set-session -f -s /usr/share/wayland-sessions/linsoft.desktop
 exit 0

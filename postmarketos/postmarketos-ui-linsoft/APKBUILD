@@ -1,23 +1,31 @@
 # Maintainer: Linsoft1 <Linsoft1@users.noreply.github.com>
 # LinsoftPhone OS jako uzivatelske rozhrani postmarketOS.
 # Zdroj linsoftphone-www.tar.gz vyrabi skript postmarketos/priprav.sh z adresare pwa/.
+# Vzor: https://postmarketos.org/uipkg a postmarketos-ui-cage v pmaports.
 pkgname=postmarketos-ui-linsoft
-pkgver=2.2
+pkgver=2.4
 pkgrel=0
-pkgdesc="LinsoftPhone OS: vlastni telefonni rozhrani (kiosk Cage + Cog)"
+pkgdesc="LinsoftPhone OS: vlastni telefonni rozhrani (kiosk Cage + Chromium)"
 url="https://github.com/Linsoft1/linsoftphone-os"
 arch="noarch"
 license="custom"
+# postmarketos-base-ui-cage prinasi cage, seatd, elogind, tinydm, NetworkManager
+# a zvuk; jeho -openrc podbalik zapne seatd, elogind a tinydm.
 depends="
-	cage
-	cog
+	chromium
 	modemmanager
-	networkmanager
-	postmarketos-base-ui
+	postmarketos-base-ui-cage
 	python3
-	tinydm
 	"
-install="$pkgname.post-install"
+# cage (wlroots) potrebuje pristup k seatd
+_pmb_groups="seat"
+subpackages="$pkgname-openrc"
+install="
+	$pkgname.post-install
+	$pkgname.post-upgrade
+	$pkgname-openrc.post-install
+	$pkgname-openrc.post-upgrade
+	"
 source="
 	linsoftphone-www.tar.gz
 	linsoft-sluzba.py
@@ -25,18 +33,31 @@ source="
 	linsoft-session
 	linsoft.desktop
 	"
-options="!check" # jen soubory, neni co testovat pri sestaveni
+# jen soubory, neni co testovat pri sestaveni; sluzba je jen pro OpenRC
+options="!check pmb:drm pmb:default-openrc pmb:support-openrc"
 builddir="$srcdir"
 
 package() {
 	install -Dm755 "$srcdir"/linsoft-sluzba.py "$pkgdir"/usr/bin/linsoft-sluzba
-	install -Dm755 "$srcdir"/linsoft-sluzba.initd "$pkgdir"/etc/init.d/linsoft-sluzba
 	install -Dm755 "$srcdir"/linsoft-session "$pkgdir"/usr/bin/linsoft-session
 	install -Dm644 "$srcdir"/linsoft.desktop "$pkgdir"/usr/share/wayland-sessions/linsoft.desktop
 
 	# rozhrani (PWA) - abuild archiv rozbalil do $srcdir/www
 	mkdir -p "$pkgdir"/usr/share/linsoftphone-os
 	cp -r "$srcdir"/www "$pkgdir"/usr/share/linsoftphone-os/www
+	find "$pkgdir"/usr/share/linsoftphone-os -type d -exec chmod 755 {} +
+	find "$pkgdir"/usr/share/linsoftphone-os -type f -exec chmod 644 {} +
+}
+
+openrc() {
+	install_if="$pkgname=$pkgver-r$pkgrel openrc"
+	depends="
+		modemmanager-openrc
+		networkmanager-openrc
+		openrc
+		postmarketos-base-ui-cage-openrc
+		"
+	install -Dm755 "$srcdir"/linsoft-sluzba.initd "$subpkgdir"/etc/init.d/linsoft-sluzba
 }
 
 sha512sums="

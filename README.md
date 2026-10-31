@@ -18,6 +18,9 @@ Tři podoby jednoho systému:
    z telefonu smaže a po zapnutí naběhne přímo LinsoftPhone OS (postmarketOS
    + kiosk + lokální služba pro hovory, SMS, Wi-Fi); funguje na telefonech,
    které podporuje postmarketOS. Návod: [postmarketos/README.md](./postmarketos/README.md)
+   — ověřeno: obraz pro `qemu-amd64` se sestaví a naběhne rovnou do zamykací
+   obrazovky LinsoftPhone OS (kiosk Cage + Chromium); na skutečném telefonu
+   zatím nevyzkoušeno
 
 ## PWA verze 2.4 — pro skutečné telefony
 

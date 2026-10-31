@@ -1,0 +1,5 @@
+#!/bin/sh
+# po instalaci: LinsoftPhone OS jako jedina graficka relace (tinydm)
+# -f: prepise relaci, kterou uz nastavil postmarketos-base-ui-cage (cage-ui)
+tinydm-set-session -f -s /usr/share/wayland-sessions/linsoft.desktop
+exit 0

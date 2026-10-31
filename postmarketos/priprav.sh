@@ -13,7 +13,7 @@ CIL="$PMAPORTS/main/postmarketos-ui-linsoft"
 echo "LinsoftPhone OS -> $CIL"
 rm -rf "$CIL"
 mkdir -p "$CIL"
-cp "$BALIK"/APKBUILD "$BALIK"/*.post-install "$BALIK"/linsoft-* "$CIL"/
+cp "$BALIK"/APKBUILD "$BALIK"/*.post-install "$BALIK"/*.post-upgrade "$BALIK"/linsoft-* "$BALIK"/linsoft.desktop "$CIL"/
 
 # rozhrani (PWA) bez testu jako jeden archiv s adresarem www/
 TMP=$(mktemp -d)

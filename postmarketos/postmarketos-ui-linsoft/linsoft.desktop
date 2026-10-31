@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=LinsoftPhone OS
 Comment=Vlastni telefonni rozhrani LinsoftPhone OS
-Exec=linsoft-session
+Exec=dbus-run-session -- linsoft-session
+TryExec=/usr/bin/linsoft-session
 Type=Application
