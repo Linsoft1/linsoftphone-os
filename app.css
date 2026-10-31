@@ -1112,3 +1112,7 @@ a.nast-radek { text-decoration: none; }
   .kalk-k { aspect-ratio: auto; height: 50px; border-radius: 25px; font-size: 22px; }
 }
 #boot-autor { margin-top: 6px; font-size: 12px; letter-spacing: 1px; opacity: .55; animation: boot-text .6s .35s both; }
+
+/* bez viditelneho posuvniku (jako na telefonu); posouvani prstem, koleckem i klavesnici funguje dal */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
