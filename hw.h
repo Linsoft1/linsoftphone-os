@@ -56,5 +56,7 @@ int  virtio_init(void);         /* vraci pocet nalezenych vstupnich zarizeni (vo
 void virtio_poll(void);        /* bez preruseni: rucni obsluha front */
 void virtio_irq(u32 id);        /* obsluha preruseni virtio-mmio */
 void virtio_info(void (*puts)(const char *), void (*putn)(u32));
+int  klavesnice_nastav(const char *nazev);  /* "sk" / "us"; 1 = ok */
+const char *klavesnice_nazev(void);         /* aktivni rozlozeni */
 
 #endif

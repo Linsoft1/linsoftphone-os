@@ -92,7 +92,7 @@ WebView), iPhone s iOS 12+ (Safari). Ošetřeno: výřez displeje (notch), malé
 displeje od 320 px, telefon na šířku, gesto Zpět na Androidu, zoom při psaní na
 iOS, plné úložiště fotkami, aktualizace přes service worker.
 
-## Kernel verze 1.2 — skutečný OS v QEMU
+## Kernel verze 1.3 — skutečný OS v QEMU
 
 Při startu se na displeji ukáže **úvodní obrazovka s logem** a ukazatelem
 načítání, v hlavičce zůstane malé logo; na sériové konzoli je logo v ASCII.
@@ -112,6 +112,16 @@ assembleru, bez jakékoli knihovny — vlastní ovladač UART, shell a aplikace.
   '-----------'   |  __/| | | | (_) | | | |  __/ |_| |___) |
                   |_|   |_| |_|\___/|_| |_|\___| \___/|____/
 ```
+
+### Novinky ve verzi 1.3
+
+- grafická konzole zalamuje text po slovech (dlouhá slova se lámou natvrdo,
+  pokračovací řádky jsou odsazené); sériový výstup je beze změny
+- virtio klávesnice má rozložení `sk` (QWERTZ, výchozí) a `us`; přepíná se
+  příkazem `klavesnica [sk|us]`, aktivní rozložení ukazuje `info`
+- v `sk` dává číselná řada číslice, písmena s diakritikou se píšou bez ní,
+  AltGr dává symboly `@ # & { } [ ] \ | < > *`
+- opraveno zamrzání vstupu ze sériové linky při vložení delšího textu
 
 ### Novinky ve verzi 1.1–1.2
 

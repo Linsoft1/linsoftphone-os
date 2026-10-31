@@ -242,7 +242,18 @@ static void kresli_logo(int x0, int y0, int vel, u32 pozadi)
 #define SLOUPCE     ((SIRKA - 2 * KONZ_X) / ZNAK_PX)      /* 28 */
 #define RADKY       ((VYSKA - KONZ_Y - 90) / ZNAK_PX)     /* ~36 */
 
+/* zalamovani po slovech: kx muze dosahnout SLOUPCE ("radek plny"), zalomi
+ * se az dalsi znak. Kdyz by slovo preteklo pres pravy okraj, jeho zacatek
+ * se presune z mrizky na novy radek; slovo delsi nez radek se zlomi natvrdo.
+ * Pokracovaci radky jsou odsazene (o 2 vic nez zacatek radku, napr. tabulka
+ * v 'pomoc'). konec[] = kde logicky skoncil zalomeny radek, aby backspace
+ * umel couvnout zpet na predchozi radek. Na UART se nic nemeni. */
+#define MAX_ODSAZENI 8
+
 static char mrizka[RADKY][SLOUPCE];
+static u8 pokracovani[RADKY];       /* 1 = radek vznikl zalomenim */
+static u8 odsazeni[RADKY];          /* odsazeni pokracovaciho radku */
+static u8 konec[RADKY];             /* logicky konec zalomeneho radku (az SLOUPCE + 1) */
 static int kx, ky;
 
 static void kresli_znak_mrizky(int cx, int cy)
@@ -257,11 +268,16 @@ static void kresli_znak_mrizky(int cx, int cy)
 
 static void scroll(void)
 {
-    for (int y = 0; y < RADKY - 1; y++)
+    for (int y = 0; y < RADKY - 1; y++) {
         for (int x = 0; x < SLOUPCE; x++)
             mrizka[y][x] = mrizka[y + 1][x];
+        pokracovani[y] = pokracovani[y + 1];
+        odsazeni[y] = odsazeni[y + 1];
+        konec[y] = konec[y + 1];
+    }
     for (int x = 0; x < SLOUPCE; x++)
         mrizka[RADKY - 1][x] = ' ';
+    pokracovani[RADKY - 1] = 0;
     for (int y = 0; y < RADKY; y++)
         for (int x = 0; x < SLOUPCE; x++)
             kresli_znak_mrizky(x, y);
@@ -274,24 +290,79 @@ static void kurzor(int zap)
     obdelnik(px, py + ZNAK_PX - 3, ZNAK_PX, 3, zap ? BARVA_AKCENT : BARVA_POZADI);
 }
 
+static void dalsi_radek(void)
+{
+    kx = 0;
+    if (++ky >= RADKY) { ky = RADKY - 1; scroll(); }
+}
+
+/* zacatek textu na radku (pocet uvodnich mezer) */
+static int uvodni_mezery(int y)
+{
+    int i = 0;
+    while (i < SLOUPCE && mrizka[y][i] == ' ') i++;
+    return i;
+}
+
+/* zalomeni plneho radku: slovo od sloupce 'od' se presune na novy radek */
+static void zalom(int od, int logicky_konec)
+{
+    int odsaz;
+    if (pokracovani[ky]) odsaz = odsazeni[ky];
+    else {
+        odsaz = uvodni_mezery(ky) + 2;
+        if (odsaz > MAX_ODSAZENI) odsaz = MAX_ODSAZENI;
+    }
+    konec[ky] = (u8)logicky_konec;
+    int stary = ky;
+    dalsi_radek();
+    if (ky == stary) stary--;           /* radek odjel nahoru scrollem */
+    for (int x = 0; x < SLOUPCE; x++) {
+        mrizka[ky][x] = ' ';
+        kresli_znak_mrizky(x, ky);
+    }
+    pokracovani[ky] = 1;
+    odsazeni[ky] = (u8)odsaz;
+    kx = odsaz;
+    for (int x = od; x < SLOUPCE; x++) {
+        mrizka[ky][kx] = mrizka[stary][x];
+        kresli_znak_mrizky(kx++, ky);
+        mrizka[stary][x] = ' ';
+        kresli_znak_mrizky(x, stary);
+    }
+}
+
 void gfx_putc(char c)
 {
     if (!aktivni) return;
     kurzor(0);
     if (c == '\n') {
-        kx = 0;
-        if (++ky >= RADKY) { ky = RADKY - 1; scroll(); }
+        dalsi_radek();
+        pokracovani[ky] = 0;
     } else if (c == '\r') {
         kx = 0;
     } else if (c == '\b') {
-        if (kx > 0) { kx--; mrizka[ky][kx] = ' '; kresli_znak_mrizky(kx, ky); }
+        if (ky > 0 && pokracovani[ky] && kx <= odsazeni[ky])
+            kx = konec[--ky];               /* zpet na konec zalomeneho radku */
+        if (kx > 0) {
+            kx--;
+            if (kx < SLOUPCE) { mrizka[ky][kx] = ' '; kresli_znak_mrizky(kx, ky); }
+        }
     } else if (c >= 32 && c < 127) {
+        if (kx >= SLOUPCE) {
+            if (c == ' ') {                 /* mezera na konci radku jen zalomi */
+                zalom(SLOUPCE, SLOUPCE + 1);
+                kurzor(1);
+                return;
+            }
+            int od = SLOUPCE;
+            while (od > 0 && mrizka[ky][od - 1] != ' ') od--;
+            if (od <= uvodni_mezery(ky)) od = SLOUPCE;   /* slovo pres cely radek */
+            zalom(od, od);
+        }
         mrizka[ky][kx] = c;
         kresli_znak_mrizky(kx, ky);
-        if (++kx >= SLOUPCE) {
-            kx = 0;
-            if (++ky >= RADKY) { ky = RADKY - 1; scroll(); }
-        }
+        kx++;
     }
     kurzor(1);
 }
@@ -299,11 +370,13 @@ void gfx_putc(char c)
 void gfx_clear(void)
 {
     if (!aktivni) return;
-    for (int y = 0; y < RADKY; y++)
+    for (int y = 0; y < RADKY; y++) {
         for (int x = 0; x < SLOUPCE; x++) {
             mrizka[y][x] = ' ';
             kresli_znak_mrizky(x, y);
         }
+        pokracovani[y] = 0;
+    }
     kx = 0;
     ky = 0;
     kurzor(1);

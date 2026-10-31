@@ -11,7 +11,7 @@
 
 static u32 uptime_s(void);
 
-#define VERZE "1.2"
+#define VERZE "1.3"
 static void obnov_hodiny(void);
 
 /* ---------------- UART PL011 (QEMU virt: 0x09000000) ---------------- */
@@ -344,6 +344,20 @@ static void app_info(void)
     }
     puts_raw("Vstup:    UART");
     virtio_info(puts_raw, put_u32);
+    puts_raw("\nKlavesnice: "); puts_raw(klavesnice_nazev()); puts_raw("\n");
+}
+
+/* ---------------- nastaveni: rozlozeni klavesnice ---------------- */
+
+static void app_klavesnica(const char *arg)
+{
+    while (*arg == ' ') arg++;
+    if (*arg && !klavesnice_nastav(arg)) {
+        puts_raw("Pouziti: klavesnica [sk|us]\n");
+        return;
+    }
+    puts_raw(*arg ? "Rozlozeni nastaveno: " : "Rozlozeni klavesnice: ");
+    puts_raw(klavesnice_nazev());
     puts_raw("\n");
 }
 
@@ -403,6 +417,7 @@ static void app_pomoc(void)
     puts_raw("  zprava <text>    - ulozit zpravu\n");
     puts_raw("  zpravy           - vypsat zpravy\n");
     puts_raw("  kontakty         - seznam kontaktu\n");
+    puts_raw("  klavesnica [sk|us] - rozlozeni klavesnice\n");
     puts_raw("  vymaz            - smazat obrazovku\n");
     puts_raw("  restart          - restart systemu\n");
     puts_raw("  vypni            - vypnout telefon\n");
@@ -505,6 +520,8 @@ void kmain(void)
         else if (str_eq(cmd, "zpravy"))  app_zpravy();
         else if (str_eq(cmd, "kontakty")) app_kontakty();
         else if (str_eq(cmd, "vymaz"))   vymaz_obrazovku();
+        else if (str_eq(cmd, "klavesnica")) app_klavesnica("");
+        else if (str_starts(cmd, "klavesnica ")) app_klavesnica(cmd + 11);
         else if (str_eq(cmd, "restart")) {
             logo();
             puts_raw("Restartuji LinsoftPhone OS...\n");

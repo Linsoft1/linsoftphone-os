@@ -99,38 +99,94 @@ static inline u32 rd(u32 base, u32 off) { return REG32(base + off); }
 static inline void wr(u32 base, u32 off, u32 v) { REG32(base + off) = v; }
 static inline void bariera(void) { __asm__ volatile("dsb sy" ::: "memory"); }
 
-/* ---------------- prevod klaves (Linux evdev kody) na ASCII ---------------- */
+/* ---------------- prevod klaves (Linux evdev kody) na ASCII ----------------
+ * QEMU posila fyzicke pozice klaves (US), znak urcuje az zvolene rozlozeni:
+ *   us - americke QWERTY
+ *   sk - slovenske QWERTZ (vychozi): prohozene Y/Z, interpunkce podle SK.
+ *        Ciselna rada dava cislice (jako "programatorska" varianta), se
+ *        Shiftem znaky slovenske rady bez diakritiky: + l s c t z y a i e.
+ *        Konzole je jen ASCII, proto pismena s diakritikou (u, a, o, n na
+ *        klavesach [ ] ; \) davaji zakladni pismeno, mrtve klavesy (dlzen,
+ *        makcen) a znaky mimo ASCII (paragraf, stupen) se ignoruji.
+ *        Prave Alt (AltGr) dava symboly jako ve Windows: @ # & { } [ ] \ | < > * $ ~ ^ `
+ */
 
-static const char mapa[58] = {
+static const char us_mapa[58] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x7F, '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\r', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' '
 };
-static const char mapa_shift[58] = {
+static const char us_mapa_shift[58] = {
     0, 27, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x7F, '\t',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\r', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' '
+};
+static const char sk_mapa[58] = {
+    0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', 0, 0x7F, '\t',
+    'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'u', 'a', '\r', 0,
+    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'o', 0, ';', 0, 'n',
+    'y', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '-', 0, '*', 0, ' '
+};
+static const char sk_mapa_shift[58] = {
+    0, 27, '+', 'l', 's', 'c', 't', 'z', 'y', 'a', 'i', 'e', '%', 0, 0x7F, '\t',
+    'Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P', '/', '(', '\r', 0,
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '"', '!', 0, 0, ')',
+    'Y', 'X', 'C', 'V', 'B', 'N', 'M', '?', ':', '_', 0, '*', 0, ' '
+};
+/* SK AltGr: dvojice { kod klavesy, znak } */
+static const u8 sk_altgr[][2] = {
+    { 2, '~' }, { 4, '^' }, { 8, '`' },
+    { 16, '\\' }, { 17, '|' }, { 33, '[' }, { 34, ']' }, { 39, '$' },
+    { 45, '#' }, { 46, '&' }, { 47, '@' }, { 48, '{' }, { 49, '}' },
+    { 51, '<' }, { 52, '>' }, { 53, '*' }, { 86, '<' },
 };
 /* numericka klavesnice: kody 71..83 */
 static const char mapa_num[13] = {
     '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.'
 };
 
-#define KEY_LSHIFT 42
-#define KEY_RSHIFT 54
+#define KEY_LSHIFT  42
+#define KEY_RSHIFT  54
+#define KEY_102ND   86          /* klavesa vlevo od Y/Z na evropske klavesnici */
 #define KEY_KPENTER 96
 #define KEY_KPSLASH 98
+#define KEY_RALT    100         /* AltGr */
 
-static int shift;
+static int shift, altgr;
+static int rozlozeni_sk = 1;    /* vychozi: slovenske QWERTZ */
+
+int klavesnice_nastav(const char *nazev)
+{
+    if (nazev[0] == 's' && nazev[1] == 'k' && !nazev[2]) { rozlozeni_sk = 1; return 1; }
+    if (nazev[0] == 'u' && nazev[1] == 's' && !nazev[2]) { rozlozeni_sk = 0; return 1; }
+    return 0;
+}
+
+const char *klavesnice_nazev(void)
+{
+    return rozlozeni_sk ? "sk (QWERTZ)" : "us (QWERTY)";
+}
 
 static void klavesa(u32 kod, u32 hodnota)
 {
     if (kod == KEY_LSHIFT || kod == KEY_RSHIFT) { shift = hodnota != 0; return; }
+    if (kod == KEY_RALT) { altgr = hodnota != 0; return; }
     if (hodnota == 0) return;               /* uvolneni klavesy */
     char c = 0;
-    if (kod < 58)                    c = shift ? mapa_shift[kod] : mapa[kod];
+    if (rozlozeni_sk && altgr) {
+        for (u32 j = 0; j < sizeof(sk_altgr) / sizeof(sk_altgr[0]); j++)
+            if (sk_altgr[j][0] == kod) c = (char)sk_altgr[j][1];
+    }
+    else if (kod < 58) {
+        if (rozlozeni_sk) c = shift ? sk_mapa_shift[kod] : sk_mapa[kod];
+        else              c = shift ? us_mapa_shift[kod] : us_mapa[kod];
+    }
+    else if (kod == KEY_102ND) {
+        if (rozlozeni_sk) c = shift ? '*' : '&';
+        else              c = shift ? '|' : '\\';
+    }
     else if (kod >= 71 && kod <= 83) c = mapa_num[kod - 71];
     else if (kod == KEY_KPENTER)     c = '\r';
     else if (kod == KEY_KPSLASH)     c = '/';

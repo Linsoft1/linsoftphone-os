@@ -134,9 +134,12 @@ void irq_obsluha(void)
         tiky++;
         tik_cekajici = 1;
     } else if (id == IRQ_UART0) {
+        /* nejdriv potvrdit, pak vyprazdnit FIFO: znak, ktery prijde behem
+         * cteni, preruseni znovu vyvola (jinak pri davce znaku pri plnem
+         * FIFO uz zadne dalsi preruseni neprislo a vstup z UART zamrzl) */
+        UART_ICR = UART_INT_RX | UART_INT_RT;
         while (!(UART_FR & UART_FR_RXFE))
             vstup_vloz(UART_DR & 0xFF);
-        UART_ICR = UART_INT_RX | UART_INT_RT;
     } else if (id >= IRQ_VIRTIO0 && id < IRQ_VIRTIO0 + 32) {
         virtio_irq(id);
     }
