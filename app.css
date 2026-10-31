@@ -8,68 +8,86 @@
   --text: #eef4fb;
   --muted: #8fa3bd;
   --tapis: linear-gradient(160deg, #15224a 0%, #0b1220 45%, #1b1035 100%);
+  /* vyrez displeje (notch) a domovsky indikator iPhonu */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
 }
 body.light {
   --bg: #e9eef6;
   --panel: rgba(255, 255, 255, .88);
   --text: #15233c;
   --muted: #5a6c87;
-  --tapis: linear-gradient(160deg, #cfe3ff 0%, #e9eef6 45%, #e5d9ff 100%);
 }
 
 html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
-  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
   background: #000;
   color: var(--text);
   display: flex; justify-content: center; align-items: center;
+  height: 100vh; /* 100vh -> JS --vh -> 100dvh, plati posledni podporovana */
+  height: calc(var(--vh, 1vh) * 100);
   height: 100dvh;
   overflow: hidden;
+  /* zadny pull-to-refresh / gumovy efekt, ktery by "restartoval" system */
+  overscroll-behavior: none;
+  -webkit-user-select: none; user-select: none;
 }
+input, textarea { -webkit-user-select: text; user-select: text; }
 
 #phone {
   position: relative;
-  width: min(100vw, 430px);
+  width: 100%;
+  max-width: 430px;
+  height: 100vh; /* 100vh -> JS --vh -> 100dvh, plati posledni podporovana */
+  height: calc(var(--vh, 1vh) * 100);
   height: 100dvh;
-  max-height: 100dvh;
   background: var(--tapis);
   overflow: hidden;
   display: flex; flex-direction: column;
 }
-@media (min-width: 500px) {
-  #phone { height: min(100dvh, 880px); border-radius: 28px; box-shadow: 0 0 60px rgba(63,167,245,.25); border: 2px solid #233; }
+@media (min-width: 500px) and (min-height: 600px) {
+  #phone { max-height: 880px; border-radius: 28px; box-shadow: 0 0 60px rgba(63,167,245,.25); border: 2px solid #233; }
 }
 
 /* ---- stavovy radek ---- */
 #statusbar {
   position: relative; z-index: 40;
   display: flex; justify-content: space-between; align-items: center;
-  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+  padding: 8px 16px;
+  padding-top: max(8px, var(--sat));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
   font-size: 14px; font-weight: 600;
   cursor: pointer;
 }
 #sb-operator { color: var(--muted); font-size: 12px; }
+body.nativ #sb-net { font-size: 10px; letter-spacing: -1px; }
 
 /* ---- obrazovky ---- */
 .screen {
-  position: absolute; inset: 0;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   display: none; flex-direction: column;
+  /* pod stavovy radek a nad navigacni listu, vcetne vyrezu (notch) */
   padding-top: 44px;
+  padding-top: calc(36px + max(8px, var(--sat)));
   padding-bottom: 64px;
+  padding-bottom: calc(54px + max(10px, var(--sab)));
 }
 .screen.visible { display: flex; }
 
 /* ---- zamykaci obrazovka ---- */
 #lockscreen {
-  z-index: 30; align-items: center; justify-content: center; gap: 12px;
+  z-index: 30; align-items: center; justify-content: center;
   background: var(--tapis);
   cursor: pointer;
   transition: transform .35s ease, opacity .35s ease;
 }
 #lockscreen.unlocking { transform: translateY(-100%); opacity: 0; }
 #lock-clock { font-size: 72px; font-weight: 200; letter-spacing: 2px; }
-#lock-date { font-size: 18px; color: var(--muted); }
-#lock-hint { margin-top: 40px; font-size: 14px; color: var(--muted); animation: puls 2s infinite; }
+#lock-date { font-size: 18px; color: var(--muted); margin-top: 12px; }
+#lock-hint { margin-top: 40px; text-align: center; padding: 0 16px; font-size: 14px; color: var(--muted); animation: puls 2s infinite; }
 @keyframes puls { 50% { opacity: .4; } }
 
 /* ---- plocha ---- */
@@ -77,7 +95,7 @@ body {
 #widget-clock {
   margin: 18px 6px 10px;
   padding: 18px 22px;
-  background: var(--panel); backdrop-filter: blur(12px);
+  background: var(--panel); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border-radius: 22px;
 }
 #w-time { font-size: 44px; font-weight: 300; }
@@ -89,10 +107,10 @@ body {
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: 92px;
   gap: 6px; padding-top: 14px;
-  overflow-y: auto;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 .appicon {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center;
   background: none; border: none; color: var(--text);
   font-family: inherit; font-size: 12px; cursor: pointer;
 }
@@ -103,11 +121,12 @@ body {
   box-shadow: 0 4px 14px rgba(0,0,0,.35);
   transition: transform .12s;
 }
+.appicon .glyph + span { margin-top: 6px; }
 .appicon:active .glyph { transform: scale(.88); }
 
 #dock {
   display: flex; justify-content: space-around;
-  background: var(--panel); backdrop-filter: blur(14px);
+  background: var(--panel); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   border-radius: 26px; padding: 10px 6px; margin-bottom: 8px;
 }
 #dock .appicon { font-size: 0; }
@@ -115,25 +134,28 @@ body {
 /* ---- aplikace ---- */
 #appscreen { z-index: 20; background: var(--bg); }
 #app-header {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center;
   padding: 10px 14px;
-  background: var(--panel); backdrop-filter: blur(10px);
+  background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 #app-header button {
   background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer;
 }
+#app-header > * + * { margin-left: 12px; }
 #app-title { font-size: 17px; font-weight: 600; }
-#app-content { flex: 1; overflow-y: auto; padding: 16px; }
+#app-header button { min-width: 44px; min-height: 40px; }
+#app-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 16px; }
 
 /* ---- panel notifikaci ---- */
 #notifpanel {
   position: absolute; z-index: 50; left: 0; right: 0; top: 0;
-  background: var(--panel); backdrop-filter: blur(18px);
+  background: var(--panel); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   border-radius: 0 0 24px 24px;
   padding: 48px 16px 16px;
+  padding-top: calc(40px + max(8px, var(--sat)));
   transform: translateY(-100%);
   transition: transform .3s ease;
-  max-height: 70%; overflow-y: auto;
+  max-height: 70%; overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 #notifpanel.open { transform: translateY(0); }
 #notif-head { display: flex; justify-content: space-between; margin-bottom: 10px; }
@@ -157,8 +179,9 @@ body {
 #navbar {
   position: absolute; z-index: 45; left: 0; right: 0; bottom: 0;
   display: flex; justify-content: space-around; align-items: center;
-  padding: 8px 0 max(10px, env(safe-area-inset-bottom));
-  background: rgba(0,0,0,.25); backdrop-filter: blur(10px);
+  padding: 8px 0 10px;
+  padding-bottom: max(10px, var(--sab));
+  background: rgba(0,0,0,.25); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 #navbar button {
   background: none; border: none; color: var(--text);
@@ -168,10 +191,11 @@ body {
 
 /* ---- spolecne prvky aplikaci ---- */
 .list-item {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center;
   background: var(--panel); border-radius: 14px;
   padding: 12px 14px; margin-bottom: 8px;
 }
+.list-item > * + * { margin-left: 12px; }
 .list-item .avatar {
   width: 42px; height: 42px; border-radius: 50%;
   background: var(--accent); color: #fff;
@@ -187,56 +211,903 @@ body {
 input, textarea, select {
   width: 100%; background: var(--panel); color: var(--text);
   border: 1px solid rgba(143,163,189,.35); border-radius: 12px;
-  padding: 10px 12px; font-size: 15px; font-family: inherit;
+  /* 16px = iOS pri psani nezoomuje stranku */
+  padding: 10px 12px; font-size: 16px; font-family: inherit;
+  -webkit-appearance: none; appearance: none;
 }
-.row { display: flex; gap: 8px; margin-bottom: 10px; }
-
-/* kalkulacka */
-#calc-disp {
-  font-size: 40px; text-align: right; padding: 18px 10px; min-height: 80px;
-  word-break: break-all;
-}
-#calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-#calc-grid button {
-  font-size: 22px; padding: 16px 0; border: none; border-radius: 16px;
-  background: var(--panel); color: var(--text); cursor: pointer;
-}
-#calc-grid button.op { background: var(--accent); color: #fff; }
-#calc-grid button:active { filter: brightness(1.3); }
-
-/* dialer */
-#dial-num { font-size: 32px; text-align: center; min-height: 48px; padding: 8px; }
-#dial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto; }
-#dial-grid button {
-  font-size: 24px; padding: 14px 0; border: none; border-radius: 50%;
-  aspect-ratio: 1; background: var(--panel); color: var(--text); cursor: pointer;
-}
-#dial-call { display: block; margin: 16px auto 0; background: #44cc66; font-size: 22px; border-radius: 50%; width: 64px; height: 64px; border: none; cursor: pointer; }
+.row { display: flex; margin-bottom: 10px; }
+.row > * + * { margin-left: 8px; }
+.row input { min-width: 0; }
 
 /* zpravy */
 .bubble {
   background: var(--accent); color: #fff; border-radius: 16px 16px 4px 16px;
-  padding: 10px 14px; margin: 6px 0 6px auto; max-width: 80%; width: fit-content;
+  padding: 10px 14px; margin: 6px 0 6px auto; max-width: 80%;
+  width: -webkit-fit-content; width: -moz-fit-content; width: fit-content;
 }
 .bubble small { display: block; opacity: .7; font-size: 11px; }
 
 /* kalendar */
 #cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
 #cal-grid .hd { color: var(--muted); font-size: 12px; padding: 4px 0; }
-#cal-grid .day { padding: 8px 0; border-radius: 10px; }
+#cal-grid .day {
+  position: relative; padding: 8px 0; border-radius: 10px;
+  background: none; border: 2px solid transparent; color: var(--text); font-size: 15px; cursor: pointer;
+}
+#cal-grid .day.sel { border-color: var(--accent); }
+#cal-grid .day.ma::after {
+  content: ""; position: absolute; left: 50%; bottom: 2px; margin-left: -2px;
+  width: 4px; height: 4px; border-radius: 50%; background: #f0556c;
+}
 #cal-grid .day.today { background: var(--accent); color: #fff; font-weight: 700; }
 
-/* terminal */
-#term {
-  background: #04070d; color: #9fe8a0; font-family: Consolas, monospace;
-  font-size: 13px; border-radius: 12px; padding: 12px;
-  height: 100%; min-height: 300px; overflow-y: auto; white-space: pre-wrap;
+/* ---- male displeje (iPhone SE, levne Androidy 320-360 px) ---- */
+@media (max-width: 360px) {
+  #homescreen { padding-left: 10px; padding-right: 10px; }
+  #appgrid { grid-auto-rows: 80px; }
+  .appicon .glyph { width: 50px; height: 50px; border-radius: 15px; font-size: 26px; }
+  .appicon { font-size: 11px; }
+  #lock-clock { font-size: 60px; }
 }
-#term-in {
-  background: #04070d; color: #9fe8a0; font-family: Consolas, monospace;
-  border-color: #1c3a22; margin-top: 8px;
+/* ---- nizke displeje / telefon na sirku ---- */
+@media (max-height: 600px) {
+  #widget-clock { margin-top: 8px; padding: 10px 16px; }
+  #w-time { font-size: 32px; }
+  #lock-clock { font-size: 52px; }
+  #lock-hint { margin-top: 20px; }
+}
+@media (max-height: 460px) {
+  #widget-clock { display: none; }
 }
 
-/* fotak */
-#cam-video { width: 100%; border-radius: 16px; background: #000; }
-#cam-shot { width: 100%; border-radius: 16px; margin-top: 10px; }
+/* ---- spolecne: pristupnost a pomocne tridy ---- */
+[hidden] { display: none !important; }
+button, a.btn { touch-action: manipulation; font-family: inherit; }
+button:focus-visible, a:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+a.btn { display: inline-block; text-decoration: none; text-align: center; }
+.btn.sm { padding: 7px 11px; font-size: 14px; flex-shrink: 0; }
+.btn.full { display: block; width: 100%; margin-top: 10px; }
+.btn.danger { border-color: #f0556c; color: #f0556c; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; margin-top: 8px; }
+.center { text-align: center; }
+.grow { flex: 1; min-width: 0; }
+.big { font-size: 26px; font-weight: 300; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; margin: 6px -4px; }
+.chips > * { margin: 4px; }
+select { width: auto; max-width: 50%; }
+
+/* ---- PIN ---- */
+#lock-pin { display: flex; flex-direction: column; align-items: center; margin-top: 24px; }
+.pin-title { color: var(--muted); margin: 6px 0 4px; }
+.pin-dots { display: flex; justify-content: center; margin: 10px 0 16px; }
+.pin-dots span {
+  width: 14px; height: 14px; margin: 0 8px; border-radius: 50%;
+  border: 2px solid var(--text);
+}
+.pin-dots span.full { background: var(--text); }
+.pin-dots.shake { animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 68px); gap: 12px; justify-content: center; }
+.pin-pad button {
+  width: 68px; height: 68px; border-radius: 50%; border: none;
+  background: var(--panel); color: var(--text); font-size: 26px; cursor: pointer;
+}
+.pin-pad button.empty { visibility: hidden; }
+#st-pin-box { margin-bottom: 8px; }
+
+/* ---- nedavne aplikace ---- */
+#recents { z-index: 25; background: var(--bg); padding-left: 16px; padding-right: 16px; overflow-y: auto; }
+#recents h2 { font-size: 18px; margin: 14px 4px 12px; }
+.recent-card {
+  display: flex; align-items: center; margin-bottom: 10px;
+  background: var(--panel); border-radius: 18px; padding: 8px;
+}
+.recent-open {
+  flex: 1; display: flex; align-items: center; background: none; border: none;
+  color: var(--text); font-size: 16px; text-align: left; cursor: pointer; padding: 4px;
+}
+.recent-open .glyph {
+  width: 44px; height: 44px; border-radius: 13px; margin-right: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.recent-x { background: none; border: none; color: var(--muted); font-size: 18px; padding: 10px 14px; cursor: pointer; }
+
+/* ---- notifikace: uchyt pro zavreni ---- */
+#notif-grip { width: 40px; height: 5px; border-radius: 3px; background: var(--muted); opacity: .6; margin: 14px auto 0; }
+
+/* ---- zvonici budik ---- */
+#alarm {
+  position: absolute; z-index: 60; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(11, 18, 32, .94); color: #eef4fb; text-align: center; padding: 24px;
+}
+#alarm-icon { font-size: 72px; animation: puls 1s infinite; }
+#alarm-text { font-size: 26px; margin: 16px 0 28px; }
+#alarm-stop { font-size: 20px; padding: 14px 40px; }
+
+/* ---- hodiny: karty ---- */
+.tabs { display: flex; background: var(--panel); border-radius: 14px; padding: 4px; margin-bottom: 16px; }
+.tab {
+  flex: 1; background: none; border: none; color: var(--muted); font-size: 14px;
+  padding: 8px 2px; border-radius: 10px; cursor: pointer;
+}
+.tab.on { background: var(--accent); color: #fff; }
+.big-time { text-align: center; font-size: 56px; font-weight: 200; margin: 10px 0; font-variant-numeric: tabular-nums; }
+
+/* ---- kalendar ---- */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-head h2 { font-size: 18px; text-transform: capitalize; }
+.kal-den { font-size: 15px; color: var(--muted); margin: 16px 4px 8px; }
+
+/* ---- zpravy ---- */
+
+/* ---- galerie ---- */
+
+@media (max-height: 600px) {
+  .pin-pad { grid-template-columns: repeat(3, 56px); gap: 8px; }
+  .pin-pad button { width: 56px; height: 56px; font-size: 22px; }
+  #lock-pin { margin-top: 8px; }
+  .big-time { font-size: 44px; }
+}
+/* dlouha jmena a cisla se nezalamuji (uzke telefony) */
+.list-item .grow > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-item > .btn.sm + .btn.sm { margin-left: 6px; }
+@media (max-width: 360px) {
+  .btn.sm { padding: 6px 8px; }
+  .list-item { padding: 10px; }
+  .list-item .avatar { width: 36px; height: 36px; }
+}
+
+/* ---- uvodni obrazovka s logem ---- */
+#boot {
+  position: absolute; z-index: 100; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #0b1220; color: #eef4fb;
+  transition: opacity .4s ease;
+}
+#boot.hotovo { opacity: 0; pointer-events: none; }
+#boot-logo { width: 128px; height: 128px; animation: boot-logo .7s cubic-bezier(.2, .9, .3, 1.2) both; }
+#boot-nazev { margin-top: 22px; font-size: 22px; font-weight: 300; letter-spacing: 1px; animation: boot-text .6s .25s both; }
+#boot-pruh { width: 120px; height: 4px; margin-top: 36px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; }
+#boot-pruh span {
+  display: block; height: 100%; width: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, #3fb4f7, #7b3fe4);
+  transform-origin: left; animation: boot-pruh 1s .2s ease-in-out both;
+}
+@keyframes boot-logo { from { opacity: 0; transform: scale(.6); } }
+@keyframes boot-text { from { opacity: 0; transform: translateY(8px); } }
+@keyframes boot-pruh { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  #boot-logo, #boot-nazev, #boot-pruh span { animation: none; }
+}
+
+/* ---- LinsoftPhone OS na skutecnem telefonu (nativni rezim) ---- */
+.bubble.in {
+  background: var(--panel); color: var(--text);
+  border-radius: 16px 16px 16px 4px; margin: 6px auto 6px 0;
+}
+button.list-item { width: 100%; border: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+input[type="range"] { width: 45%; padding: 0; border: none; background: none; -webkit-appearance: auto; appearance: auto; accent-color: var(--accent); }
+
+/* hovor */
+#hovor {
+  position: absolute; z-index: 80; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #15224a, #0b1220 60%, #1b1035); color: #eef4fb; text-align: center;
+}
+#hovor-avatar {
+  width: 96px; height: 96px; border-radius: 50%; background: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 600;
+}
+#hovor-kdo { font-size: 28px; margin-top: 18px; padding: 0 16px; }
+#hovor-stav { color: #8fa3bd; margin-top: 8px; font-variant-numeric: tabular-nums; }
+#hovor-tlacitka { display: flex; margin-top: 80px; }
+#hovor-tlacitka button {
+  width: 72px; height: 72px; border-radius: 50%; border: none; font-size: 30px; margin: 0 28px; cursor: pointer;
+}
+#hovor-prijmout { background: #44cc66; animation: puls 1s infinite; }
+#hovor-zavesit { background: #f0556c; transform: rotate(135deg); }
+
+/* klavesnice na obrazovce */
+#klavesnice {
+  position: absolute; z-index: 70; left: 0; right: 0; bottom: 0;
+  background: #1a2233; padding: 6px 3px;
+  padding-bottom: max(6px, var(--sab));
+  -webkit-user-select: none; user-select: none;
+}
+.kb-radek { display: flex; justify-content: center; margin-bottom: 6px; }
+.kb-k {
+  flex: 1; max-width: 44px; height: 44px; margin: 0 2px; padding: 0;
+  border: none; border-radius: 7px; background: #3a4458; color: #fff; font-size: 19px;
+}
+.kb-k.zvl { background: #273042; font-size: 15px; max-width: 58px; flex: 1.4; }
+.kb-k.mezera { flex: 4; max-width: none; }
+.kb-k:active { background: var(--accent); }
+#phone.kb #app-content { padding-bottom: 250px; }
+
+/* ================= vzhled 2.3: tapety, vlastni ikony, sklo ================= */
+.tapeta-polar { --tapis: radial-gradient(120% 60% at 15% 5%, rgba(63,180,247,.55), transparent 60%), radial-gradient(90% 60% at 95% 85%, rgba(123,63,228,.6), transparent 60%), linear-gradient(165deg, #0e1a3a, #0a1020 55%, #160c2e); }
+.tapeta-zapad { --tapis: radial-gradient(110% 60% at 20% 8%, rgba(251,146,60,.65), transparent 60%), radial-gradient(90% 60% at 90% 85%, rgba(219,39,119,.6), transparent 60%), linear-gradient(165deg, #2b1238, #140a22 60%, #0c0716); }
+.tapeta-les { --tapis: radial-gradient(110% 60% at 18% 8%, rgba(45,212,191,.5), transparent 60%), radial-gradient(90% 60% at 90% 88%, rgba(34,197,94,.45), transparent 60%), linear-gradient(165deg, #06282a, #04161a 60%, #03100c); }
+.tapeta-noc { --tapis: radial-gradient(80% 40% at 50% 0%, rgba(91,108,240,.28), transparent 70%), linear-gradient(180deg, #0a0e1a, #05070d); }
+.tapeta-foto { --tapis: linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.45)), var(--foto) center / cover no-repeat; }
+
+.ik { width: 22px; height: 22px; flex-shrink: 0; vertical-align: middle; }
+
+/* plocha a zamek: bily text na tapete (v obou motivech) */
+#homescreen, #lockscreen { color: #fff; }
+#homescreen .appicon { color: #fff; }
+#homescreen .appicon span:last-child { text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.glyph { color: #fff; }
+.appicon .glyph { box-shadow: 0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.35); }
+.glyph .ik { width: 54%; height: 54%; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+
+/* sklo: widget a dok */
+#widget-clock, #dock {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%);
+}
+#w-time { font-size: 52px; font-weight: 200; line-height: 1.05; letter-spacing: -1px; }
+#w-date { color: rgba(255,255,255,.75); }
+#w-info { margin-top: 10px; }
+.w-radek { display: flex; align-items: center; font-size: 13px; color: rgba(255,255,255,.88); margin-top: 4px; }
+.w-radek .ik { width: 15px; height: 15px; margin-right: 8px; opacity: .85; }
+.w-radek span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* stavovy radek a navigace: bile na tapete, v aplikaci se svetlym motivem tmave */
+#statusbar, #navbar { color: #fff; }
+body.light.v-app #statusbar, body.light.v-app #navbar { color: var(--text); }
+body.light.v-app #navbar { background: rgba(255,255,255,.75); }
+#navbar button { color: inherit; display: flex; align-items: center; justify-content: center; }
+#sb-operator { color: inherit; opacity: .7; }
+#sb-right { display: flex; align-items: center; }
+#sb-right > span { display: inline-flex; align-items: center; margin-left: 5px; }
+.ik.sb { width: 17px; height: 17px; }
+.ik.sb.bat { width: 25px; height: 20px; }
+.sb-pct { font-size: 12px; margin-right: 2px; }
+
+/* rychle dlazdice */
+.tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 74px; border-radius: 20px; background: rgba(127,127,127,.16);
+}
+.tile .ik { width: 24px; height: 24px; margin-bottom: 6px; }
+
+/* zamykaci obrazovka */
+#lockscreen { justify-content: space-between; align-items: stretch; padding-left: 20px; padding-right: 20px; }
+#lock-top { text-align: center; margin-top: 6vh; }
+#lock-date { font-size: 17px; color: rgba(255,255,255,.85); margin-top: 0; }
+#lock-clock { font-size: 92px; font-weight: 200; letter-spacing: -3px; line-height: 1; margin-top: 4px; text-shadow: 0 2px 24px rgba(0,0,0,.25); }
+#lock-info { display: flex; justify-content: center; align-items: center; min-height: 20px; margin-top: 10px; font-size: 14px; color: rgba(255,255,255,.85); }
+#lock-info .ik { width: 16px; height: 16px; margin-right: 6px; }
+#lock-notif { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px 0; overflow: hidden; }
+.lock-karta {
+  display: grid; grid-template-columns: 1fr auto; margin-top: 8px; padding: 10px 14px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; font-size: 14px;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.lock-karta small { grid-column: 2; grid-row: 1; opacity: .7; }
+.lock-karta span { grid-column: 1 / 3; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lock-bottom { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+.lock-btn {
+  width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.14); color: #fff;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.lock-btn.on { background: #fff; color: #0b1220; }
+#lock-hint { display: flex; flex-direction: column; align-items: center; margin-top: 0; font-size: 12px; color: rgba(255,255,255,.7); animation: none; }
+#lock-sipka .ik { width: 20px; height: 20px; animation: sipka 1.6s ease-in-out infinite; }
+@keyframes sipka { 50% { transform: translateY(-6px); opacity: .5; } }
+#lockscreen.pin { justify-content: flex-start; }
+#lockscreen.pin #lock-notif, #lockscreen.pin #lock-bottom, #lockscreen.pin #lock-info { display: none; }
+#lockscreen.pin #lock-clock { font-size: 56px; }
+#lockscreen .pin-title { color: rgba(255,255,255,.8); }
+#lockscreen .pin-dots span { border-color: #fff; }
+#lockscreen .pin-dots span.full { background: #fff; }
+#lockscreen .pin-pad button { background: rgba(255,255,255,.14); color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* nedavne aplikace */
+.recent-open .glyph .ik { width: 26px; height: 26px; }
+
+/* nastaveni: vyber tapety */
+.tapety { display: flex; margin: -2px -4px 10px; }
+.tapeta-vzor { flex: 1; height: 72px; margin: 0 4px; border-radius: 14px; border: 2px solid transparent; background: var(--tapis); cursor: pointer; }
+.tapeta-vzor.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg) inset; }
+
+/* animace */
+#appscreen.visible { animation: app-in .26s cubic-bezier(.2, .8, .2, 1); }
+@keyframes app-in { from { opacity: 0; transform: scale(.94); } }
+#homescreen.vstup .appicon { animation: ikona-in .42s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 22ms); }
+#homescreen.vstup #widget-clock, #homescreen.vstup #dock { animation: ikona-in .4s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes ikona-in { from { opacity: 0; transform: translateY(14px) scale(.92); } }
+#recents.visible .recent-card { animation: ikona-in .3s both; }
+@media (prefers-reduced-motion: reduce) {
+  #appscreen.visible, #homescreen.vstup .appicon, #homescreen.vstup #widget-clock, #homescreen.vstup #dock,
+  #recents.visible .recent-card, #lock-sipka .ik { animation: none; }
+}
+@media (max-height: 600px) {
+  #lock-clock { font-size: 64px; }
+  #lock-top { margin-top: 2vh; }
+  #w-time { font-size: 38px; }
+  #w-info { margin-top: 6px; }
+  #w-info .w-radek + .w-radek { display: none; }
+  #appgrid { gap: 2px; padding-top: 8px; }
+  .lock-karta:nth-child(2) { display: none; }
+}
+
+/* ================= nastaveni: moderni vzhled ================= */
+.nast-karta {
+  display: flex; align-items: center; padding: 16px; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(63,180,247,.18), rgba(123,63,228,.18));
+  border: 1px solid rgba(127,127,127,.18);
+}
+.nast-karta img { width: 56px; height: 56px; margin-right: 14px; flex-shrink: 0; }
+.nast-karta strong { display: block; font-size: 19px; font-weight: 600; }
+.nast-karta span { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.nast-nadpis {
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px; margin: 22px 14px 8px;
+}
+.nast-skupina { background: var(--panel); border-radius: 20px; overflow: hidden; }
+
+.nast-radek {
+  display: flex; align-items: center; width: 100%; min-height: 56px; padding: 10px 14px;
+  position: relative; background: none; border: none; color: var(--text); font: inherit; text-align: left;
+}
+/* oddelovac mezi radky odsazeny za ikonu */
+.nast-radek + .nast-radek::before, .nast-pozn + .nast-radek::before, #st-pin-box + .nast-radek::before,
+#st-wifi-seznam + .nast-radek::before {
+  content: ""; position: absolute; top: 0; left: 60px; right: 0; height: 1px; background: rgba(127,127,127,.18);
+}
+.nast-akce { cursor: pointer; }
+.nast-akce:active { background: rgba(127,127,127,.12); }
+.nast-ik {
+  width: 32px; height: 32px; border-radius: 9px; margin-right: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+.nast-ik .ik { width: 19px; height: 19px; }
+.nast-text { flex: 1; min-width: 0; font-size: 16px; }
+.nast-text small { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.nast-sipka { width: 18px; height: 18px; color: var(--muted); opacity: .7; }
+.nast-cervena .nast-text { color: #ef4444; }
+.nast-radek select { width: auto; max-width: 48%; padding: 6px 10px; font-size: 15px; }
+.nast-radek input[type="range"] { width: 42%; }
+.nast-skupina .tapety { margin: 0; padding: 0 14px 4px 60px; }
+.nast-skupina .tapeta-vzor { height: 64px; margin: 0 6px 0 0; }
+.nast-pozn { font-size: 12px; color: var(--muted); padding: 6px 14px 12px 60px; }
+.nast-o { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; margin: 18px 10px 8px; }
+#st-pin-box:not(:empty) { padding: 4px 0 14px; }
+#st-wifi-seznam .list-item { background: none; border-radius: 0; margin: 0; padding: 10px 14px 10px 60px; }
+
+/* prepinac (switch) */
+.prepinac {
+  width: 50px; height: 30px; border-radius: 15px; border: none; padding: 0; flex-shrink: 0; cursor: pointer;
+  background: rgba(127,127,127,.35); position: relative; transition: background .2s;
+}
+.prepinac span {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s cubic-bezier(.3, .8, .3, 1);
+}
+.prepinac.on { background: #22c55e; }
+.prepinac.on span { transform: translateX(20px); }
+.nast-skupina .pin-pad button { background: rgba(127,127,127,.13); }
+
+/* ================= kontakty: moderni vzhled ================= */
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; margin-right: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 600; font-size: 15px; letter-spacing: .5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+.avatar.velky { width: 96px; height: 96px; margin: 0 auto; font-size: 36px; box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.3); }
+
+.kt-hledat {
+  display: flex; align-items: center; padding: 0 14px; border-radius: 14px;
+  background: var(--panel); color: var(--muted); margin-bottom: 4px;
+}
+.kt-hledat .ik { width: 19px; height: 19px; }
+.kt-hledat input { border: none; background: none; padding: 12px 10px; }
+.kt-hledat input:focus { outline: none; }
+.kt-pismeno {
+  position: sticky; top: -16px; z-index: 2; background: var(--bg);
+  font-size: 13px; font-weight: 700; color: var(--accent); padding: 14px 14px 6px;
+}
+.kt-radek .nast-text small { font-variant-numeric: tabular-nums; }
+.kt-radek + .kt-radek::before {
+  content: ""; position: absolute; top: 0; left: 68px; right: 0; height: 1px; background: rgba(127,127,127,.18);
+}
+.kt-nic { text-align: center; color: var(--muted); padding: 40px 0; }
+
+.fab {
+  position: absolute; z-index: 5; right: 20px; bottom: calc(64px + max(10px, var(--sab)) + 16px);
+  width: 58px; height: 58px; border-radius: 18px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(145deg, #3fb4f7, #7b3fe4);
+  box-shadow: 0 10px 24px rgba(91,108,240,.45);
+}
+.fab .ik { width: 26px; height: 26px; }
+.fab:active { transform: scale(.94); }
+
+.kt-hlava { text-align: center; padding: 14px 0 6px; }
+.kt-hlava h2 { font-size: 26px; font-weight: 600; margin-top: 14px; }
+.kt-hlava p { color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kt-akce { display: flex; margin: 18px -5px; }
+.kt-akce a, .kt-akce button {
+  flex: 1; margin: 0 5px; padding: 12px 4px; border-radius: 16px; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; text-decoration: none;
+  background: var(--panel); color: var(--accent); font: inherit; font-size: 13px;
+}
+.kt-akce .ik { width: 22px; height: 22px; margin-bottom: 6px; }
+.kt-akce a:active, .kt-akce button:active { background: rgba(127,127,127,.2); }
+.kt-formular { margin-top: 18px; }
+.kt-formular input { border: none; border-radius: 0; background: none; padding: 16px; }
+.kt-formular input + input { border-top: 1px solid rgba(127,127,127,.18); }
+.kt-tlacitka { display: flex; margin: 16px -5px 0; }
+.kt-tlacitka .btn { flex: 1; margin: 0 5px; padding: 12px; }
+#kt-seznam { padding-bottom: 84px; }
+.kt-formular input:focus { outline: none; background: rgba(127,127,127,.1); }
+
+/* ================= nastaveni -> o systemu ================= */
+button.nast-karta { width: 100%; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.nast-karta > div { flex: 1; min-width: 0; }
+.nast-karta:active { filter: brightness(1.1); }
+a.nast-radek { text-decoration: none; }
+.nast-hodnota {
+  color: var(--muted); text-align: right; margin-left: 12px; max-width: 58%;
+  font-size: 15px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums;
+}
+.nast-skupina.info .nast-radek { min-height: 48px; }
+.nast-skupina.info .nast-radek + .nast-radek::before { left: 14px; }
+.info-hlava { text-align: center; padding: 10px 0 2px; }
+.info-hlava img { width: 88px; height: 88px; filter: drop-shadow(0 10px 24px rgba(91,108,240,.4)); }
+.info-hlava h2 { font-size: 24px; font-weight: 600; margin-top: 12px; }
+.info-hlava p { color: var(--muted); margin-top: 2px; }
+
+/* ================= Linsoft Browser ================= */
+#appscreen.plna #app-header { display: none; }
+#appscreen.plna #app-content { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.pr { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pr-adresa {
+  display: flex; align-items: center; height: 44px; margin: 8px 10px 6px; padding: 0 4px 0 14px;
+  border-radius: 22px; background: var(--panel); border: 1px solid rgba(127,127,127,.15);
+}
+.pr-adresa input { border: none; background: none; height: 100%; padding: 0 8px; font-size: 15px; text-align: center; }
+.pr-adresa input:focus { outline: none; text-align: left; }
+.pr-ikona { display: flex; color: var(--muted); }
+.pr-ikona .ik { width: 16px; height: 16px; }
+.pr-tl {
+  width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; position: relative;
+}
+.pr-tl:active { background: rgba(127,127,127,.18); }
+.pr-tl:disabled { opacity: .3; }
+.pr-pruh { height: 2px; position: relative; overflow: hidden; }
+.pr-pruh.nacita::after {
+  content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+  background: linear-gradient(90deg, #3fb4f7, #7b3fe4); animation: pr-pruh 1s linear infinite;
+}
+@keyframes pr-pruh { to { left: 100%; } }
+.pr-telo { flex: 1; min-height: 0; position: relative; }
+#pr-ram { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #fff; }
+.pr-start, .pr-vrstva {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 18px 16px 24px; background: var(--bg);
+}
+.pr-vrstva { z-index: 3; animation: app-in .2s ease; }
+.pr-vrstva-hlava { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pr-vrstva-hlava h2 { font-size: 20px; font-weight: 600; }
+.pr-lista {
+  display: flex; justify-content: space-around; align-items: center; height: 52px; flex-shrink: 0;
+  background: var(--panel); border-top: 1px solid rgba(127,127,127,.15);
+}
+/* pocet karet uprostred predniho ctverce ikony */
+.pr-karty-tl span {
+  position: absolute; top: calc(50% + 1.5px); left: calc(50% - 1.5px); transform: translate(-50%, -50%);
+  font-size: 9px; font-weight: 700; line-height: 1;
+}
+
+/* uvodni stranka */
+.pr-logo { text-align: center; padding: 8px 0 4px; }
+.pr-logo-ik {
+  display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 22px;
+  color: #fff; background: linear-gradient(145deg, #38bdf8, #6d28d9); box-shadow: 0 10px 26px rgba(109,40,217,.35);
+}
+.pr-logo-ik .ik { width: 40px; height: 40px; }
+.pr-logo h2 { font-size: 22px; font-weight: 600; margin-top: 12px; }
+.pr-logo p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.pr-hledat {
+  display: flex; align-items: center; width: 100%; margin-top: 18px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(127,127,127,.2); background: var(--panel); color: var(--muted); font: inherit; cursor: text;
+}
+.pr-hledat .ik { width: 18px; height: 18px; margin-right: 10px; }
+.pr-rychle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pr-rychle .pr-otevrit {
+  display: flex; flex-direction: column; align-items: center; padding: 8px 2px; border: none; border-radius: 14px;
+  background: none; color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+}
+.pr-rychle .pr-otevrit:active { background: rgba(127,127,127,.15); }
+.pr-rychle .avatar { width: 48px; height: 48px; margin: 0 0 6px; border-radius: 16px; font-size: 17px; }
+.pr-rychle span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-polozka { padding: 0 6px 0 0; }
+.pr-polozka .pr-otevrit {
+  flex: 1; min-width: 0; display: flex; align-items: center; padding: 10px 0 10px 14px;
+  border: none; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.pr-polozka .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-tip { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; margin: 20px 8px 0; }
+
+/* karty */
+.pr-karty { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pr-karta {
+  position: relative; height: 110px; border-radius: 16px; background: var(--panel);
+  border: 2px solid transparent; overflow: hidden;
+}
+.pr-karta.on { border-color: var(--accent); }
+.pr-karta-otevrit {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; padding: 8px;
+}
+.pr-karta-otevrit .avatar { margin: 0 0 8px; }
+.pr-karta-otevrit span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-karta-x { position: absolute; top: 2px; right: 2px; width: 32px; height: 32px; }
+.pr-karta-x .ik { width: 16px; height: 16px; }
+.pr-karta-nova {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 2px dashed rgba(127,127,127,.35); background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.pr-karta-nova .ik { margin-bottom: 6px; }
+
+/* nazvy aplikaci na plose na dva radky (napr. Linsoft Browser) */
+#homescreen .appicon span:last-child { text-align: center; line-height: 1.15; max-width: 100%; }
+
+/* ================= Linsoft Browser 2.1 ================= */
+/* adresni radek: pri psani krizek misto obnoveni */
+#pr-vymaz { display: none; }
+.pr-adresa.pise #pr-vymaz { display: flex; }
+.pr-adresa.pise #pr-obnov { display: none; }
+.pr-adresa.pise { border-color: var(--accent); }
+/* soukroma karta */
+.pr-adresa.sukromna { background: #2e1065; border-color: #6d28d9; color: #ede9fe; }
+.pr-adresa.sukromna input, .pr-adresa.sukromna .pr-tl, .pr-adresa.sukromna .pr-ikona { color: #ede9fe; }
+.pr-logo.sukromna .pr-logo-ik { background: linear-gradient(145deg, #4c1d95, #1e1b4b); }
+.pr-karta.sukromna { background: #2e1065; color: #ede9fe; }
+.pr-karta.sukromna .pr-karta-otevrit, .pr-karta.sukromna .pr-tl { color: #ede9fe; }
+.avatar.pr-maska { background: #4c1d95; }
+.avatar.pr-maska .ik { width: 22px; height: 22px; }
+
+/* navrhy pri psani */
+.pr-navrhy {
+  position: absolute; z-index: 4; top: 0; left: 0; right: 0; max-height: 100%; overflow-y: auto;
+  background: var(--bg); border-bottom: 1px solid rgba(127,127,127,.18); padding: 4px 0 8px;
+  box-shadow: 0 16px 30px rgba(0,0,0,.25);
+}
+.pr-navrh {
+  display: flex; align-items: center; width: 100%; padding: 10px 18px; border: none; background: none;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.pr-navrh:active { background: rgba(127,127,127,.15); }
+.pr-navrh > .ik { width: 18px; height: 18px; margin-right: 14px; color: var(--muted); flex-shrink: 0; }
+.pr-navrh .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* uvodni stranka: vyhledavac vpravo v poli */
+.pr-hledat span { flex: 1; text-align: left; }
+.pr-hledat small { font-size: 12px; opacity: .8; }
+
+/* hlaska: blokovany web, bez pripojeni */
+.pr-hlaska { text-align: center; padding: 48px 12px 0; }
+.pr-hlaska-ik {
+  display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(127,127,127,.14); color: var(--muted);
+}
+.pr-hlaska-ik .ik { width: 40px; height: 40px; }
+.pr-hlaska h2 { font-size: 20px; font-weight: 600; margin-top: 18px; }
+.pr-hlaska p { color: var(--muted); margin: 8px 0 22px; line-height: 1.5; }
+
+/* nastaveni prohlizece: vybrany vyhledavac */
+.pr-vybrano { color: var(--accent); width: 22px; height: 22px; }
+
+/* ================= Telefon ================= */
+.tel { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px; }
+.tel-displej { text-align: center; min-height: 100px; padding: 14px 0 6px; }
+.tel-cislo { font-size: 34px; font-weight: 300; letter-spacing: 1px; min-height: 44px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tel-kdo {
+  display: inline-flex; align-items: center; margin-top: 8px; padding: 4px 14px 4px 4px; border-radius: 24px;
+  border: none; background: var(--panel); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.tel-kdo:empty { display: none; }
+.tel-kdo .avatar { width: 32px; height: 32px; font-size: 12px; margin-right: 10px; }
+.tel-kdo small { display: block; font-size: 12px; color: var(--muted); }
+.tel-klavesy { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px 26px; justify-content: center; }
+.tel-k {
+  width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--panel); color: var(--text); font: inherit;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.tel-k b { font-size: 30px; font-weight: 400; line-height: 1; }
+.tel-k small { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+.tel-k:active { background: rgba(127,127,127,.28); }
+.tel-akce { display: grid; grid-template-columns: repeat(3, 72px); gap: 26px; justify-content: center; margin-top: 16px; }
+.tel-volat {
+  width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer; color: #fff;
+  background: linear-gradient(145deg, #4ade80, #16a34a); box-shadow: 0 8px 22px rgba(22,163,74,.4);
+  display: flex; align-items: center; justify-content: center;
+}
+.tel-volat .ik { width: 32px; height: 32px; }
+.tel-mazat { border: none; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.tel-mazat .ik { width: 28px; height: 28px; }
+.tel-smer { display: inline-flex; align-items: center; }
+.tel-smer .ik { width: 14px; height: 14px; margin-right: 4px; }
+.tel-smer.odchozi .ik { color: #22c55e; }
+.tel-smer.prichozi .ik { color: #3b82f6; }
+.tel-smer.zmeskany { color: #ef4444; }
+.tel-ik-volat { color: #22c55e; }
+@media (max-height: 640px) {
+  .tel-displej { min-height: 70px; padding-top: 4px; }
+  .tel-cislo { font-size: 28px; min-height: 36px; }
+  .tel-kdo { margin-top: 2px; }
+  .tel-klavesy { grid-template-columns: repeat(3, 56px); gap: 6px 24px; }
+  .tel-k, .tel-volat { width: 56px; height: 56px; }
+  .tel-k b { font-size: 22px; }
+  .tel-k small { font-size: 8px; margin-top: 1px; }
+  .tel-akce { grid-template-columns: repeat(3, 56px); gap: 24px; margin-top: 8px; }
+}
+
+/* ================= Zpravy ================= */
+.zpr-konv .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zpr-cas { font-size: 12px; align-self: flex-start; margin-top: 4px; }
+.zpr-obal { min-height: 100%; display: flex; flex-direction: column; }
+.zpr-vlakno { flex: 1; padding-bottom: 8px; }
+.zpr-den { text-align: center; font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+.zpr-vlakno .bubble { border-radius: 20px 20px 6px 20px; max-width: 78%; }
+.zpr-vlakno .bubble.in { border-radius: 20px 20px 20px 6px; }
+.zpr-pole { position: sticky; bottom: -16px; margin: 0 -16px -16px; padding: 8px 12px 12px; background: var(--bg); }
+.zpr-info { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+.zpr-psani { display: flex; align-items: center; background: var(--panel); border-radius: 24px; padding: 4px 4px 4px 14px; }
+.zpr-psani input { border: none; background: none; padding: 8px 4px; }
+.zpr-psani input:focus { outline: none; }
+.zpr-odeslat {
+  width: 40px; height: 40px; border-radius: 50%; border: none; flex-shrink: 0; cursor: pointer; color: #fff;
+  background: linear-gradient(145deg, #3fb4f7, #2563eb); display: flex; align-items: center; justify-content: center;
+}
+.zpr-odeslat .ik { width: 19px; height: 19px; }
+.zpr-komu input { border-radius: 14px; }
+
+/* ================= Galerie ================= */
+.gal-hlava { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 4px; color: var(--muted); font-size: 14px; }
+.gal-den { font-size: 15px; font-weight: 600; margin: 14px 2px 8px; }
+.gal-mriezka { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 -16px; }
+.gal-nahled { padding: 0; border: none; background: rgba(127,127,127,.15); cursor: pointer; aspect-ratio: 1; overflow: hidden; }
+.gal-nahled img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+.gal-nahled:active img { transform: scale(.94); }
+@supports not (aspect-ratio: 1) { .gal-nahled { height: 33vw; max-height: 140px; } }
+
+/* prohlizec pres celou plochu aplikace */
+.gal-prohlizec {
+  position: absolute; z-index: 30; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; flex-direction: column; background: #000; color: #fff; animation: app-in .2s ease;
+  padding-top: calc(36px + max(8px, var(--sat))); padding-bottom: calc(54px + max(10px, var(--sab)));
+}
+.gal-lista { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; }
+.gal-lista .pr-tl { color: #fff; }
+.gal-popis { text-align: center; }
+.gal-popis b { display: block; font-size: 14px; font-weight: 600; }
+.gal-popis small { font-size: 12px; opacity: .7; }
+.gal-plocha { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: pan-y; overflow: hidden; }
+.gal-plocha img { max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.gal-plocha img.posun-l { animation: gal-l .22s ease; }
+.gal-plocha img.posun-p { animation: gal-p .22s ease; }
+@keyframes gal-l { from { opacity: .3; transform: translateX(40px); } }
+@keyframes gal-p { from { opacity: .3; transform: translateX(-40px); } }
+.gal-akce { display: flex; justify-content: space-around; padding: 8px 4px 4px; }
+.gal-akce button {
+  display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 6px;
+  border: none; background: none; color: #fff; font: inherit; font-size: 11px; cursor: pointer; border-radius: 12px;
+}
+.gal-akce button:active { background: rgba(255,255,255,.12); }
+.gal-akce .ik { width: 22px; height: 22px; margin-bottom: 4px; }
+#gp-smazat { color: #f87171; }
+
+/* ================= Fotoaparat ================= */
+.cam { flex: 1; min-height: 0; position: relative; background: #000; color: #fff; overflow: hidden; }
+#cam-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+#cam-video.zrcadlo { transform: scaleX(-1); }
+.cam-zablesk { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #fff; opacity: 0; pointer-events: none; }
+.cam-zablesk.on { animation: cam-zablesk .35s ease-out; }
+@keyframes cam-zablesk { from { opacity: .85; } to { opacity: 0; } }
+.cam-odpocet {
+  position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); text-align: center;
+  font-size: 120px; font-weight: 200; text-shadow: 0 4px 30px rgba(0,0,0,.5); pointer-events: none;
+}
+.cam-chyba { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; color: rgba(255,255,255,.75); }
+.cam-chyba .ik { width: 56px; height: 56px; margin-bottom: 14px; opacity: .6; }
+.cam-horni { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14px; }
+.cam-dolni {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-around;
+  padding: 18px 10px 22px; background: linear-gradient(transparent, rgba(0,0,0,.55));
+}
+.cam-tl {
+  width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; color: #fff;
+  background: rgba(0,0,0,.35); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.cam-tl.on { background: #facc15; color: #111; }
+.cam-casovac b { position: absolute; bottom: -4px; right: -6px; font-size: 11px; background: #facc15; color: #111; border-radius: 8px; padding: 1px 5px; }
+.cam-spoust {
+  width: 78px; height: 78px; border-radius: 50%; border: 4px solid #fff; background: none; padding: 5px; cursor: pointer;
+}
+.cam-spoust span { display: block; width: 100%; height: 100%; border-radius: 50%; background: #fff; transition: transform .12s; }
+.cam-spoust:active span { transform: scale(.85); }
+.cam-posledni {
+  width: 48px; height: 48px; border-radius: 12px; border: 2px solid rgba(255,255,255,.8); padding: 0; overflow: hidden;
+  background: rgba(255,255,255,.12); cursor: pointer;
+}
+.cam-posledni img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ================= Poznamky ================= */
+.pz-mriezka { columns: 2; column-gap: 10px; margin-top: 10px; padding-bottom: 84px; }
+.pz-karta {
+  display: block; width: 100%; margin: 0 0 10px; padding: 14px; border-radius: 18px; break-inside: avoid;
+  border: none; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+  background: var(--panel); box-shadow: inset 0 4px 0 var(--pz, transparent);
+}
+.pz-karta b { display: block; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.pz-karta span { display: block; font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.4; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.pz-karta small { display: block; font-size: 11px; color: var(--muted); margin-top: 10px; opacity: .8; }
+.pz-editor { display: flex; flex-direction: column; min-height: 100%; }
+.pz-lista { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pz-barvy { display: flex; }
+.pz-barva { width: 28px; height: 28px; border-radius: 50%; margin-right: 8px; cursor: pointer; border: 2px solid rgba(127,127,127,.3); }
+.pz-barva.on { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg) inset; }
+#pz-text {
+  flex: 1; min-height: 300px; resize: none; border: none; border-radius: 18px; padding: 16px;
+  font-size: 17px; line-height: 1.55; background: var(--panel); box-shadow: inset 0 4px 0 var(--pz, transparent);
+}
+#pz-text:focus { outline: none; }
+.pz-stav { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+/* ================= Hodiny ================= */
+.hd-cifernik { display: flex; justify-content: center; margin: 4px 0 6px; }
+.hd-cifernik svg { width: 210px; height: 210px; }
+.hd-kruh { fill: var(--panel); stroke: rgba(127,127,127,.25); stroke-width: 2; }
+.hd-rysky line { stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; }
+.hd-hod, .hd-min { stroke: var(--text); stroke-linecap: round; }
+.hd-hod { stroke-width: 6; }
+.hd-min { stroke-width: 4; }
+.hd-sek { stroke: #f0556c; stroke-width: 2; stroke-linecap: round; }
+.hd-stred { fill: #f0556c; }
+.hd-svet-cas { font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; }
+.hd-budiky { display: flex; flex-direction: column; }
+.hd-budik { background: var(--panel); border-radius: 20px; padding: 14px 16px 12px; margin-bottom: 10px; }
+.hd-budik.vyp { opacity: .55; }
+.hd-budik-hlava { display: flex; align-items: center; justify-content: space-between; }
+.hd-budik-hlava b { font-size: 40px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.hd-budik-dny { display: flex; align-items: center; margin: 8px 0 4px; }
+.hd-den {
+  width: 32px; height: 32px; border-radius: 50%; margin-right: 4px; padding: 0; cursor: pointer;
+  border: 1px solid rgba(127,127,127,.35); background: none; color: var(--muted); font: inherit; font-size: 12px;
+}
+.hd-den.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hd-smaz { margin-left: auto; width: 34px; height: 34px; }
+.hd-budik small { font-size: 12px; color: var(--muted); }
+.hd-novy { display: flex; align-items: center; }
+.hd-novy select { width: auto; max-width: none; font-size: 20px; padding: 8px 12px; }
+.hd-novy b { margin: 0 6px; font-size: 20px; }
+.hd-novy .btn { margin-left: auto; }
+.hd-kruh-minutka { position: relative; width: 230px; height: 230px; margin: 6px auto 10px; }
+.hd-kruh-minutka svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.hd-mn-pozadi { fill: none; stroke: var(--panel); stroke-width: 12; }
+.hd-mn-postup { fill: none; stroke: #f0556c; stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset .25s linear; }
+.hd-mn-cas { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 50px; font-weight: 200; font-variant-numeric: tabular-nums; }
+.hd-ovladani { display: flex; justify-content: center; margin: 12px 0 18px; }
+.hd-kulate {
+  width: 84px; height: 84px; border-radius: 50%; margin: 0 22px; border: none; cursor: pointer; font: inherit; font-size: 15px;
+  background: #22c55e; color: #fff;
+}
+.hd-kulate.pauza { background: #f59e0b; }
+.hd-kulate.ghost { background: var(--panel); color: var(--text); }
+.hd-stopky { text-align: center; font-size: 58px; font-weight: 200; margin: 40px 0 10px; font-variant-numeric: tabular-nums; }
+
+/* ================= Kalendar ================= */
+.cal-head .pr-tl { color: var(--text); }
+#cal-grid .day { aspect-ratio: 1; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; }
+#cal-grid .day.ma::after { bottom: 3px; background: var(--accent); }
+#cal-grid .day.today.ma::after { background: #fff; }
+.kal-den-hlava { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
+.kal-den-hlava .kal-den { margin: 0 4px; }
+.kal-udalosti { display: flex; flex-direction: column; }
+.kal-udalost {
+  display: flex; align-items: center; background: var(--panel); border-radius: 14px; margin-bottom: 8px;
+  padding: 10px 6px 10px 14px; box-shadow: inset 4px 0 0 var(--accent);
+}
+.kal-cas { width: 72px; flex-shrink: 0; font-size: 13px; color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.kal-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.kal-nic { padding: 14px 0; }
+.kal-nova { background: var(--panel); border-radius: 16px; padding: 10px; margin-top: 6px; }
+.kal-nova input { border: none; background: none; }
+.kal-nova input:focus { outline: none; }
+.kal-nova-radek { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.kal-nova-radek select { max-width: 55%; }
+
+/* ================= Kalkulacka ================= */
+.kalk { display: flex; flex-direction: column; min-height: 100%; }
+.kalk-displej { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; text-align: right; padding: 10px 6px 16px; min-height: 120px; }
+.kalk-vyraz { font-size: 46px; font-weight: 300; overflow-wrap: anywhere; line-height: 1.15; cursor: pointer; }
+.kalk-vysledek { font-size: 22px; color: var(--muted); min-height: 30px; margin-top: 4px; }
+.kalk-mriezka { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.kalk-k {
+  aspect-ratio: 1; max-height: 76px; border-radius: 50%; border: none; cursor: pointer;
+  font: inherit; font-size: 26px; background: var(--panel); color: var(--text);
+}
+.kalk-k.fn { background: rgba(127,127,127,.32); }
+.kalk-k.op { background: #f59e0b; color: #fff; font-size: 30px; }
+.kalk-k:active { filter: brightness(1.25); }
+@supports not (aspect-ratio: 1) { .kalk-k { height: 68px; } }
+
+/* ================= Terminal ================= */
+.ter { display: flex; flex-direction: column; min-height: 100%; }
+.ter-okno { flex: 1; display: flex; flex-direction: column; background: #04070d; border-radius: 14px; overflow: hidden; min-height: 320px;
+  font-family: Consolas, Menlo, "Roboto Mono", monospace; font-size: 13px; color: #9fe8a0; border: 1px solid #1c2a3c; }
+.ter-lista { display: flex; align-items: center; padding: 8px 12px; background: #0d1522; color: #6b7a90; font-size: 12px; }
+.ter-lista i { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: #f0556c; }
+.ter-lista i:nth-child(2) { background: #f59e0b; }
+.ter-lista i:nth-child(3) { background: #22c55e; margin-right: 12px; }
+.ter-vystup { flex: 1; overflow-y: auto; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ter-nadpis { color: #3fb4f7; }
+.ter-zadani { color: #eef4fb; margin-top: 6px; }
+.ter-ok { color: #4ade80; }
+.ter-chyba { color: #f87171; }
+.ter-radek { display: flex; align-items: center; padding: 8px 12px; border-top: 1px solid #1c2a3c; }
+.ter-prompt { color: #3fb4f7; margin-right: 8px; }
+.ter-radek input { border: none; background: none; color: #eef4fb; font: inherit; padding: 4px 0; }
+.ter-radek input:focus { outline: none; }
+.ter-rychle { margin-top: 8px; }
+.ter-rychle .btn { font-family: Consolas, Menlo, monospace; }
+
+/* ================= hledani, plocha, jas v panelu ================= */
+#hledat-plocha {
+  display: flex; align-items: center; margin: 0 6px 4px; padding: 10px 14px; border-radius: 16px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); font: inherit; font-size: 14px;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+#hledat-plocha .ik { width: 17px; height: 17px; margin-right: 10px; }
+#hledani { z-index: 25; background: var(--bg); padding-left: 16px; padding-right: 16px; overflow-y: auto; }
+.hl-pole { display: flex; align-items: center; margin: 10px 0 6px; padding: 0 14px; border-radius: 16px; background: var(--panel); color: var(--muted); }
+.hl-pole .ik { width: 19px; height: 19px; }
+.hl-pole input { border: none; background: none; padding: 13px 10px; }
+.hl-pole input:focus { outline: none; }
+.hl-appky { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 10px; }
+.hl-appky .appicon { color: var(--text); padding: 6px 0; }
+.hl-appky .appicon span:last-child { font-size: 12px; text-align: center; }
+#hledani .nast-radek .nast-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-radek .glyph { width: 36px; height: 36px; border-radius: 10px; margin-right: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pl-radek .glyph .ik { width: 20px; height: 20px; }
+.pl-radek .pr-tl { width: 36px; height: 36px; color: var(--muted); }
+.pl-dok.on { color: #f59e0b; }
+.pl-dok.on .ik { fill: currentColor; }
+.pl-dolu .ik { transform: rotate(180deg); }
+#panel-jas { display: flex; align-items: center; margin: 10px 2px 0; padding: 10px 14px; border-radius: 16px; background: rgba(127,127,127,.16); }
+#panel-jas[hidden] { display: none; }
+#panel-jas .ik { width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0; }
+#panel-jas input { width: 100%; }
+@media (max-height: 600px) { #hledat-plocha { padding: 7px 12px; } }
+/* maly displej: s hledanim se musi vejit widget, 3 rady ikon a dok */
+@media (max-height: 600px) {
+  #w-info { display: none; }
+  #appgrid { grid-auto-rows: 74px; }
+}
+/* maly displej: kalkulacka s nizsimi tlacitky, aby se vesla bez posouvani */
+@media (max-height: 640px) {
+  .kalk-displej { min-height: 70px; padding-bottom: 8px; }
+  .kalk-vyraz { font-size: 34px; }
+  .kalk-vysledek { font-size: 17px; min-height: 22px; }
+  .kalk-mriezka { gap: 7px 10px; }
+  .kalk-k { aspect-ratio: auto; height: 50px; border-radius: 25px; font-size: 22px; }
+}

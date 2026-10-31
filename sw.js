@@ -1,8 +1,9 @@
 /* LinsoftPhone OS - service worker (offline rezim) */
-const CACHE = "linsoftos-v1";
+const CACHE = "linsoftos-v7";
 const SOUBORY = [
-  "./", "index.html", "app.css", "app.js", "manifest.webmanifest",
-  "icons/icon-192.png", "icons/icon-512.png"
+  "./", "index.html", "app.css", "core.js", "ikony.js", "system.js", "start.js", "manifest.webmanifest",
+  "apps/telefon.js", "apps/zpravy.js", "apps/kontakty.js", "apps/kalkulacka.js", "apps/hodiny.js", "apps/kalendar.js", "apps/poznamky.js", "apps/galerie.js", "apps/fotak.js", "apps/terminal.js", "apps/prehliadac.js", "apps/nastaveni.js",
+  "icons/logo.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (e) => {
@@ -18,8 +19,27 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
+/* nejdriv sit (at se nova verze dostane do telefonu), bez signalu cache */
 self.addEventListener("fetch", (e) => {
+  const req = e.request;
+  const url = new URL(req.url);
+  /* /api/ = zive udaje telefonu (LinsoftPhone OS), nikdy z cache */
+  if (req.method !== "GET" || url.origin !== location.origin || url.pathname.indexOf("/api/") === 0) return;
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request))
+    fetch(req)
+      .then((r) => {
+        if (r.ok) { const kopie = r.clone(); caches.open(CACHE).then((c) => c.put(req, kopie)); }
+        return r;
+      })
+      .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match("./")))
+  );
+});
+
+/* klepnuti na notifikaci telefonu otevre LinsoftOS */
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((okna) =>
+      okna.length ? okna[0].focus() : self.clients.openWindow("./"))
   );
 });
