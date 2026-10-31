@@ -28,7 +28,7 @@ import threading
 import urllib.request
 import zipfile
 
-VERZIA = "1.1"
+VERZIA = "1.2"
 REPO = "Linsoft1/linsoftphone-os"
 API_VYDANIE = "https://api.github.com/repos/%s/releases/latest" % REPO
 NAZOV_IMG = "linsoftPhone.img"
@@ -40,14 +40,29 @@ MAX_DISK = 256 * 1024 ** 3   # vacsi "vymenitelny" disk je skor externy SSD so z
 #   linsoftphone-os-<verzia>-<id>.img.xz      system (pri fastboot telefonoch oddiel rootfs)
 #   linsoftphone-os-<verzia>-<id>-boot.img    jadro (iba fastboot telefony)
 # sposob: "fastboot" = telefon cez USB kabel, "sd" = obraz na SD kartu, "pc" = pocitac / virtualny stroj
-# rootfs / boot: oddiely telefonu podla deviceinfo postmarketOS, vymaz: oddiely, ktore treba vyprazdnit
+# rootfs / boot / vbmeta: oddiely telefonu podla deviceinfo postmarketOS - kroky su tie iste,
+# ake odporuca pmbootstrap (flash_rootfs, flash_kernel, pri vbmeta aj flash_vbmeta)
 ZARIADENIA = [
     {"id": "qemu-amd64", "nazov": "Počítač / virtuálny stroj (x86-64)", "sposob": "pc"},
-    {"id": "oneplus-enchilada", "nazov": "OnePlus 6", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vymaz": ["dtbo"]},
-    {"id": "oneplus-fajita", "nazov": "OnePlus 6T", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vymaz": ["dtbo"]},
+    {"id": "oneplus-enchilada", "nazov": "OnePlus 6", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť +"},
+    {"id": "oneplus-fajita", "nazov": "OnePlus 6T", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť +"},
+    {"id": "google-sargo", "nazov": "Google Pixel 3a", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
+    {"id": "google-bonito", "nazov": "Google Pixel 3a XL", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "vbmeta": "vbmeta", "klavesy": "Hlasitosť −"},
+    {"id": "xiaomi-beryllium-tianma", "nazov": "Xiaomi Poco F1 (displej Tianma)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
+    {"id": "xiaomi-beryllium-ebbg", "nazov": "Xiaomi Poco F1 (displej EBBG)", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
+    {"id": "fairphone-fp4", "nazov": "Fairphone 4", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot", "klavesy": "Hlasitosť −"},
+    {"id": "shift-axolotl", "nazov": "SHIFT6mq", "sposob": "fastboot", "rootfs": "userdata", "boot": "boot"},
     {"id": "pine64-pinephone", "nazov": "PINE64 PinePhone (SD karta)", "sposob": "sd"},
+    {"id": "pine64-pinephonepro", "nazov": "PINE64 PinePhone Pro (SD karta)", "sposob": "sd"},
 ]
 PLATFORM_TOOLS = "https://dl.google.com/android/repository/platform-tools-latest-%s.zip"
+
+
+def rezim_fastboot(z):
+    """Navod, ako telefon zapnut do rezimu fastboot."""
+    if z.get("klavesy"):
+        return "vypni telefón, drž %s a zapni ho – naštartuje do režimu fastboot" % z["klavesy"]
+    return "zapni telefón do režimu fastboot (postup je na wiki postmarketOS pri tvojom modeli)"
 
 
 def zariadenie(id_):
@@ -329,29 +344,46 @@ def fastboot_telefony(fastboot):
     return [riadok.split()[0] for riadok in r.stdout.splitlines() if riadok.strip().endswith("fastboot")]
 
 
-def prikazy_nahratia(z, rootfs, boot):
+def vbmeta_bez_overovania(stranka=4096):
+    """Prazdny obraz vbmeta s priznakom 2 (overovanie vypnute) - to iste ako
+    'avbtool make_vbmeta_image --flags 2 --padding_size <stranka>', ktory pouziva pmbootstrap."""
+    import struct
+    hlavicka = struct.pack(">4sLLQQL11QLL48s80x", b"AVB0", 1, 0, 0, 0, 0, *([0] * 11), 2, 0, b"avbtool 1.3.0")
+    return hlavicka + b"\0" * (stranka - len(hlavicka))
+
+
+def prikazy_nahratia(z, rootfs, boot, vbmeta=None):
     """Prikazy fastboot na nahratie systemu do telefonu (bez cesty k fastboot)."""
     prikazy = [["flash", z["rootfs"], rootfs], ["flash", z["boot"], boot]]
-    prikazy += [["erase", oddiel] for oddiel in z.get("vymaz", [])]
+    if z.get("vbmeta"):
+        prikazy.append(["flash", z["vbmeta"], vbmeta])
     return prikazy + [["reboot"]]
 
 
 def nahraj_do_telefonu(fastboot, z, obraz, boot, sprava, priebeh=None, seriove=None):
     """Nahra LinsoftPhone OS do telefonu v rezime fastboot. Obraz .xz najprv rozbali do docasneho suboru."""
-    docasny = None
+    docasne = []
+
+    def docasny_subor(pripona):
+        f = tempfile.NamedTemporaryFile(suffix=pripona, delete=False)
+        f.close()
+        docasne.append(f.name)
+        return f.name
     try:
         rootfs = obraz
         if obraz.lower().endswith(".xz"):
-            docasny = tempfile.NamedTemporaryFile(suffix=".img", delete=False)
-            docasny.close()
-            rootfs = docasny.name
+            rootfs = docasny_subor(".img")
             sprava("Rozbaľujem obraz systému…")
             zapis(obraz, rootfs, priebeh)
+        vbmeta = None
+        if z.get("vbmeta"):
+            vbmeta = docasny_subor("-vbmeta.img")
+            with open(vbmeta, "wb") as f:
+                f.write(vbmeta_bez_overovania())
         zaklad = [fastboot] + (["-s", seriove] if seriove else [])
-        kroky = prikazy_nahratia(z, rootfs, boot)
+        kroky = prikazy_nahratia(z, rootfs, boot, vbmeta)
         for i, prikaz in enumerate(kroky):
-            sprava({"flash": "Nahrávam oddiel %s (%d/%d)…", "erase": "Vymazávam oddiel %s (%d/%d)…",
-                    "reboot": "Reštartujem telefón%s (%d/%d)…"}[prikaz[0]]
+            sprava({"flash": "Nahrávam oddiel %s (%d/%d)…", "reboot": "Reštartujem telefón%s (%d/%d)…"}[prikaz[0]]
                    % ((prikaz[1] if len(prikaz) > 1 else ""), i + 1, len(kroky)))
             if priebeh:
                 priebeh(i, len(kroky))
@@ -361,8 +393,8 @@ def nahraj_do_telefonu(fastboot, z, obraz, boot, sprava, priebeh=None, seriove=N
         if priebeh:
             priebeh(1, 1)
     finally:
-        if docasny:
-            os.remove(docasny.name)
+        for cesta in docasne:
+            os.remove(cesta)
 
 
 # ---------------- okno (tkinter) ----------------
@@ -526,8 +558,8 @@ def okno():
         if not messagebox.askyesno("Nahrať do telefónu?", (
                 "Telefón %s sa CELÝ ZMAŽE (Android, fotky, aplikácie) a nahrá sa doň LinsoftPhone OS.\n\n"
                 "Predtým:\n• odomkni bootloader (návod na wiki postmarketOS pri tvojom modeli)\n"
-                "• vypni telefón, drž Hlasitosť + a zapni ho – naštartuje do režimu fastboot\n"
-                "• pripoj ho USB káblom k počítaču\n\nPokračovať?") % z["nazov"], icon="warning"):
+                "• %s\n"
+                "• pripoj ho USB káblom k počítaču\n\nPokračovať?") % (z["nazov"], rezim_fastboot(z)), icon="warning"):
             return
         if not messagebox.askyesno("Naozaj?", "Posledná otázka: všetky dáta v telefóne budú nenávratne stratené. Nahrať?", icon="warning"):
             return

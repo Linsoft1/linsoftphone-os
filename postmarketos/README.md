@@ -39,7 +39,8 @@ Xiaomi Poco F1, Fairphone 4/5 a Pixel 3a.
 
 ## Najjednoduchšie: hotový obraz a LinsoftPhone Installer
 
-Pre **OnePlus 6**, **OnePlus 6T** a **PinePhone** sú hotové obrazy vo
+Pre **OnePlus 6 / 6T**, **Google Pixel 3a / 3a XL**, **Xiaomi Poco F1**,
+**Fairphone 4**, **SHIFT6mq**, **PinePhone** a **PinePhone Pro** sú hotové obrazy vo
 [vydaní na GitHube](https://github.com/Linsoft1/linsoftphone-os/releases/latest).
 [LinsoftPhone Installer](../instalator/README.md) ich sám stiahne a nahrá do
 telefónu cez USB kábel. Pri PinePhone ich zapíše na SD kartu. Netreba nič zostavovať.
@@ -119,7 +120,7 @@ LINSOFT_DEMO=1 python3 postmarketos/postmarketos-ui-linsoft/linsoft-sluzba.py pw
 
 - Obraz systému je vyskúšaný len vo virtuálnom stroji
   (qemu-amd64, postmarketOS edge, OpenRC): služba aj zámková obrazovka
-  naštartujú. Obrazy pre OnePlus 6/6T a PinePhone sú zostavené (balík
+  naštartujú. Obrazy pre telefóny sú zostavené (balík
   LinsoftPhone OS je v nich nainštalovaný), ale na skutočnom telefóne zatiaľ
   vyskúšané neboli.
 - Fotoaparát v prehliadači závisí od toho, či ho daný telefón podporuje v postmarketOS

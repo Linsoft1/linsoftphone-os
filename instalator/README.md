@@ -21,7 +21,17 @@ VirtualBox / QEMU.
 |---|---|---|
 | OnePlus 6 | USB kábel (fastboot) | `oneplus-enchilada` |
 | OnePlus 6T | USB kábel (fastboot) | `oneplus-fajita` |
+| Google Pixel 3a | USB kábel (fastboot) | `google-sargo` |
+| Google Pixel 3a XL | USB kábel (fastboot) | `google-bonito` |
+| Xiaomi Poco F1, displej Tianma | USB kábel (fastboot) | `xiaomi-beryllium-tianma` |
+| Xiaomi Poco F1, displej EBBG | USB kábel (fastboot) | `xiaomi-beryllium-ebbg` |
+| Fairphone 4 | USB kábel (fastboot) | `fairphone-fp4` |
+| SHIFT6mq | USB kábel (fastboot) | `shift-axolotl` |
 | PINE64 PinePhone | SD karta | `pine64-pinephone` |
+| PINE64 PinePhone Pro | SD karta | `pine64-pinephonepro` |
+
+Do telefónu sa nahráva presne to, čo odporúča `pmbootstrap`: systém do oddielu
+`userdata`, jadro do `boot`, pri Pixeloch aj `vbmeta` s vypnutým overovaním.
 | Počítač / virtuálny stroj | USB kľúč alebo `linsoftPhone.img` | `qemu-amd64` |
 
 Iné telefóny podporované postmarketOS sa dajú zostaviť cez `pmbootstrap`, pozri
@@ -30,10 +40,12 @@ Iné telefóny podporované postmarketOS sa dajú zostaviť cez `pmbootstrap`, p
 ## Telefón: skôr než začneš
 
 - Inštalácia **zmaže celý telefón** (Android, fotky, aplikácie). Najprv si sprav zálohu.
-- **Odomkni bootloader.** Návod je na wiki postmarketOS pri danom modeli
-  ([OnePlus 6](https://wiki.postmarketos.org/wiki/OnePlus_6_(oneplus-enchilada)),
-  [OnePlus 6T](https://wiki.postmarketos.org/wiki/OnePlus_6T_(oneplus-fajita))).
-- **Režim fastboot:** vypni telefón, drž **Hlasitosť +** a zapni ho. Potom ho pripoj USB káblom.
+- **Odomkni bootloader.** Návod je na [wiki postmarketOS](https://wiki.postmarketos.org/wiki/Devices)
+  pri danom modeli.
+- **Režim fastboot:** vypni telefón, drž **Hlasitosť +** (OnePlus) alebo **Hlasitosť −**
+  (Pixel, Poco F1, Fairphone) a zapni ho. Potom ho pripoj USB káblom.
+- **Poco F1** má dva druhy displeja (Tianma, EBBG). Vyber ten svoj, postup je na
+  [wiki pri Poco F1](https://wiki.postmarketos.org/wiki/Xiaomi_Poco_F1_(xiaomi-beryllium)).
 - **Windows** potrebuje ovládač fastboot
   ([Google USB Driver](https://developer.android.com/studio/run/win-usb)).
   **Linux:** spusti cez `sudo` alebo nastav pravidlá udev pre Android.

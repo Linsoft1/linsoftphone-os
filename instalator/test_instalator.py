@@ -93,7 +93,7 @@ class TestTelefon(unittest.TestCase):
             ins.subprocess.run = stary
 
     def test_nahratie_do_telefonu(self):
-        """Rozbali rootfs, nahra ho do userdata, jadro do boot, vymaze dtbo a restartuje - v tomto poradi."""
+        """Rozbali rootfs, nahra ho do userdata, jadro do boot a restartuje - v tomto poradi (ako pmbootstrap)."""
         volania, stary = [], ins.subprocess.run
 
         def falosny(prikaz, **k):
@@ -108,7 +108,41 @@ class TestTelefon(unittest.TestCase):
         finally:
             ins.subprocess.run = stary
         self.assertEqual(volania, [("obsah", b"rootfs"), ("-s", "SER", "flash", "userdata"), ("-s", "SER", "flash", "boot"),
-                                   ("-s", "SER", "erase", "dtbo"), ("-s", "SER", "reboot")])
+                                   ("-s", "SER", "reboot")])
+
+    def test_pixel_aj_vbmeta_bez_overovania(self):
+        """Pixel 3a: navyse vbmeta s vypnutym overovanim (flags=2), docasne subory sa zmazu."""
+        volania, subory, stary = [], [], ins.subprocess.run
+
+        def falosny(prikaz, **k):
+            if prikaz[1] == "flash" and prikaz[2] == "vbmeta":
+                with open(prikaz[3], "rb") as f:
+                    volania.append(("vbmeta", f.read()))
+            if prikaz[1] == "flash":
+                subory.append(prikaz[3])
+            volania.append(tuple(prikaz[1:3]))
+            return type("R", (), {"stdout": "", "stderr": "", "returncode": 0})()
+        ins.subprocess.run = falosny
+        try:
+            ins.nahraj_do_telefonu("fastboot", ins.zariadenie("google-sargo"), self.obraz, self.boot, lambda t: None)
+        finally:
+            ins.subprocess.run = stary
+        vbmeta = next(v[1] for v in volania if v[0] == "vbmeta")
+        self.assertEqual([v for v in volania if v[0] != "vbmeta"],
+                         [("flash", "userdata"), ("flash", "boot"), ("flash", "vbmeta"), ("reboot",)])
+        self.assertEqual(len(vbmeta), 4096)
+        self.assertEqual(vbmeta[:4], b"AVB0")
+        self.assertEqual(int.from_bytes(vbmeta[120:124], "big"), 2)   # HASHTREE_DISABLED / VERIFICATION_DISABLED
+        self.assertFalse(os.path.exists(subory[0]) or os.path.exists(subory[2]))   # docasny rootfs a vbmeta zmazane
+        self.assertTrue(os.path.exists(subory[1]))                                  # boot.img pouzivatela zostal
+
+    def test_vbmeta_ako_avbtool(self):
+        """Ak je k dispozicii referencny vbmeta z avbtool (zostavenie obrazov), musi byt zhodny."""
+        ref = os.environ.get("VBMETA_AVBTOOL")
+        if not ref:
+            self.skipTest("VBMETA_AVBTOOL nie je nastavene")
+        with open(ref, "rb") as f:
+            self.assertEqual(ins.vbmeta_bez_overovania(), f.read())
 
     def test_chyba_fastboot_zastavi_nahravanie(self):
         volania, stary = [], ins.subprocess.run
